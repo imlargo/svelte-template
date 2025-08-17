@@ -14,6 +14,9 @@ importers:
       '@eslint/js':
         specifier: ^9.18.0
         version: 9.33.0
+      '@lucide/svelte':
+        specifier: ^0.539.0
+        version: 0.539.0(svelte@5.38.1)
       '@playwright/test':
         specifier: ^1.49.1
         version: 1.54.2
@@ -38,6 +41,9 @@ importers:
       '@vitest/browser':
         specifier: ^3.2.3
         version: 3.2.4(playwright@1.54.2)(vite@7.1.2(jiti@2.5.1)(lightningcss@1.30.1))(vitest@3.2.4)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       eslint:
         specifier: ^9.18.0
         version: 9.33.0(jiti@2.5.1)
@@ -68,9 +74,18 @@ importers:
       svelte-check:
         specifier: ^4.0.0
         version: 4.3.1(picomatch@4.0.3)(svelte@5.38.1)(typescript@5.9.2)
+      tailwind-merge:
+        specifier: ^3.3.1
+        version: 3.3.1
+      tailwind-variants:
+        specifier: ^2.1.0
+        version: 2.1.0(tailwind-merge@3.3.1)(tailwindcss@4.1.12)
       tailwindcss:
         specifier: ^4.0.0
         version: 4.1.12
+      tw-animate-css:
+        specifier: ^1.3.7
+        version: 1.3.7
       typescript:
         specifier: ^5.0.0
         version: 5.9.2
@@ -346,6 +361,11 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.30':
     resolution: {integrity: sha512-GQ7Nw5G2lTu/BtHTKfXhKHok2WGetd4XYcVKGx00SjAk8GMwgJM3zr6zORiPGuOE+/vkc90KtTosSSvaCjKb2Q==}
+
+  '@lucide/svelte@0.539.0':
+    resolution: {integrity: sha512-OWhw4BhHO+owmOE/ijSNLnw/flbW2/DsLzMHAeM8oEjLsO0xE6glX0ADCDwxKItTs5ZJYssfyGNXxMXrea173w==}
+    peerDependencies:
+      svelte: ^5
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1534,6 +1554,19 @@ packages:
     resolution: {integrity: sha512-fO6CLDfJYWHgfo6lQwkQU2vhCiHc2MBl6s3vEhK+sSZru17YL4R5s1v14ndRpqKAIkq8nCz6MTk1yZbESZWeyQ==}
     engines: {node: '>=18'}
 
+  tailwind-merge@3.3.1:
+    resolution: {integrity: sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g==}
+
+  tailwind-variants@2.1.0:
+    resolution: {integrity: sha512-82m0eRex0z6A3GpvfoTCpHr+wWJmbecfVZfP3mqLoDxeya5tN4mYJQZwa5Aw1hRZTedwpu1D2JizYenoEdyD8w==}
+    engines: {node: '>=16.x', pnpm: '>=7.x'}
+    peerDependencies:
+      tailwind-merge: '>=3.0.0'
+      tailwindcss: '*'
+    peerDependenciesMeta:
+      tailwind-merge:
+        optional: true
+
   tailwindcss@4.1.12:
     resolution: {integrity: sha512-DzFtxOi+7NsFf7DBtI3BJsynR+0Yp6etH+nRPTbpWnS2pZBaSksv/JGctNwSWzbFjp0vxSqknaUylseZqMDGrA==}
 
@@ -1580,6 +1613,9 @@ packages:
     engines: {node: '>=18.12'}
     peerDependencies:
       typescript: '>=4.8.4'
+
+  tw-animate-css@1.3.7:
+    resolution: {integrity: sha512-lvLb3hTIpB5oGsk8JmLoAjeCHV58nKa2zHYn8yWOoG5JJusH3bhJlF2DLAZ/5NmJ+jyH3ssiAx/2KmbhavJy/A==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -1915,6 +1951,10 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@lucide/svelte@0.539.0(svelte@5.38.1)':
+    dependencies:
+      svelte: 5.38.1
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -3001,6 +3041,14 @@ snapshots:
       magic-string: 0.30.17
       zimmerframe: 1.1.2
 
+  tailwind-merge@3.3.1: {}
+
+  tailwind-variants@2.1.0(tailwind-merge@3.3.1)(tailwindcss@4.1.12):
+    dependencies:
+      tailwindcss: 4.1.12
+    optionalDependencies:
+      tailwind-merge: 3.3.1
+
   tailwindcss@4.1.12: {}
 
   tapable@2.2.2: {}
@@ -3038,6 +3086,8 @@ snapshots:
   ts-api-utils@2.1.0(typescript@5.9.2):
     dependencies:
       typescript: 5.9.2
+
+  tw-animate-css@1.3.7: {}
 
   type-check@0.4.0:
     dependencies:
