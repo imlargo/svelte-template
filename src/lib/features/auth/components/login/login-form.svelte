@@ -4,7 +4,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLFormAttributes } from 'svelte/elements';
-	import { GOOGLE_CLIENT_ID } from '$lib/constants';
+	import { GOOGLE_CLIENT_ID } from '$lib/config/constants';
 
 	let {
 		ref = $bindable(null),
