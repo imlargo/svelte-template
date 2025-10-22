@@ -18,6 +18,10 @@ export class AuthController extends BaseController {
 		return await this.post<SignUpResponse, SignUpRequest>('/auth/register', data);
 	}
 
+	async loginWithGoogle(code: string) {
+		return await this.post<SignInResponse>('/auth/google/login', { code });
+	}
+
 	async getMe() {
 		return await this.get<User>('/auth/me');
 	}

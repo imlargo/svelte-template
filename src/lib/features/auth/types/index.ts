@@ -1,5 +1,10 @@
 import { type User } from '$lib/domain/models/user';
 
+export type AuthTokens = {
+	accessToken: string;
+	refreshToken: string;
+};
+
 export type SignInResponse = {
 	user: User;
 	tokens: {
