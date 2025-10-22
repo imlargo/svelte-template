@@ -1,5 +1,4 @@
 import type { BaseEntity } from './base';
-import type { Client } from './client';
 
 export enum UserType {
 	USER = 'user',
