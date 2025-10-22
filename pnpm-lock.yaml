@@ -12,43 +12,43 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0(eslint@9.38.0(jiti@2.6.1))
       '@eslint/js':
-        specifier: ^9.36.0
+        specifier: ^9.38.0
         version: 9.38.0
       '@internationalized/date':
-        specifier: ^3.8.1
+        specifier: ^3.10.0
         version: 3.10.0
       '@lucide/svelte':
         specifier: ^0.544.0
         version: 0.544.0(svelte@5.41.1)
       '@playwright/test':
-        specifier: ^1.55.1
+        specifier: ^1.56.1
         version: 1.56.1
       '@sveltejs/adapter-cloudflare':
-        specifier: ^7.2.3
+        specifier: ^7.2.4
         version: 7.2.4(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)))(wrangler@4.44.0(@cloudflare/workers-types@4.20251014.0))
       '@sveltejs/kit':
-        specifier: ^2.43.2
+        specifier: ^2.47.2
         version: 2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2))
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.0
+        specifier: ^6.2.1
         version: 6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2))
       '@tailwindcss/forms':
         specifier: ^0.5.10
         version: 0.5.10(tailwindcss@4.1.15)
       '@tailwindcss/typography':
-        specifier: ^0.5.18
+        specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.1.15)
       '@tailwindcss/vite':
-        specifier: ^4.1.13
+        specifier: ^4.1.15
         version: 4.1.15(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2))
       '@types/node':
-        specifier: ^20
+        specifier: ^20.19.23
         version: 20.19.23
       '@vitest/browser':
         specifier: ^3.2.4
         version: 3.2.4(playwright@1.56.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@3.2.4)
       bits-ui:
-        specifier: ^2.11.0
+        specifier: ^2.14.0
         version: 2.14.0(@internationalized/date@3.10.0)(@sveltejs/kit@2.47.2(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)(vite@7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)))(svelte@5.41.1)
       clsx:
         specifier: ^2.1.1
@@ -57,13 +57,13 @@ importers:
         specifier: ^8.6.0
         version: 8.6.0(svelte@5.41.1)
       eslint:
-        specifier: ^9.36.0
+        specifier: ^9.38.0
         version: 9.38.0(jiti@2.6.1)
       eslint-config-prettier:
         specifier: ^10.1.8
         version: 10.1.8(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-svelte:
-        specifier: ^3.12.4
+        specifier: ^3.12.5
         version: 3.12.5(eslint@9.38.0(jiti@2.6.1))(svelte@5.41.1)
       globals:
         specifier: ^16.4.0
@@ -75,7 +75,7 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(svelte@5.41.1)
       playwright:
-        specifier: ^1.55.1
+        specifier: ^1.56.1
         version: 1.56.1
       prettier:
         specifier: ^3.6.2
@@ -87,10 +87,10 @@ importers:
         specifier: ^0.6.14
         version: 0.6.14(prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.41.1))(prettier@3.6.2)
       svelte:
-        specifier: ^5.39.5
+        specifier: ^5.41.1
         version: 5.41.1
       svelte-check:
-        specifier: ^4.3.2
+        specifier: ^4.3.3
         version: 4.3.3(picomatch@4.0.3)(svelte@5.41.1)(typescript@5.9.3)
       svelte-sonner:
         specifier: ^1.0.5
@@ -102,19 +102,19 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(tailwind-merge@3.3.1)(tailwindcss@4.1.15)
       tailwindcss:
-        specifier: ^4.1.13
+        specifier: ^4.1.15
         version: 4.1.15
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
       typescript:
-        specifier: ^5.9.2
+        specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.44.1
+        specifier: ^8.46.2
         version: 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
       vite:
-        specifier: ^7.1.7
+        specifier: ^7.1.11
         version: 7.1.11(@types/node@20.19.23)(jiti@2.6.1)(lightningcss@1.30.2)
       vite-plugin-devtools-json:
         specifier: ^1.0.0
