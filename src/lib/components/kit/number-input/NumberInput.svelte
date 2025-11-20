@@ -85,7 +85,7 @@
 		class={cn(
 			'h-8 w-14 text-center font-mono',
 			className,
-			'[appearance:textfield] text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+			'text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 		)}
 	/>
 

@@ -13,6 +13,7 @@
 		placeholder?: string;
 		children?: Snippet<[string]>;
 		onchange?: (value: any) => void;
+		disabled?: boolean;
 	};
 
 	let {
@@ -20,6 +21,7 @@
 		options,
 		placeholder = 'Please select an option...',
 		onchange,
+		disabled = false,
 		children
 	}: Props = $props();
 
@@ -32,7 +34,7 @@
 	});
 </script>
 
-<Select.Root type="single" bind:value>
+<Select.Root type="single" bind:value {disabled}>
 	<Select.Trigger class="w-full">
 		{#if children}
 			{@render children(triggerContent)}
