@@ -8,7 +8,7 @@
 		<div class="flex justify-center gap-2 md:justify-start">
 			<a href="##" class="flex items-center gap-2 font-medium">
 				<div
-					class="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md"
+					class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground"
 				>
 					<Notebook class="size-4" />
 				</div>
