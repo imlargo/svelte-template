@@ -21,14 +21,14 @@
 	const fileType = getFileType(file.name);
 </script>
 
-<div class="bg-muted/40 flex items-center gap-4 rounded-md p-3">
-	<div class="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-md">
+<div class="flex items-center gap-4 rounded-md bg-muted/40 p-3">
+	<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted">
 		{#if fileType === 'image'}
-			<ImageIcon class="text-muted-foreground size-5" />
+			<ImageIcon class="size-5 text-muted-foreground" />
 		{:else if fileType === 'video'}
-			<VideoIcon class="text-muted-foreground size-5" />
+			<VideoIcon class="size-5 text-muted-foreground" />
 		{:else}
-			<FileIcon class="text-muted-foreground size-5" />
+			<FileIcon class="size-5 text-muted-foreground" />
 		{/if}
 	</div>
 
@@ -52,11 +52,11 @@
 	<div class="shrink-0">
 		<div class="flex h-8 w-8 shrink-0 items-center justify-center">
 			{#if loading}
-				<Loader2 class="text-muted-foreground size-5 animate-spin" />
+				<Loader2 class="size-5 animate-spin text-muted-foreground" />
 			{:else if error === null}
 				<CheckCircle class="size-5 text-green-500" />
 			{:else if error !== null}
-				<XCircle class="text-destructive size-5" />
+				<XCircle class="size-5 text-destructive" />
 			{/if}
 		</div>
 	</div>

@@ -40,7 +40,7 @@
 		<Popover.Trigger
 			class={cn(
 				buttonVariants({ variant: 'outline' }),
-				!value && 'text-muted-foreground max-w-max'
+				!value && 'max-w-max text-muted-foreground'
 			)}
 		>
 			<CalendarIcon class="mr-2 size-4" />

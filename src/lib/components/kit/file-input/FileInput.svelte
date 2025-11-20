@@ -144,7 +144,7 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		onclick={handleClick}
-		class="hover:border-primary hover:bg-primary/5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-6 transition-colors"
+		class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-6 transition-colors hover:border-primary hover:bg-primary/5"
 	>
 		<input
 			bind:this={fileInputRef}
@@ -156,24 +156,24 @@
 			class="hidden"
 			aria-label={variant === 'single' ? 'Select file' : 'Select files'}
 		/>
-		<Upload class="text-muted-foreground h-10 w-10" />
+		<Upload class="h-10 w-10 text-muted-foreground" />
 		<div class="text-center">
 			<p class="text-sm font-medium">
 				Click to select {variant === 'single' ? 'a file' : 'files'}.
 			</p>
-			<p class="text-muted-foreground mt-1 text-xs">
+			<p class="mt-1 text-xs text-muted-foreground">
 				{variant === 'single' ? 'Maximum file size: ' : 'Maximum file size per file: '}
 				{formatFileSize(maxSize)}
 			</p>
 
 			{#if variant === 'multiple'}
-				<p class="text-muted-foreground text-xs">Maximum files: {maxFiles}</p>
+				<p class="text-xs text-muted-foreground">Maximum files: {maxFiles}</p>
 			{/if}
 		</div>
 	</div>
 
 	{#if error}
-		<div class="text-destructive flex items-center gap-2 text-sm">
+		<div class="flex items-center gap-2 text-sm text-destructive">
 			<AlertCircle class="size-4" />
 			<span>{error}</span>
 		</div>
@@ -183,12 +183,12 @@
 		<ScrollArea class="h-full max-h-36 w-full lg:max-h-44">
 			<div class="flex w-full flex-col gap-y-2">
 				{#each files as file, index (index)}
-					<div class="bg-muted/40 flex w-full items-center justify-between rounded-lg p-3">
+					<div class="flex w-full items-center justify-between rounded-lg bg-muted/40 p-3">
 						<div class="flex items-center gap-2 overflow-hidden">
-							<FileIcon class="text-muted-foreground size-5 shrink-0" />
-							<div class="min-w-0 max-w-52">
+							<FileIcon class="size-5 shrink-0 text-muted-foreground" />
+							<div class="max-w-52 min-w-0">
 								<p class="truncate text-sm font-medium">{file.name}</p>
-								<p class="text-muted-foreground text-xs">{formatFileSize(file.size)}</p>
+								<p class="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
 							</div>
 						</div>
 						<Button

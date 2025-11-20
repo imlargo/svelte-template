@@ -76,7 +76,7 @@
 	<Popover.Content class="w-full p-0">
 		<Command.Root filter={customFilter}>
 			<Command.Input
-				class="border-0 outline-0 ring-0 focus:border-0"
+				class="border-0 ring-0 outline-0 focus:border-0"
 				placeholder={searchPlaceholder}
 			/>
 			<Command.List>
