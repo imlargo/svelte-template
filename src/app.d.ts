@@ -1,4 +1,4 @@
-import { User } from "$lib/domain/models";
+import { User } from '$lib/domain/models';
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
