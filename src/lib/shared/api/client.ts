@@ -57,7 +57,8 @@ export class ApiClient {
 
 		// If there's an error, throw an ApiError with backend's format
 		throw new ApiError(
-			responseData.code || 'UNKNOWN_ERROR',
+			(responseData.code as number) || 0,
+			(responseData.status as string) || 'UNKNOWN_ERROR',
 			responseData.message || 'An unknown error occurred',
 			responseData.payload
 		);
@@ -102,7 +103,8 @@ export class ApiClient {
 		} catch (error) {
 			// If it's a network error (not an API error)
 			if (error instanceof Error && !(error instanceof ApiError)) {
-				throw new ApiError('NETWORK_ERROR', error.message, { originalError: error.toString() });
+				console.error('Unknown: ', error.toString());
+				throw new ApiError(0, 'NETWORK_ERROR', error.message, { originalError: error.toString() });
 			}
 			// Re-throw if it's already an ApiError
 			throw error;
