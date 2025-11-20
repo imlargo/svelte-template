@@ -1,6 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
-import type { AuthCookiesManagerOptions } from './cookies_options';
+import type { AuthTokens } from '$lib/features/auth/types';
 import { parseAuthCookiesManagerOptions } from './options';
+import type { AuthCookiesManagerOptions } from './cookies_options';
 
 /**
  * Manages authentication cookies for access and refresh tokens.
@@ -35,7 +36,7 @@ export class AuthCookiesManager {
 		this.sameSite = parsedOptions.cookies.sameSite as 'strict' | 'lax' | 'none' | '';
 	}
 
-	getTokens(cookies: Cookies): AuthToken {
+	getTokens(cookies: Cookies): AuthTokens {
 		return {
 			accessToken: cookies.get(this.accessTokenCookieName) ?? '',
 			refreshToken: cookies.get(this.refreshTokenCookieName) ?? ''

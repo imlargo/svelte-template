@@ -1,6 +1,7 @@
 // Type definitions for backend error format
 export interface ApiErrorResponse {
-	code: string;
+	code: number;
+	status: string;
 	message: string;
 	payload?: Record<string, any>;
 }
@@ -9,13 +10,15 @@ export interface ApiErrorResponse {
  * API Error class for consistent error handling
  */
 export class ApiError extends Error implements ApiErrorResponse {
-	code: string;
+	code: number;
+	status: string;
 	payload?: Record<string, any>;
 
-	constructor(code: string, message: string, payload?: Record<string, any>) {
+	constructor(code: number, status: string, message: string, payload?: Record<string, any>) {
 		super(message);
 		this.name = 'ApiError';
 		this.code = code;
+		this.status = status;
 		this.payload = payload;
 	}
 
@@ -28,60 +31,60 @@ export class ApiError extends Error implements ApiErrorResponse {
 		}
 
 		if (isApiErrorResponse(error)) {
-			return new ApiError(error.code, error.message, error.payload);
+			return new ApiError(error.code, error.status, error.message, error.payload);
 		}
 
 		if (error instanceof Error) {
-			return new ApiError('CLIENT_ERROR', error.message, { originalError: error.name });
+			return new ApiError(0, 'CLIENT_ERROR', error.message, { originalError: error.name });
 		}
 
-		return new ApiError('UNKNOWN_ERROR', String(error));
+		return new ApiError(0, 'UNKNOWN_ERROR', String(error));
 	}
 
 	/**
 	 * Check if the error is a network error
 	 */
 	isNetworkError(): boolean {
-		return this.code === 'NETWORK_ERROR';
+		return this.status === 'NETWORK_ERROR';
 	}
 
 	/**
 	 * Check if the error is a validation error
 	 */
 	isValidationError(): boolean {
-		return this.code === 'BAD_REQUEST' || this.code === 'BIND_JSON';
+		return this.status === 'BAD_REQUEST' || this.status === 'BIND_JSON';
 	}
 
 	/**
 	 * Check if the error is an authorization error
 	 */
 	isAuthError(): boolean {
-		return this.code === 'UNAUTHORIZED';
+		return this.status === 'UNAUTHORIZED';
 	}
 
 	/**
 	 * Check if the error is a not found error
 	 */
 	isNotFoundError(): boolean {
-		return this.code === 'NOT_FOUND';
+		return this.status === 'NOT_FOUND';
 	}
 
 	/**
 	 * Check if the error is a conflict error
 	 */
 	isConflictError(): boolean {
-		return this.code === 'CONFLICT';
+		return this.status === 'CONFLICT';
 	}
 
 	/**
 	 * Get user-friendly error message
 	 */
 	getMessage(): string {
-		if (this?.message) {
-			return this.message || 'An unexpected error has occurred.';
+		if (this.message && typeof this.message === 'string' && this.message.trim() !== '') {
+			return this.message;
 		}
 
-		switch (this.code) {
+		switch (this.status) {
 			case 'NETWORK_ERROR':
 				return 'Connection error. Please check your internet connection.';
 			case 'UNAUTHORIZED':
@@ -108,7 +111,7 @@ export function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
 	return (
 		typeof error === 'object' &&
 		error !== null &&
-		typeof (error as any).code === 'string' &&
+		typeof (error as any).code === 'number' &&
 		typeof (error as any).message === 'string'
 	);
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '$styles/app.css';
+	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 
