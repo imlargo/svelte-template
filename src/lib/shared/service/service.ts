@@ -1,10 +1,10 @@
-import { authStore } from '$lib/features/auth/stores/auth.svelte';
 import api from '$lib/shared/api';
+import { authStore } from '../../features/auth/stores/auth.svelte';
 
 /**
  * Base controller class that handles authentication and common API functionality
  */
-export class BaseController {
+export class BaseService {
 	protected api = api;
 	protected token?: string;
 

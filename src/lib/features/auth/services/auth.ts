@@ -7,9 +7,9 @@ import type {
 	ChangePasswordResponse
 } from '$lib/features/auth/types';
 import type { User } from '$lib/domain/models/user';
-import { BaseController } from './base';
+import { BaseService } from '$lib/shared/service/service';
 
-export class AuthController extends BaseController {
+export class AuthService extends BaseService {
 	async login(data: SignInRequest) {
 		return await this.post<SignInResponse, SignInRequest>('/auth/login', data);
 	}

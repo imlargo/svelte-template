@@ -1,4 +1,4 @@
-import { AuthController } from '$lib/controllers/auth';
+import { AuthService } from '$lib/features/auth/services/auth';
 import type { SignInResponse } from '$lib/features/auth/types';
 import { authCookiesManager } from '$lib/server/cookies/manager';
 import type { PageServerLoad } from './$types';
@@ -35,12 +35,12 @@ export const load = (async ({ url, cookies }) => {
 	const decoded = new URLSearchParams(credentialsText);
 	const credentials = Object.fromEntries(decoded) as GoogleOAuthResponse;
 
-	const authController = new AuthController();
+	const authService = new AuthService();
 
 	let authData: null | SignInResponse = null;
 	let destination = '/logout';
 	try {
-		const response = await authController.loginWithGoogle(credentials.code);
+		const response = await authService.loginWithGoogle(credentials.code);
 		authCookiesManager.login(cookies, response.tokens.access_token, response.tokens.refresh_token);
 
 		authData = response;

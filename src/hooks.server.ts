@@ -1,7 +1,7 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { authCookiesManager } from '$lib/server/cookies/manager';
-import { AuthController } from '$lib/controllers/auth';
 import type { User } from '$lib/domain/models';
+import { AuthService } from '$lib/features/auth/services/auth';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const homePath = '/';
@@ -35,8 +35,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.refreshToken = authTokens?.refreshToken;
 
 	try {
-		const authController = new AuthController(authTokens.accessToken);
-		const user = (await authController.getMe()) as User;
+		const authService = new AuthService(authTokens.accessToken);
+		const user = (await authService.getMe()) as User;
 		event.locals.user = user;
 		const response = await resolve(event);
 		return response;
