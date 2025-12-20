@@ -15,7 +15,7 @@ importers:
         specifier: ^9.39.2
         version: 9.39.2
       '@internationalized/date':
-        specifier: ^3.10.0
+        specifier: ^3.10.1
         version: 3.10.1
       '@lucide/svelte':
         specifier: ^0.561.0
