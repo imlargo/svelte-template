@@ -7,7 +7,7 @@ import type {
 	ChangePasswordResponse
 } from '$lib/features/auth/types';
 import type { User } from '$lib/domain/models/user';
-import { BaseService } from '$lib/shared/service/service';
+import { BaseService } from '$lib/core/service';
 
 export class AuthService extends BaseService {
 	async login(data: SignInRequest) {

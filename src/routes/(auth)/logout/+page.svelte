@@ -1,13 +1,6 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
-
-	onMount(async () => {
-		toast.success('Sesión cerrada exitosamente.');
-		await invalidateAll();
-		await goto('/login');
-	});
+	// The server load function handles the redirect to /login.
+	// This page is only rendered if JavaScript is disabled.
 </script>
 
-<h1>Logging out...</h1>
+<p>Cerrando sesión...</p>

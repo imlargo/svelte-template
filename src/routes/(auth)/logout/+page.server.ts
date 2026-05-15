@@ -1,8 +1,8 @@
-import { authCookiesManager } from '$lib/server/cookies/manager';
+import { authCookies } from '$lib/features/auth';
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
 export const load = (async ({ cookies }) => {
-	authCookiesManager.logout(cookies);
+	authCookies.clearTokens(cookies);
 	redirect(303, '/login');
 }) satisfies PageServerLoad;

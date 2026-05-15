@@ -1,21 +1,21 @@
 import { browser } from '$app/environment';
-import type { User } from '$lib/domain/models';
 import { authStore } from '$lib/features/auth/stores/auth.svelte';
 import type { LayoutLoad } from './$types';
 
 export const load = (async ({ data }) => {
-	const user: User | null = data?.user || null;
-	const accessToken: string | any = data?.accessToken;
+	const { user, accessToken, refreshToken } = data;
 
 	if (browser) {
-		if (user == null || accessToken == null) {
-			authStore.logout();
+		if (user && accessToken && refreshToken) {
+			try {
+				authStore.login(accessToken, refreshToken, user);
+			} catch {
+				authStore.logout();
+			}
 		} else {
-			authStore.login(accessToken, accessToken, user);
+			authStore.logout();
 		}
 	}
 
-	return {
-		...data
-	};
+	return { ...data };
 }) satisfies LayoutLoad;

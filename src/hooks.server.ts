@@ -1,33 +1,32 @@
 import type { Handle } from '@sveltejs/kit';
-import { authCookiesManager } from '$lib/server/cookies/manager';
-import { AuthService } from '$lib/features/auth/services/auth';
-import { createAuthHandler } from '$lib/server/hooks/auth';
+import { getConfig } from '$lib/config';
+import { authCookies, AuthService, createAuthHandler } from '$lib/features/auth';
 
-export const handle: Handle = createAuthHandler({
-	// Gestor de cookies
-	cookieManager: authCookiesManager,
+// Import app.config.ts first so defineConfig() runs and sets the config
+// before getConfig() is called inside the handler below.
+import './app.config';
 
-	// Función para obtener el usuario
-	fetchUser: async (accessToken: string) => {
-		const authService = new AuthService(accessToken);
-		return await authService.getMe();
-	},
+export const handle: Handle = async ({ event, resolve }) => {
+	const config = getConfig();
 
-	// Rutas públicas que no requieren autenticación
-	publicRoutes: ['/login', '/authorize', '/logout'],
-
-	// Ruta de login
-	loginPath: '/login',
-
-	// Ruta de redirección después de login exitoso
-	defaultRedirectPath: '/',
-
-	// Rutas donde NO se debe preservar el redirect (solo home '/')
-	noRedirectPreservation: ['/'],
-
-	// Manejo de errores personalizado
-	onAuthError: (error, event) => {
-		console.error('Error fetching user data:', error);
-		// Aquí podrías agregar logging adicional o métricas
+	if (!config.auth.enabled) {
+		return resolve(event);
 	}
-});
+
+	return createAuthHandler({
+		cookieManager: authCookies,
+
+		fetchUser: async (accessToken) => {
+			const service = new AuthService(accessToken);
+			return service.getMe();
+		},
+
+		publicRoutes: config.auth.publicRoutes,
+		loginPath: config.auth.loginPath,
+		defaultRedirectPath: config.auth.defaultRedirectPath,
+
+		onAuthError: (error) => {
+			console.error('[auth] Failed to authenticate user:', error);
+		}
+	})({ event, resolve });
+};

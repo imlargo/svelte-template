@@ -1,6 +1,5 @@
-import { AuthService } from '$lib/features/auth/services/auth';
+import { AuthService, authCookies } from '$lib/features/auth';
 import type { SignInResponse } from '$lib/features/auth/types';
-import { authCookiesManager } from '$lib/server/cookies/manager';
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
@@ -13,17 +12,15 @@ type GoogleOAuthResponse = {
 };
 
 export const load = (async ({ url, cookies }) => {
-	const isAuthenticated = authCookiesManager.isAuthenticated(cookies);
+	const isAuthenticated = authCookies.isAuthenticated(cookies);
 	const redirectParam = url.searchParams.get('redirect');
 	let redirectTo: null | string = null;
 
 	if (redirectParam) {
 		try {
 			redirectTo = atob(redirectParam);
-		} catch (error) {
-			// If base64 decoding fails, ignore the redirect parameter
-			console.warn('Failed to decode redirect parameter.');
-			redirectTo = null;
+		} catch {
+			console.warn('[auth] Failed to decode redirect parameter.');
 		}
 	}
 
@@ -31,26 +28,22 @@ export const load = (async ({ url, cookies }) => {
 		redirect(303, redirectTo || '/');
 	}
 
-	const credentialsText = url.searchParams.toString();
-	const decoded = new URLSearchParams(credentialsText);
-	const credentials = Object.fromEntries(decoded) as GoogleOAuthResponse;
+	const credentials = Object.fromEntries(
+		new URLSearchParams(url.searchParams.toString())
+	) as GoogleOAuthResponse;
 
 	const authService = new AuthService();
 
-	let authData: null | SignInResponse = null;
+	let _authData: null | SignInResponse = null;
 	let destination = '/logout';
 	try {
 		const response = await authService.loginWithGoogle(credentials.code);
-		authCookiesManager.login(cookies, response.tokens.access_token, response.tokens.refresh_token);
-
-		authData = response;
-		console.log(response);
-
-		// Redirect to the original destination or default to home
-		destination = redirectTo && redirectTo !== '' ? redirectTo : '/';
+		authCookies.setTokens(cookies, response.tokens.access_token, response.tokens.refresh_token);
+		_authData = response;
+		destination = redirectTo || '/';
 	} catch (error) {
-		authCookiesManager.logout(cookies);
-		console.log(error);
+		authCookies.clearTokens(cookies);
+		console.error('[auth] Google login failed:', error);
 	}
 
 	redirect(303, destination);

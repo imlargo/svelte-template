@@ -1,9 +1,9 @@
-import { authCookiesManager } from '$lib/server/cookies/manager';
 import type { LayoutServerLoad } from './$types';
 
-export const load = (async ({ locals, cookies }) => {
-	const user = locals?.user || null;
-	const { accessToken } = authCookiesManager.getTokens(cookies);
-
-	return { user, accessToken };
+export const load = (async ({ locals }) => {
+	return {
+		user: locals.user ?? null,
+		accessToken: locals.accessToken ?? null,
+		refreshToken: locals.refreshToken ?? null
+	};
 }) satisfies LayoutServerLoad;

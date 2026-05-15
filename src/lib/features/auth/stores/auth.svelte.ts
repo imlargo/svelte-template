@@ -1,5 +1,5 @@
 import type { User } from '$lib/domain/models';
-import type { AuthTokens } from '../types';
+import type { AuthTokens } from '$lib/features/auth/types';
 
 /**
  * A generic authentication store for managing user sessions and tokens.
@@ -22,15 +22,6 @@ export class AuthStore<T> {
 
 		this.userData = user;
 		this.tokens = { accessToken, refreshToken };
-	}
-
-	initiateUserSession(accessToken: string, refreshToken: string, user: T | null) {
-		try {
-			this.login(accessToken, refreshToken, user);
-		} catch (error) {
-			console.error('[sv-auth] Login error in auth store:', error);
-			this.logout();
-		}
 	}
 
 	logout() {
