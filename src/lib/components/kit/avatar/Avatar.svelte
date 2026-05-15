@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as AvatarUI from '$lib/components/ui/avatar/index.js';
-	import { getInitials } from '$lib/shared/tools';
+	import { getInitials } from '$lib/core/tools';
 	import { cn } from '$lib/utils';
 
 	type Props = {

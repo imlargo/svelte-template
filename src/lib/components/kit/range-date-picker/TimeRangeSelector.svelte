@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { timeFilterLabel, type TimeFilter } from '$lib/shared/tools/date';
+	import { timeFilterLabel, type TimeFilter } from '$lib/core/tools/date';
 	import Select from '../select/Select.svelte';
-	import { Calendar } from '@lucide/svelte';
+	import CalendarIcon from '@lucide/svelte/icons/calendar';
 
 	type Props = {
 		options: TimeFilter[];
@@ -26,7 +26,7 @@
 <Select options={selectOptions} bind:value {disabled}>
 	{#snippet children(content: string)}
 		<div class="flex w-full items-center gap-2">
-			<Calendar class="size-4" />
+			<CalendarIcon class="size-4" />
 			<span>{content}</span>
 		</div>
 	{/snippet}

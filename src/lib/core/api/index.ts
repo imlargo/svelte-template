@@ -13,7 +13,7 @@ import { ApiClient, type ApiClientOptions } from './client';
 
 export { ApiClient } from './client';
 export { ApiError, isApiErrorResponse, toApiError, getErrorMessage } from './error';
-export type { ApiOptions } from './client';
+export type { ApiOptions, ApiClientOptions } from './client';
 export type { ApiErrorResponse } from './error';
 
 /**

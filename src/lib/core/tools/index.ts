@@ -1,6 +1,20 @@
 /**
- * API utility helpers — FormData, query string, and JSON sanitization.
+ * Utility helpers — FormData, query string, JSON sanitization, and string utils.
  */
+
+/**
+ * Returns the initials from a name string (up to 2 characters).
+ * e.g. "John Doe" → "JD", "Alice" → "A", undefined → ""
+ */
+export function getInitials(name: string | undefined): string {
+	if (!name?.trim()) return '';
+	return name
+		.trim()
+		.split(/\s+/)
+		.slice(0, 2)
+		.map((part) => part[0].toUpperCase())
+		.join('');
+}
 
 export function toFormData(data: Record<string, unknown>): FormData {
 	const formData = new FormData();

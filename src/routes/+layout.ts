@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { authStore } from '$lib/features/auth/stores/auth.svelte';
+import { authStore } from '$lib/features/auth';
 import type { LayoutLoad } from './$types';
 
 export const load = (async ({ data }) => {

@@ -54,28 +54,13 @@ export interface AppConfig extends PublicConfig {
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
 function buildDefaults(): AppConfig {
-	// Resolve env vars lazily so that modules importing this file don't crash
-	// when the env var is not set. All vars are optional — the project works
-	// out of the box without any .env file.
-	let backendBaseUrl = '';
-	let googleClientId = '';
-
-	try {
-		// Dynamic import is not possible at module level in SvelteKit for static
-		// env vars, so we read them via a conditional import trick using eval to
-		// avoid static analysis failures when the var is not present.
-		// The canonical way: consume env in app.config.ts and pass them to defineConfig().
-	} catch {
-		// Silently fall back to defaults
-	}
-
 	return {
 		api: {
-			baseUrl: backendBaseUrl
+			baseUrl: ''
 		},
 		auth: {
 			enabled: true,
-			googleClientId,
+			googleClientId: '',
 			loginPath: '/login',
 			defaultRedirectPath: '/',
 			publicRoutes: ['/login', '/authorize', '/logout']

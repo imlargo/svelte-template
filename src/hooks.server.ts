@@ -3,30 +3,24 @@ import { getConfig } from '$lib/config';
 import { authCookies, AuthService, createAuthHandler } from '$lib/features/auth';
 
 // Import app.config.ts first so defineConfig() runs and sets the config
-// before getConfig() is called inside the handler below.
+// before getConfig() is called below.
 import './app.config';
 
-export const handle: Handle = async ({ event, resolve }) => {
-	const config = getConfig();
+// Build the handler once at server startup — not on every request.
+const config = getConfig();
 
-	if (!config.auth.enabled) {
-		return resolve(event);
-	}
+export const handle: Handle = config.auth.enabled
+	? createAuthHandler({
+			cookieManager: authCookies,
 
-	return createAuthHandler({
-		cookieManager: authCookies,
+			fetchUser: (accessToken) => new AuthService(accessToken).getMe(),
 
-		fetchUser: async (accessToken) => {
-			const service = new AuthService(accessToken);
-			return service.getMe();
-		},
+			publicRoutes: config.auth.publicRoutes,
+			loginPath: config.auth.loginPath,
+			defaultRedirectPath: config.auth.defaultRedirectPath,
 
-		publicRoutes: config.auth.publicRoutes,
-		loginPath: config.auth.loginPath,
-		defaultRedirectPath: config.auth.defaultRedirectPath,
-
-		onAuthError: (error) => {
-			console.error('[auth] Failed to authenticate user:', error);
-		}
-	})({ event, resolve });
-};
+			onAuthError: (error) => {
+				console.error('[auth] Failed to authenticate user:', error);
+			}
+		})
+	: ({ event, resolve }) => resolve(event);

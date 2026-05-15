@@ -10,7 +10,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { isValidDate } from '$lib/shared/format/date.js';
+	import { isValidDate } from '$lib/core/tools/date';
 
 	const df = new DateFormatter('en-US', {
 		dateStyle: 'long'
