@@ -1,1 +1,0 @@
-pnpm dlx shadcn-svelte@latest add $(ls src/lib/components/ui/ | tr '\n' ' ') -y
