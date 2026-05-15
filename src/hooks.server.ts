@@ -1,13 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
-import { getConfig } from '$lib/config';
+import { config } from '$lib/config';
 import { authCookies, AuthService, createAuthHandler } from '$lib/features/auth';
-
-// Import app.config.ts first so defineConfig() runs and sets the config
-// before getConfig() is called below.
-import './app.config';
-
-// Build the handler once at server startup — not on every request.
-const config = getConfig();
 
 export const handle: Handle = config.auth.enabled
 	? createAuthHandler({

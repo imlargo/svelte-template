@@ -6,8 +6,8 @@
  */
 
 // Config
-export { getConfig, getPublicConfig } from './config';
-export type { AppConfig, PublicConfig, PublicApiConfig, PublicAuthConfig } from './config';
+export { config } from './config';
+export type { AppConfig } from './config';
 
 // Core API
 export {

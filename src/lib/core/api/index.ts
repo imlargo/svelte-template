@@ -1,14 +1,11 @@
 /**
  * API client factory.
  *
- * The factory reads the base URL from app config at call time, not at module
- * init time, so `defineConfig()` in app.config.ts is always resolved first.
- *
  * Usage:
  *   import { createApiClient } from '$lib/core/api';
  *   const client = createApiClient({ getToken: () => authStore.getAccessToken() });
  */
-import { getConfig } from '$lib/config';
+import { config } from '$lib/config';
 import { ApiClient, type ApiClientOptions } from './client';
 
 export { ApiClient } from './client';
@@ -22,7 +19,7 @@ export type { ApiErrorResponse } from './error';
  */
 export function createApiClient(options: Partial<ApiClientOptions> = {}): ApiClient {
 	return new ApiClient({
-		baseUrl: getConfig().api.baseUrl,
+		baseUrl: config.api.baseUrl,
 		...options
 	});
 }

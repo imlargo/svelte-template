@@ -4,7 +4,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLFormAttributes } from 'svelte/elements';
-	import { getConfig } from '$lib/config';
+	import { config } from '$lib/config';
 
 	let {
 		ref = $bindable(null),
@@ -25,7 +25,7 @@
 
 		// Parameters to pass to OAuth 2.0 endpoint.
 		const params: Record<string, string> = {
-			client_id: getConfig().auth.googleClientId,
+			client_id: config.auth.googleClientId,
 			redirect_uri: `${window.location.origin}/authorize`,
 			response_type: 'code',
 			prompt: 'select_account',

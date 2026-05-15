@@ -1,23 +1,26 @@
 /**
- * Application configuration entry point.
+ * App configuration — edit this file to customize your project.
  *
- * Override any defaults here. All fields are optional — the project works
- * out of the box without a single .env variable.
- *
- * Read env variables from $env/dynamic/public (client-safe) or
- * $env/dynamic/private (server-only, import only in server files) and pass
- * them into defineConfig(). This keeps config centralized and makes env
- * usage explicit and auditable.
+ * Env vars are read from $env/dynamic/public (safe on client + server).
+ * For server-only secrets use $env/dynamic/private in hooks.server.ts.
  */
-import { defineConfig } from '$lib/config';
 import { env } from '$env/dynamic/public';
 
-export default defineConfig({
+const config = {
 	api: {
-		baseUrl: env.PUBLIC_BACKEND_BASE_URL ?? ''
+		/** Base URL for all API requests. Defaults to '' (same origin). */
+		baseUrl: env.PUBLIC_BACKEND_BASE_URL || ''
 	},
 	auth: {
+		/** Set to false to disable authentication entirely. */
 		enabled: true,
-		googleClientId: env.PUBLIC_GOOGLE_CLIENT_ID ?? ''
+		/** Google OAuth client ID. Only required when using Google login. */
+		googleClientId: env.PUBLIC_GOOGLE_CLIENT_ID || '',
+		loginPath: '/login',
+		defaultRedirectPath: '/',
+		publicRoutes: ['/login', '/authorize', '/logout']
 	}
-});
+};
+
+export default config;
+export type AppConfig = typeof config;
