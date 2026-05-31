@@ -12,7 +12,6 @@ const config = {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: adapter(),
 		alias: {
-			// $lib is handled by SvelteKit automatically (src/lib)
 			$components: './src/lib/components',
 			$ui: './src/lib/components/ui',
 			$core: './src/lib/core'
