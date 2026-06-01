@@ -6,7 +6,7 @@
  */
 import { redirect, type Handle, type Cookies, type RequestEvent } from '@sveltejs/kit';
 import type { AuthCookiesManager } from './cookies';
-import type { User } from '$lib/domain/models/user';
+import type { User } from '$lib/types/auth/user';
 import type { AuthTokens } from './types';
 
 export interface AuthHandlerOptions {

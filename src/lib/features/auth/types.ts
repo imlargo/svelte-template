@@ -1,4 +1,4 @@
-import type { User } from '$lib/domain/models';
+import type { User } from '$lib/types/auth/user';
 
 export interface AuthTokens {
 	accessToken: string;

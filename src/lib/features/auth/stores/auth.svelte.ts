@@ -1,4 +1,4 @@
-import type { User } from '$lib/domain/models';
+import type { User } from '$lib/types/auth/user';
 import type { AuthTokens } from '../types';
 
 export class AuthStore<T> {
