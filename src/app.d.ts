@@ -1,4 +1,4 @@
-import type { User } from '$lib/domain/models';
+import type { User } from '$lib/types/auth/user';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
