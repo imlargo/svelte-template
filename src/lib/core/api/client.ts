@@ -1,4 +1,4 @@
-import { ApiError } from './error';
+import { ApiError } from './errors';
 
 export interface ApiOptions extends RequestInit {
 	headers?: HeadersInit;
