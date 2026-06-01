@@ -1,8 +1,8 @@
-export { authStore, AuthStore } from './stores/auth.svelte';
-export { authCookies, AuthCookiesManager } from './cookies';
-export { createAuthHandler } from './handler';
-export { AuthService } from './services/auth';
-export { hasPermission, canUseFeature, isWithinPlanLimit } from './permissions';
+export { authStore, AuthStore } from './stores/auth.svelte'
+export { authCookies, AuthCookiesManager } from './cookies'
+export { createAuthHandler } from './handler'
+export { AuthService } from './services/auth'
+export { hasPermission } from './permissions'
 export type {
 	AuthTokens,
 	AuthTokensResponse,
@@ -12,4 +12,4 @@ export type {
 	SignUpResponse,
 	ChangePasswordRequest,
 	ChangePasswordResponse
-} from './types';
+} from './types'
