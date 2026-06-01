@@ -11,7 +11,7 @@ import { ApiClient, type ApiClientOptions } from './client';
 export { ApiClient } from './client';
 export { ApiError, isApiErrorResponse, toApiError, getErrorMessage } from './errors';
 export type { ApiOptions, ApiClientOptions } from './client';
-export type { ApiErrorResponse } from './errors';
+export type { ErrorCode } from './errors';
 
 /**
  * Create an ApiClient using the app's configured base URL.

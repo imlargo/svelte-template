@@ -6,21 +6,18 @@
 export { config } from './config'
 export type { AppConfig } from './config'
 
-// Core API
-export {
-	createApiClient,
-	ApiClient,
-	ApiError,
-	getErrorMessage,
-	toApiError,
-	isApiErrorResponse
-} from './core/api'
-export type { ApiOptions, ApiErrorResponse } from './core/api'
+// Errors
+export { AppError, ApiError, ValidationError, normalizeError, getErrorMessage } from './core/errors'
+export type { ErrorCode } from './core/errors'
 
-// Core service
+// API client
+export { createApiClient, ApiClient } from './core/api'
+export type { ApiOptions, ApiClientOptions } from './core/api'
+
+// Service base class
 export { BaseService } from './core/service'
 
-// Core helpers
+// Async loading helper
 export { withLoading } from './core/helpers/with-loading.svelte'
 export type { LoadingState } from './core/helpers/with-loading.svelte'
 
