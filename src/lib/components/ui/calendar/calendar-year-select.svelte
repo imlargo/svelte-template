@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Calendar as CalendarPrimitive } from 'bits-ui';
-	import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
+	import { Calendar as CalendarPrimitive } from "bits-ui";
+	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
 	let {
@@ -13,13 +13,13 @@
 
 <span
 	class={cn(
-		'relative flex rounded-md border border-input shadow-xs has-focus:border-ring has-focus:ring-[3px] has-focus:ring-ring/50',
+		"has-focus:border-ring border-input has-focus:ring-ring/50 relative flex rounded-md border shadow-xs has-focus:ring-[3px]",
 		className
 	)}
 >
 	<CalendarPrimitive.YearSelect
 		bind:ref
-		class="absolute inset-0 opacity-0 dark:bg-popover dark:text-popover-foreground"
+		class="dark:bg-popover dark:text-popover-foreground absolute inset-0 opacity-0"
 		{...restProps}
 	>
 		{#snippet child({ props, yearItems, selectedYearItem })}
@@ -36,11 +36,11 @@
 				{/each}
 			</select>
 			<span
-				class="flex h-8 items-center gap-1 rounded-md ps-2 pe-1 text-sm font-medium select-none [&>svg]:size-3.5 [&>svg]:text-muted-foreground"
+				class="[&>svg]:text-muted-foreground flex h-(--cell-size) items-center gap-1 rounded-md ps-2 pe-1 text-sm font-medium select-none [&>svg]:size-3.5"
 				aria-hidden="true"
 			>
 				{yearItems.find((item) => item.value === value)?.label || selectedYearItem.label}
-				<ChevronDownIcon class="size-4" />
+				<ChevronDownIcon class={cn("size-4", className)} />
 			</span>
 		{/snippet}
 	</CalendarPrimitive.YearSelect>
