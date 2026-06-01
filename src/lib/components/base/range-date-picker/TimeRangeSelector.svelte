@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { timeFilterLabel, type TimeFilter } from '$lib/core/tools/date';
+	import { timeFilterLabel, type TimeFilter } from '$lib/utils/date';
 	import Select from '../select/Select.svelte';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 
