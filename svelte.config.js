@@ -14,7 +14,10 @@ const config = {
 		alias: {
 			$components: './src/lib/components',
 			$ui: './src/lib/components/ui',
-			$core: './src/lib/core'
+			$core: './src/lib/core',
+			$stores: './src/lib/stores',
+			$types: './src/lib/types',
+			$utils: './src/lib/utils'
 		}
 	}
 };
