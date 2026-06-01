@@ -1,40 +1,23 @@
-export function createFilterStore<T extends Record<string, unknown>>(initial: T) {
-	let filters = $state<T>({ ...initial });
+// Generic filter state — extend or instantiate per feature.
+// Usage: const filter = new FilterStore({ search: '', status: '' })
+export class FilterStore<T extends Record<string, unknown>> {
+	filters = $state<T>({} as T)
 
-	const hasActive = $derived(
-		Object.values(filters as Record<string, unknown>).some(
+	readonly hasActive = $derived(
+		Object.values(this.filters as Record<string, unknown>).some(
 			(v) => v !== '' && v !== null && v !== undefined
 		)
-	);
+	)
 
-	function set<K extends keyof T>(key: K, value: T[K]) {
-		filters[key] = value;
+	constructor(initial: T) {
+		this.filters = { ...initial }
 	}
 
-	function reset() {
-		filters = { ...initial };
+	set<K extends keyof T>(key: K, value: T[K]) {
+		this.filters[key] = value
 	}
 
-	return {
-		get filters() {
-			return filters;
-		},
-		get hasActive() {
-			return hasActive;
-		},
-		get search() {
-			return ((filters as Record<string, unknown>).search as string) ?? '';
-		},
-		set search(v: string) {
-			(filters as Record<string, unknown>).search = v;
-		},
-		get status() {
-			return ((filters as Record<string, unknown>).status as string) ?? '';
-		},
-		set status(v: string) {
-			(filters as Record<string, unknown>).status = v;
-		},
-		set,
-		reset
-	};
+	reset(initial: T) {
+		this.filters = { ...initial }
+	}
 }

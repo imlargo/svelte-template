@@ -1,18 +1,13 @@
-export function createDisclosure(initial = false) {
-	let isOpen = $state(initial);
+// Toggle state for modals, drawers, dropdowns, etc.
+// Usage: const modal = new Disclosure()  or  new Disclosure(true) to start open
+export class Disclosure {
+	open = $state(false)
 
-	return {
-		get isOpen() {
-			return isOpen;
-		},
-		open: () => {
-			isOpen = true;
-		},
-		close: () => {
-			isOpen = false;
-		},
-		toggle: () => {
-			isOpen = !isOpen;
-		}
-	};
+	constructor(initial = false) {
+		this.open = initial
+	}
+
+	show() { this.open = true }
+	hide() { this.open = false }
+	toggle() { this.open = !this.open }
 }

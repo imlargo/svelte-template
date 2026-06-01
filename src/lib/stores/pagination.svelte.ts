@@ -1,57 +1,17 @@
-import { PAGINATION_DEFAULTS } from '$lib/config/domain/pagination';
+// Generic pagination state.
+// Usage: const pagination = new PaginationStore()
+export class PaginationStore {
+	page = $state(1)
+	pageSize = $state(20)
+	total = $state(0)
 
-export function createPaginationStore(initialPageSize = PAGINATION_DEFAULTS.pageSize) {
-	let page = $state(1);
-	let pageSize = $state(initialPageSize);
-	let total = $state(0);
+	readonly totalPages = $derived(Math.ceil(this.total / this.pageSize))
+	readonly hasNext = $derived(this.page < this.totalPages)
+	readonly hasPrev = $derived(this.page > 1)
+	readonly offset = $derived((this.page - 1) * this.pageSize)
 
-	const totalPages = $derived(Math.ceil(total / pageSize));
-	const hasNext = $derived(page < totalPages);
-	const hasPrev = $derived(page > 1);
-	const offset = $derived((page - 1) * pageSize);
-
-	function next() {
-		if (hasNext) page++;
-	}
-	function prev() {
-		if (hasPrev) page--;
-	}
-	function goTo(p: number) {
-		page = Math.max(1, Math.min(p, totalPages));
-	}
-	function setTotal(t: number) {
-		total = t;
-	}
-	function reset() {
-		page = 1;
-	}
-
-	return {
-		get page() {
-			return page;
-		},
-		get pageSize() {
-			return pageSize;
-		},
-		get total() {
-			return total;
-		},
-		get totalPages() {
-			return totalPages;
-		},
-		get hasNext() {
-			return hasNext;
-		},
-		get hasPrev() {
-			return hasPrev;
-		},
-		get offset() {
-			return offset;
-		},
-		setTotal,
-		next,
-		prev,
-		goTo,
-		reset
-	};
+	next() { if (this.hasNext) this.page++ }
+	prev() { if (this.hasPrev) this.page-- }
+	goTo(p: number) { this.page = Math.max(1, Math.min(p, this.totalPages)) }
+	reset() { this.page = 1 }
 }
