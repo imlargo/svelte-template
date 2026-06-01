@@ -2,6 +2,7 @@
 // Usage: const filter = new FilterStore({ search: '', status: '' })
 export class FilterStore<T extends Record<string, unknown>> {
 	filters = $state<T>({} as T)
+	private initial: T
 
 	readonly hasActive = $derived(
 		Object.values(this.filters as Record<string, unknown>).some(
@@ -10,6 +11,7 @@ export class FilterStore<T extends Record<string, unknown>> {
 	)
 
 	constructor(initial: T) {
+		this.initial = initial
 		this.filters = { ...initial }
 	}
 
@@ -17,7 +19,7 @@ export class FilterStore<T extends Record<string, unknown>> {
 		this.filters[key] = value
 	}
 
-	reset(initial: T) {
-		this.filters = { ...initial }
+	reset() {
+		this.filters = { ...this.initial }
 	}
 }
