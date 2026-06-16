@@ -1,7 +1,9 @@
-import { AuthService, authCookies } from '$lib/features/auth';
+import { AuthService } from '$lib/features/auth';
+import { serverAuthCookies } from '$lib/features/auth/server';
 import type { SignInResponse } from '$lib/features/auth/types';
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
+import { config } from '$lib/config';
 
 type GoogleOAuthResponse = {
 	code: string;
@@ -11,21 +13,22 @@ type GoogleOAuthResponse = {
 	prompt: string;
 };
 
-export const load = (async ({ url, cookies }) => {
-	const isAuthenticated = authCookies.isAuthenticated(cookies);
-	const redirectParam = url.searchParams.get('redirect');
-	let redirectTo: null | string = null;
-
-	if (redirectParam) {
-		try {
-			redirectTo = atob(redirectParam);
-		} catch {
-			console.warn('[auth] Failed to decode redirect parameter.');
-		}
+function decodeRedirect(value: string | null): string | null {
+	if (!value) return null;
+	try {
+		const decoded = atob(value);
+		if (decoded.startsWith('/')) return decoded;
+	} catch {
+		// ignore malformed base64
 	}
+	return null;
+}
 
-	if (isAuthenticated) {
-		redirect(303, redirectTo || '/');
+export const load = (async ({ url, cookies }) => {
+	const redirectTo = decodeRedirect(url.searchParams.get('redirect'));
+
+	if (serverAuthCookies.isAuthenticated(cookies)) {
+		redirect(303, redirectTo ?? config.auth.defaultRedirectPath);
 	}
 
 	const credentials = Object.fromEntries(
@@ -36,13 +39,14 @@ export const load = (async ({ url, cookies }) => {
 
 	let _authData: null | SignInResponse = null;
 	let destination = '/logout';
+
 	try {
 		const response = await authService.loginWithGoogle(credentials.code);
-		authCookies.setTokens(cookies, response.tokens.access_token, response.tokens.refresh_token);
+		serverAuthCookies.setTokens(cookies, response.tokens.access_token, response.tokens.refresh_token);
 		_authData = response;
-		destination = redirectTo || '/';
+		destination = redirectTo ?? config.auth.defaultRedirectPath;
 	} catch (error) {
-		authCookies.clearTokens(cookies);
+		serverAuthCookies.clearTokens(cookies);
 		console.error('[auth] Google login failed:', error);
 	}
 

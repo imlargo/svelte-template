@@ -11,6 +11,7 @@ export interface AuthCookiesOptions {
 	accessTokenName?: string;
 	refreshTokenName?: string;
 	domain?: string;
+	secure?: boolean;
 	maxAgeSeconds?: number;
 	sameSite?: 'strict' | 'lax' | 'none';
 }
@@ -18,6 +19,7 @@ export interface AuthCookiesOptions {
 const DEFAULTS = {
 	accessTokenName: 'access_token',
 	refreshTokenName: 'refresh_token',
+	secure: true,
 	maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
 	sameSite: 'lax' as const,
 	domain: ''
@@ -27,6 +29,7 @@ export class AuthCookiesManager {
 	private readonly atName: string;
 	private readonly rtName: string;
 	private readonly domain: string;
+	private readonly secure: boolean;
 	private readonly sameSite: 'strict' | 'lax' | 'none';
 	private readonly maxAge: number;
 
@@ -34,6 +37,7 @@ export class AuthCookiesManager {
 		this.atName = options.accessTokenName ?? DEFAULTS.accessTokenName;
 		this.rtName = options.refreshTokenName ?? DEFAULTS.refreshTokenName;
 		this.domain = options.domain ?? DEFAULTS.domain;
+		this.secure = options.secure ?? DEFAULTS.secure;
 		this.sameSite = options.sameSite ?? DEFAULTS.sameSite;
 		this.maxAge = options.maxAgeSeconds ?? DEFAULTS.maxAgeSeconds;
 	}
@@ -65,7 +69,7 @@ export class AuthCookiesManager {
 		cookies.set(name, value, {
 			path: '/',
 			httpOnly: true,
-			secure: true,
+			secure: this.secure,
 			maxAge: this.maxAge,
 			sameSite: this.sameSite,
 			...(this.domain ? { domain: this.domain } : {})

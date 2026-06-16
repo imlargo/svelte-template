@@ -1,26 +1,42 @@
+import { env } from '$env/dynamic/public';
+
 export interface AppConfig {
 	api: {
 		baseUrl: string;
 	};
 	auth: {
+		baseUrl: string;
 		enabled: boolean;
 		loginPath: string;
 		defaultRedirectPath: string;
 		publicRoutes: string[];
-		googleClientId: string;
+		methods: {
+			password: boolean;
+			google: {
+				enabled: boolean;
+				clientId: string;
+			};
+		};
 	};
 }
 
 const config: AppConfig = {
 	api: {
-		baseUrl: import.meta.env.VITE_API_URL ?? ''
+		baseUrl: env.PUBLIC_API_URL ?? ''
 	},
 	auth: {
-		enabled: import.meta.env.VITE_AUTH_ENABLED !== 'false',
+		baseUrl: env.PUBLIC_AUTH_BASE_URL ?? '',
+		enabled: env.PUBLIC_AUTH_ENABLED !== 'false',
 		loginPath: '/login',
 		defaultRedirectPath: '/',
 		publicRoutes: ['/login', '/authorize', '/logout', '/register'],
-		googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
+		methods: {
+			password: env.PUBLIC_AUTH_PASSWORD_ENABLED !== 'false',
+			google: {
+				enabled: env.PUBLIC_AUTH_GOOGLE_ENABLED === 'true',
+				clientId: env.PUBLIC_GOOGLE_CLIENT_ID ?? ''
+			}
+		}
 	}
 };
 

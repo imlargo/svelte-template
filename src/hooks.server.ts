@@ -1,11 +1,12 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { config } from '$lib/config';
-import { authCookies, AuthService, createAuthHandler } from '$lib/features/auth';
+import { AuthService, createAuthHandler } from '$lib/features/auth';
+import { serverAuthCookies } from '$lib/features/auth/server';
 import { normalizeError } from '$lib/core/errors';
 
 export const handle: Handle = config.auth.enabled
 	? createAuthHandler({
-			cookieManager: authCookies,
+			cookieManager: serverAuthCookies,
 
 			fetchUser: (accessToken) => new AuthService(accessToken).getMe(),
 

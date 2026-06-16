@@ -17,9 +17,10 @@ export type { ApiOptions, ApiClientOptions } from './core/api'
 // Service base class
 export { BaseService } from './core/service'
 
-// Async loading helper
+// Async loading helpers
 export { withLoading } from './core/helpers/with-loading.svelte'
 export type { LoadingState } from './core/helpers/with-loading.svelte'
+export { ViewState } from './core/helpers/view-state.svelte'
 
 // Utils
 export { formatCurrency, formatPercent, formatNumber } from './utils/number'

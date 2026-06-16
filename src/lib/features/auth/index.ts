@@ -5,8 +5,12 @@ export {
 	AuthCookiesManager,
 	createAuthHandler,
 	AuthService,
-	hasPermission
-} from './index.svelte'
+	hasPermission,
+	hasAnyPermission,
+	resolveRole,
+	canAccessRoute,
+	resolveDefaultRoute
+} from './index.svelte';
 export type {
 	AuthTokens,
 	AuthTokensResponse,
@@ -16,4 +20,4 @@ export type {
 	SignUpResponse,
 	ChangePasswordRequest,
 	ChangePasswordResponse
-} from './types'
+} from './types';
