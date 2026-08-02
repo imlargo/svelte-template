@@ -1,9 +1,4 @@
-import {
-	PERMISSION_GROUPS,
-	PermissionKey,
-	AUTH_ROUTE_PERMISSIONS,
-	AUTH_DEFAULT_ROUTES
-} from '$lib/config/domain';
+import { PERMISSION_GROUPS, AUTH_ROUTE_PERMISSIONS, AUTH_DEFAULT_ROUTES } from '$lib/config/domain';
 import type { PermissionGroup } from '$lib/config/domain';
 import { UserRole } from '$lib/types/auth/roles';
 
@@ -39,7 +34,15 @@ export function canAccessRoute(role: string | null | undefined, pathname: string
 	return true;
 }
 
+/**
+ * First route the role can actually reach — use it after login so a user is not
+ * sent to a page that would immediately bounce them.
+ */
 export function resolveDefaultRoute(role: string | null | undefined): string {
-	if (hasPermission(role, PermissionKey.Dashboard)) return AUTH_DEFAULT_ROUTES.home;
-	return AUTH_DEFAULT_ROUTES.home;
+	if (canAccessRoute(role, AUTH_DEFAULT_ROUTES.home)) return AUTH_DEFAULT_ROUTES.home;
+
+	const reachable = Object.keys(AUTH_ROUTE_PERMISSIONS).find((route) =>
+		canAccessRoute(role, route)
+	);
+	return reachable ?? AUTH_DEFAULT_ROUTES.home;
 }

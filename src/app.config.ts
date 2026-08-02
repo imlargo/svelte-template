@@ -1,4 +1,7 @@
 import { env } from '$env/dynamic/public';
+// Imported from the leaf module, not the `domain` barrel, to keep the icon
+// imports in navigation.ts out of every consumer of this config.
+import { AUTH_PUBLIC_ROUTE_PREFIXES } from '$lib/config/domain/permissions';
 
 export interface AppConfig {
 	api: {
@@ -9,6 +12,7 @@ export interface AppConfig {
 		enabled: boolean;
 		loginPath: string;
 		defaultRedirectPath: string;
+		/** Route prefixes reachable without a session. See AUTH_PUBLIC_ROUTE_PREFIXES. */
 		publicRoutes: string[];
 		methods: {
 			password: boolean;
@@ -29,7 +33,7 @@ const config: AppConfig = {
 		enabled: env.PUBLIC_AUTH_ENABLED !== 'false',
 		loginPath: '/login',
 		defaultRedirectPath: '/',
-		publicRoutes: ['/login', '/authorize', '/logout', '/register'],
+		publicRoutes: [...AUTH_PUBLIC_ROUTE_PREFIXES],
 		methods: {
 			password: env.PUBLIC_AUTH_PASSWORD_ENABLED !== 'false',
 			google: {

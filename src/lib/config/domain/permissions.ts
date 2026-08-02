@@ -28,6 +28,9 @@ export const PERMISSION_GROUPS = {
 } as const satisfies Record<PermissionKey, readonly UserRole[]>;
 
 // ─── Route-level access control ───────────────────────────────────────────────
+// Single source of truth for routes reachable without a session. Consumed by
+// `config.auth.publicRoutes` and matched by prefix, so '/login' also covers
+// '/login/callback'. Add new unauthenticated routes here and nowhere else.
 export const AUTH_PUBLIC_ROUTE_PREFIXES = ['/login', '/register', '/logout', '/authorize'] as const;
 
 export const AUTH_ROUTE_PERMISSIONS = {

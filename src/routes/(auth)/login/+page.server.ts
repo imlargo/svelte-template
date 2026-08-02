@@ -1,22 +1,12 @@
 import { AuthService } from '$lib/features/auth';
 import { LoginSchema } from '$lib/features/auth/schemas';
 import { serverAuthCookies } from '$lib/features/auth/server';
+import { decodeRedirect } from '$lib/features/auth/redirect';
 import { config } from '$lib/config';
 import { fail, redirect } from '@sveltejs/kit';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { PageServerLoad, Actions } from './$types';
-
-function decodeRedirect(value: string | null): string | null {
-	if (!value) return null;
-	try {
-		const decoded = atob(value);
-		if (decoded.startsWith('/')) return decoded;
-	} catch {
-		// ignore malformed base64
-	}
-	return null;
-}
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
 	if (serverAuthCookies.isAuthenticated(cookies)) {

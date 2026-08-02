@@ -8,21 +8,26 @@ import { redirect, type Handle, type Cookies, type RequestEvent } from '@sveltej
 import type { AuthCookiesManager } from './cookies';
 import type { User } from '$lib/types/auth/user';
 import type { AuthTokens } from './types';
+import { encodeRedirect } from './redirect';
 
 export interface AuthHandlerOptions {
 	/** Cookie manager instance to use. */
 	cookieManager: AuthCookiesManager;
 	/** Resolves the user from an access token. Should throw on invalid token. */
 	fetchUser: (accessToken: string) => Promise<User>;
-	/** Routes accessible without authentication. Default: ['/login', '/authorize', '/logout'] */
-	publicRoutes?: string[];
+	/**
+	 * Route prefixes accessible without authentication. A prefix matches the path
+	 * itself and everything nested under it, so '/login' also covers
+	 * '/login/callback'. Default: ['/login', '/authorize', '/logout']
+	 */
+	publicRoutes?: readonly string[];
 	/**
 	 * Override which routes are protected.
 	 * - Array: only those paths are protected.
 	 * - Function: called with the pathname, return true to protect.
 	 * - Default: all routes not in publicRoutes are protected.
 	 */
-	protectedRoutes?: string[] | ((pathname: string) => boolean);
+	protectedRoutes?: readonly string[] | ((pathname: string) => boolean);
 	/** Path for the login page. Default: '/login' */
 	loginPath?: string;
 	/** Redirect destination after successful login. Default: '/' */
@@ -49,10 +54,13 @@ export function createAuthHandler(options: AuthHandlerOptions): Handle {
 	} = options;
 
 	const noRedirectSet = new Set(noRedirectPreservation ?? [defaultRedirectPath]);
-	const publicSet = new Set(publicRoutes);
+
+	function isPublic(pathname: string): boolean {
+		return publicRoutes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+	}
 
 	function isProtected(pathname: string): boolean {
-		if (publicSet.has(pathname)) return false;
+		if (isPublic(pathname)) return false;
 		if (Array.isArray(protectedRoutes)) return protectedRoutes.includes(pathname);
 		if (typeof protectedRoutes === 'function') return protectedRoutes(pathname);
 		return true;
@@ -61,7 +69,8 @@ export function createAuthHandler(options: AuthHandlerOptions): Handle {
 	function buildLoginUrl(pathname: string, search: string): string {
 		const shouldPreserve = !noRedirectSet.has(pathname) || Boolean(search);
 		if (!shouldPreserve) return loginPath;
-		return `${loginPath}?redirect=${btoa(pathname + search)}`;
+		// The base64 is escaped because '+' and '=' are not query-string safe.
+		return `${loginPath}?redirect=${encodeURIComponent(encodeRedirect(pathname + search))}`;
 	}
 
 	async function redirectToLogin(cookies: Cookies, pathname: string, search: string) {

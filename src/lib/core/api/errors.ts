@@ -9,9 +9,9 @@ export function isApiErrorResponse(err: unknown): boolean {
 }
 
 export function toApiError(err: unknown): ApiError {
-	return ApiError.isShape(err)
-		? new ApiError((err as { code?: number }).code ?? 0, err.status, err.message)
-		: ApiError.isShape(err)
-			? new ApiError(0, 'UNKNOWN_ERROR', String(err))
-			: new ApiError(0, 'UNKNOWN_ERROR', err instanceof Error ? err.message : String(err));
+	if (err instanceof ApiError) return err;
+	if (ApiError.isShape(err)) {
+		return new ApiError(err.code ?? 0, err.status, err.message);
+	}
+	return new ApiError(0, 'UNKNOWN_ERROR', err instanceof Error ? err.message : String(err));
 }
