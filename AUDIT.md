@@ -42,7 +42,13 @@ Son el núcleo real del template y sobreviven al refactor casi intactos.
 
 ## 2. Hallazgos bloqueantes — corrección y seguridad
 
-### B1 — Los tokens viajan al cliente, anulando `httpOnly` 🔴
+### B1 — El refresh token viaja al cliente 🔴
+
+> **Revisado.** La primera versión de este hallazgo decía que *ningún* token debía salir del
+> servidor. Eso era incorrecto: la capa de servicios es isomorfa por diseño (`air` funciona en
+> ambos lados y `BaseService` acepta el token como función precisamente para el caso cliente),
+> así que el **access token sí debe llegar al navegador**. El problema real es más estrecho y
+> sigue siendo grave: es el **refresh token** el que no puede salir. Ver §7 de `ARCHITECTURE.md`.
 
 `src/routes/+layout.server.ts:3-9`
 
@@ -55,16 +61,21 @@ return {
 ```
 
 Todo lo que devuelve un `+layout.server.ts` se serializa en el payload que SvelteKit inyecta en
-la página. Guardaste los tokens en cookies `httpOnly` — precisamente para que el JavaScript del
-navegador no pueda leerlos — y luego los pones en el HTML donde cualquier script sí puede leerlos.
-El resultado neto es que `httpOnly` no protege nada: un XSS se lleva el **refresh token**, que es
-el peor caso posible porque sobrevive a la rotación del access token.
+la página. Para el access token eso es aceptable y necesario: es lo que permite que un servicio
+funcione desde un componente, y su exposición está acotada por su vida corta.
 
-**Refactor.** El layout server devuelve solo `user`. Los tokens no salen del servidor. Las
-llamadas autenticadas se hacen desde `load` / actions / `+server.ts` leyendo `locals.accessToken`.
+Para el refresh token no lo es. El cliente **nunca** necesita refrescar por su cuenta —para eso
+está el servidor— así que exponerlo no compra nada, y convierte un XSS de "sesión robada hasta que
+expire el access token" en "sesión permanente para el atacante".
 
-Consecuencia en cadena: `BaseService` deja de necesitar la variante "token como función"
-(`src/lib/core/service.ts:36`), que solo existía para el caso cliente.
+**Refactor.** `+layout.server.ts` devuelve `user` y `accessToken`. El `refreshToken` desaparece del
+retorno y de `App.Locals` fuera del handler de auth. Además, `AuthCookiesManager` aplica hoy el
+mismo `maxAge` a las dos cookies (`cookies.ts:23`): deben ser dos valores distintos, o el par de
+tokens no aporta nada sobre un token único.
+
+**No cambia:** `BaseService` conserva la variante "token como función"
+(`src/lib/core/service.ts:36`). Es lo que hace que un servicio de vida larga en el cliente lea el
+token actual en cada request en vez de capturar el que había al construirse.
 
 ### B2 — `authStore` es estado de módulo: se comparte entre requests en el servidor 🔴
 
@@ -83,10 +94,10 @@ Además, `+layout.ts` es un load universal que existe únicamente para provocar 
 secundario (mutar el singleton) y devolver `{ ...data }` sin transformar nada. Un load que no
 transforma datos no debería existir.
 
-**Refactor.** Eliminar `authStore` y `+layout.ts` completos. El usuario ya llega por `data` desde
-`+layout.server.ts` y está disponible en todas las páginas. Si algún componente profundo lo
-necesita sin prop drilling, se propaga con `setContext`/`getContext` desde `(app)/+layout.svelte`
-— que es estado por árbol de componentes, es decir por request. Nunca un singleton de módulo.
+**Refactor.** Eliminar `authStore` y `+layout.ts` completos. El usuario y el access token llegan
+por `data` desde `+layout.server.ts`, y se propagan con `createContext` desde `+layout.svelte`
+— estado colgado del árbol de componentes, es decir por request. Nunca un singleton de módulo.
+Los servicios del cliente leen el token de ese contexto (`ARCHITECTURE.md` §6 y §8).
 
 Regla que hay que escribir en `AGENTS.md`: **`$state` a nivel de módulo está prohibido para
 cualquier dato que dependa del usuario.**

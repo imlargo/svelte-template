@@ -139,7 +139,7 @@ src/
 │   │       ├── types.ts               ← tipos propios del dominio
 │   │       ├── schemas.ts             ← Zod: forms y payloads
 │   │       ├── services/
-│   │       │   └── <entity>.server.ts ← SERVER-ONLY (ver §6)
+│   │       │   └── <entity>.ts        ← isomorfo: servidor y cliente (§6)
 │   │       ├── <domain>.svelte.ts     ← orquestador (solo si hace falta)
 │   │       ├── components/            ← UI del dominio
 │   │       └── *.test.ts              ← tests junto al código
@@ -155,7 +155,7 @@ src/
 │
 ├── routes/
 │   ├── +layout.svelte             ← ModeWatcher, Toaster, skip link
-│   ├── +layout.server.ts          ← devuelve SOLO `user`
+│   ├── +layout.server.ts          ← user + accessToken (nunca el refresh)
 │   ├── +error.svelte
 │   ├── (auth)/                    ← login, register, logout, authorize — sin sesión
 │   └── (app)/                     ← todo lo autenticado
@@ -195,74 +195,68 @@ no antes.
 ## 5. Flujo de datos
 
 ```
-                       ┌──────────────────┐
-   Navegador ────────► │  SvelteKit (BFF) │ ────────► API externa
-                       └──────────────────┘
-   ▲                     │        │
-   │                     │        └── locals.accessToken (nunca sale de aquí)
-   └── data (user, DTOs) ┘
+                    ┌─────────────────────┐
+                    │   SvelteKit server  │──────┐
+   Navegador ──────►│  load / actions     │      │
+        │           └─────────────────────┘      ├──────► API externa
+        │              ▲  refresh_token (httpOnly, no sale de aquí)
+        │              │                         │
+        └──────────────┴─── access_token ────────┘
+             (en memoria, vida corta)
 ```
 
-**Regla absoluta: el navegador nunca llama a la API externa y nunca ve un token.**
+Los dos caminos existen y usan **el mismo servicio**. La diferencia es de dónde sale el token:
 
-Las cookies de sesión son `httpOnly` precisamente para que el JavaScript del navegador no las
-lea. Devolver los tokens desde un `load` los serializa en el HTML y anula esa protección: un XSS
-se llevaría el refresh token. Por eso:
-
-```ts
-// src/routes/+layout.server.ts
-export const load: LayoutServerLoad = async ({ locals }) => {
-    return { user: locals.user ?? null };   // ← y nada más
-};
-```
-
-`locals.accessToken` existe solo para que el código del servidor construya servicios. No se
-devuelve, no se loguea, no se pasa a un componente.
-
-### Dónde se piden los datos
-
-| Caso | Mecanismo | Por qué |
+| Origen | Token | Vía |
 |---|---|---|
-| Datos del primer render de una página | `+page.server.ts` → `load` | Llegan con el HTML, sin waterfall, sin flash de loading |
-| Datos que dependen de la ruta padre | `+layout.server.ts` → `load` | Se comparten con las hijas vía `data` |
-| Mutación desde un formulario | form action + Superforms | Progressive enhancement gratis; funciona sin JS |
-| Datos bajo demanda desde el cliente (búsqueda, scroll infinito, refresco) | `+server.ts` en la misma carpeta de la ruta, llamado con `fetch` | El servidor sigue siendo quien tiene el token |
-| Cualquier llamada directa del navegador a la API externa | **Prohibido** | Requeriría exponer el token |
+| `+page.server.ts`, `+layout.server.ts`, actions, `hooks.server.ts` | `locals.accessToken` | `new UsersService(locals.accessToken)` |
+| Componente, orquestador, event handler | contexto de auth | `new UsersService(() => auth.accessToken)` |
 
-**Sobre remote functions.** SvelteKit tiene `query` / `form` / `command` / `prerender` en archivos
-`.remote.ts`, y resolverían con menos código el caso de "datos bajo demanda". **Están marcadas como
-experimentales en la versión instalada** (`kit.experimental.remoteFunctions`, por defecto `false`,
-documentadas como "not yet stable and may be changed or removed at any time"). Por eso el template
-no las usa. Cuando se estabilicen, sustituyen la fila de `+server.ts` de la tabla y esta sección
-se reescribe — es un cambio aditivo, no un rediseño.
+### Cuándo se usa cada uno
+
+Que ambos sean posibles no significa que sean intercambiables. Por defecto, **servidor**:
+
+| Caso | Dónde | Por qué |
+|---|---|---|
+| Datos del primer render | `load` en el servidor | Llegan con el HTML: sin waterfall, sin flash de loading, indexables, y funcionan con JS deshabilitado |
+| Datos que comparten varias rutas hijas | `+layout.server.ts` | Se propagan por `data` |
+| Mutación desde un formulario | form action + Superforms | Progressive enhancement gratis |
+| Búsqueda incremental, scroll infinito, polling, refresco parcial | Servicio desde el cliente | Un round-trip menos y no re-ejecuta el `load` de toda la página |
+| Mutación optimista con rollback | Servicio desde el cliente | Necesitas el control del ciclo, que una action no te da |
+| Cualquier cosa que requiera un secreto distinto del access token | Servidor, obligatorio | Ese secreto no puede salir |
+
+La regla práctica: **si el dato hace falta para pintar la página, va por `load`. Si es una
+interacción posterior del usuario, puede ir por el cliente.** Empieza siempre por el servidor y
+muévete al cliente cuando tengas una razón concreta.
+
+### Consecuencias de llamar desde el cliente
+
+Tres cosas que hay que aceptar conscientemente, no descubrir después:
+
+1. **La API externa necesita CORS** configurado para el origen de la app.
+2. **El access token es visible para el JavaScript de la página.** Un XSS puede usarlo mientras
+   sea válido. Por eso su vida debe ser corta y por eso el refresh token no acompaña (§7).
+3. **No hay SSR para ese dato.** La primera pintura no lo tiene, así que necesitas un estado de
+   carga real — es justo el caso de uso de `ViewState` (§8).
+
+### Sobre remote functions
+
+SvelteKit tiene `query` / `form` / `command` / `prerender` en archivos `.remote.ts`, que darían un
+tercer camino con tipado extremo a extremo. **Están marcadas como experimentales en la versión
+instalada** (`kit.experimental.remoteFunctions`, por defecto `false`, documentadas en los tipos
+como *"not yet stable and may be changed or removed at any time"*). Por eso el template no las usa.
+Cuando se estabilicen serán una alternativa al camino cliente, no un reemplazo de la capa de
+servicios.
 
 ---
 
 ## 6. Servicios y acceso a la API
 
-Un servicio encapsula las llamadas a la API externa de un dominio. **Todos los servicios son
-código de servidor.**
-
-### Cómo se garantiza
-
-SvelteKit trata como server-only dos cosas: los módulos bajo `$lib/server/`, y **cualquier archivo
-con `.server.` en el nombre**. Si código del navegador importa uno de ellos —directa o
-indirectamente— el build falla con un error que muestra la cadena de imports completa.
-
-Por eso los servicios se llaman `<entity>.server.ts`:
-
-```
-lib/features/users/services/users.server.ts
-```
-
-Esto da lo mejor de los dos mundos: el slice sigue siendo cohesivo (el servicio vive junto a sus
-tipos y sus componentes) **y** el compilador impide que se filtre al cliente. No dependemos de la
-disciplina de nadie.
-
-### La forma de un servicio
+Un servicio encapsula las llamadas a la API externa de un dominio. **Es isomorfo: el mismo archivo
+se usa desde el servidor y desde el cliente.**
 
 ```ts
-// lib/features/users/services/users.server.ts
+// lib/features/users/services/users.ts
 import { BaseService } from '$lib/core/service';
 import type { User } from '$lib/types/user';
 import type { CreateUserInput } from '../types';
@@ -282,36 +276,73 @@ export class UsersService extends BaseService {
 }
 ```
 
-`BaseService` recibe el token en el constructor y construye su cliente:
+Un servicio **no importa nada específico de un entorno**: ni `$env/dynamic/private`, ni `node:*`,
+ni `$app/state`. Solo `BaseService`, tipos, y como mucho constantes de `config/`. Ese es el
+requisito que lo mantiene isomorfo, y es fácil de romper sin darse cuenta.
+
+### El token
+
+`BaseService` acepta el token como valor o como función. No es una comodidad: la forma función es
+lo que permite que un servicio de vida larga en el cliente vea el token **actual** en cada request,
+en vez de capturar el que había cuando se construyó.
 
 ```ts
 // lib/core/service.ts
 export class BaseService {
     protected api: AirClient;
 
-    constructor(token = '') {
-        this.api = createApiClient({ token });
+    constructor(token: string | (() => string | null) = '') {
+        this.api = createApiClient({
+            getToken: () => (typeof token === 'function' ? token() : token)
+        });
     }
 }
 ```
 
-Un solo tipo de token: `string`. La variante "token como función" existía únicamente para el caso
-cliente, que ya no existe.
+`air` resuelve `headers` en cada llamada, así que la función se evalúa por request, no una vez.
 
-### Uso
+### Uso desde el servidor
 
 ```ts
 // routes/(app)/users/+page.server.ts
-import { UsersService } from '$lib/features/users/services/users.server';
+import { UsersService } from '$lib/features/users/services/users';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
     const users = new UsersService(locals.accessToken ?? '');
-    return {
-        users: await users.list({ search: url.searchParams.get('q') ?? undefined })
-    };
+    return { users: await users.list({ search: url.searchParams.get('q') ?? undefined }) };
 };
 ```
+
+### Uso desde el cliente
+
+El token sale del contexto de auth (§8), nunca de un singleton de módulo:
+
+```svelte
+<script lang="ts">
+    import { getAuth } from '$lib/features/auth/context';
+    import { UsersService } from '$lib/features/users/services/users';
+    import { ViewState } from '$lib/core/view-state.svelte';
+
+    const auth = getAuth();
+    const users = new UsersService(() => auth().accessToken);
+    const search = new ViewState<User[]>();
+
+    async function onSearch(q: string) {
+        await search.run(() => users.list({ search: q }));
+    }
+</script>
+```
+
+### Cuándo un servicio SÍ es server-only
+
+Si un servicio necesita un secreto que no puede salir del servidor (una API key de un tercero, un
+token de servicio), deja de ser isomorfo y **debe** llevar sufijo `.server.ts`. SvelteKit trata
+como server-only los módulos bajo `$lib/server/` y cualquier archivo con `.server.` en el nombre:
+si código del navegador lo importa, directa o indirectamente, el build falla y muestra la cadena
+de imports completa.
+
+Es la excepción, no la norma. La norma es `services/<entity>.ts`.
 
 ### Errores
 
@@ -345,6 +376,42 @@ Es el activo diferencial del template. Tiene que ser correcto.
   ruta**, y puebla `locals`.
 - El login y el registro son **form actions**. El callback de OAuth es un **`+server.ts`**. El
   logout es una **form action POST**.
+
+### Los dos tokens no son simétricos
+
+Esta es la parte que hay que entender bien, porque la capa de servicios isomorfa depende de ella.
+
+| | Access token | Refresh token |
+|---|---|---|
+| Cookie `httpOnly` | sí | sí |
+| Llega al navegador vía `data` | **sí** | **nunca** |
+| Dónde vive en el cliente | memoria (contexto), nunca `localStorage` | no existe en el cliente |
+| Vida | corta (minutos, la fija la API) | larga (días) |
+| Si hay XSS | se puede usar mientras no expire | sigue a salvo |
+
+`+layout.server.ts` devuelve el usuario y el access token. **No devuelve el refresh token.**
+
+```ts
+// src/routes/+layout.server.ts
+export const load: LayoutServerLoad = async ({ locals }) => {
+    return {
+        user: locals.user ?? null,
+        accessToken: locals.accessToken ?? null   // el refresh se queda en el servidor
+    };
+};
+```
+
+El razonamiento: exponer el access token es el precio de tener servicios que funcionan desde el
+cliente, y es un precio acotado si el token dura poco. Exponer el refresh token no compra nada
+—el cliente nunca necesita refrescar por su cuenta, para eso está el servidor— y convierte un XSS
+en una sesión permanente para el atacante. Por eso uno sale y el otro no.
+
+**Corolario que hay que respetar:** si tu API emite access tokens de larga duración, esta
+arquitectura pierde su garantía. En ese caso, o acortas la vida del token en la API, o renuncias
+al camino cliente y usas solo `load` y actions.
+
+Hoy `AuthCookiesManager` aplica el mismo `maxAge` a las dos cookies. Deben ser dos valores
+distintos.
 
 ### El check de autorización va en el servidor
 
@@ -426,22 +493,31 @@ Antes de crear estado, comprueba en orden:
 
 Svelte 5.40+ trae `createContext`, que da tipado y elimina las claves mágicas. Es lo que usamos:
 
+Es donde vive el estado de auth del cliente: el usuario y el access token que consumen los
+servicios (§6).
+
 ```ts
 // lib/features/auth/context.ts
 import { createContext } from 'svelte';
 import type { User } from '$lib/types/user';
 
-export const [getUser, setUser] = createContext<() => User>();
+export interface AuthContext {
+    user: User | null;
+    accessToken: string | null;
+}
+
+export const [getAuth, setAuth] = createContext<() => AuthContext>();
 ```
 
 ```svelte
-<!-- routes/(app)/+layout.svelte -->
+<!-- routes/+layout.svelte -->
 <script lang="ts">
-    import { setUser } from '$lib/features/auth/context';
+    import { setAuth } from '$lib/features/auth/context';
     let { data, children } = $props();
 
-    // Se pasa una función, no el valor: así la reactividad cruza el límite del contexto.
-    setUser(() => data.user);
+    // Se pasa una función, no el valor: así la reactividad cruza el límite del contexto
+    // y el token siempre se lee actualizado tras una navegación.
+    setAuth(() => ({ user: data.user, accessToken: data.accessToken }));
 </script>
 
 {@render children()}
@@ -450,12 +526,15 @@ export const [getUser, setUser] = createContext<() => User>();
 ```svelte
 <!-- cualquier descendiente -->
 <script lang="ts">
-    import { getUser } from '$lib/features/auth/context';
-    const user = getUser();
+    import { getAuth } from '$lib/features/auth/context';
+    const auth = getAuth();
 </script>
 
-<span>{user().name}</span>
+<span>{auth().user?.name}</span>
 ```
+
+Esto sustituye por completo al `authStore` singleton. Mismo acceso ergonómico, pero el estado
+cuelga del árbol de componentes —es decir, de la request— en vez de vivir en el módulo.
 
 Se usa contexto **solo** cuando el prop drilling sería de tres o más niveles. A dos niveles, pasa
 props: son más fáciles de seguir y de testear.
@@ -712,7 +791,11 @@ components/ui/     → bits-ui, utils/   ✗ nada más
 core/              → types/            ✗ no conoce config/ ni features/
 utils/             → nada
 config/domain/     → types/
-*.server.ts        → cualquier cosa; nadie del cliente lo importa (el compilador lo verifica)
+features/<d>/services/ → core/, config/, types/, sus propios types
+                     ✗ NADA específico de un entorno ($env/private, node:*, $app/state):
+                       rompe el isomorfismo
+*.server.ts        → cualquier cosa; el compilador impide que el cliente lo importe.
+                     Solo para servicios que necesitan secretos (excepción, §6)
 ```
 
 Un slice se comunica con otro **solo** a través de su `index.ts`. Si `features/orders` necesita
@@ -729,7 +812,7 @@ algo de `features/users`, lo importa de `$lib/features/users`, nunca de
 | Componentes en `ui/` | kebab-case (vendorizado) | `alert-dialog-content.svelte` |
 | Módulos TS | kebab-case | `view-state.svelte.ts`, `feature-flags.ts` |
 | Módulos con runes | sufijo `.svelte.ts` | `view-state.svelte.ts` |
-| Módulos server-only | sufijo `.server.ts` | `users.server.ts` |
+| Módulos server-only (excepción) | sufijo `.server.ts` | `billing.server.ts` |
 | Tests | junto al código | `redirect.test.ts` |
 | Clases y tipos | PascalCase | `ViewState`, `ApiError`, `User` |
 | Constantes de config | SCREAMING_SNAKE_CASE | `AUTH_ROUTE_PERMISSIONS` |
@@ -770,8 +853,11 @@ contra un backend real: un test que depende de la red no es una red de seguridad
 
 Todos estos existieron en el repo. Están aquí para que no vuelvan.
 
-**❌ Devolver tokens desde un `load`**
-Anula `httpOnly`. Los tokens no salen del servidor.
+**❌ Devolver el refresh token desde un `load`**
+Convierte un XSS en una sesión permanente. El access token sí sale (§7); el refresh, nunca.
+
+**❌ Guardar el token en `localStorage` o en un singleton**
+Vive en el contexto, en memoria, y muere con la pestaña.
 
 **❌ `$state` a nivel de módulo con datos de usuario**
 Se comparte entre requests en SSR. Usa contexto.
@@ -828,7 +914,7 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 
 ### Añadir un slice
 
-1. `lib/features/<domain>/` con `types.ts`, `schemas.ts` y `services/<entity>.server.ts`.
+1. `lib/features/<domain>/` con `types.ts`, `schemas.ts` y `services/<entity>.ts`.
 2. `index.ts` exportando **solo** la API pública: tipos y, si existe, el orquestador.
 3. Componentes en `components/`. El componente raíz recibe los datos por props desde la página.
 4. Estado del cliente solo si hace falta: una clase con `$state` en `<domain>.svelte.ts`.
