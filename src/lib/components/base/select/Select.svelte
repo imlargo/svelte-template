@@ -12,7 +12,7 @@
 		value?: string;
 		placeholder?: string;
 		children?: Snippet<[string]>;
-		onchange?: (value: any) => void;
+		onchange?: (value: string) => void;
 		disabled?: boolean;
 	};
 

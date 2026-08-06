@@ -1,6 +1,7 @@
 <script lang="ts">
 	import LoginForm from '$lib/features/auth/components/login/login-form.svelte';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
+	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -9,7 +10,7 @@
 <div class="grid min-h-svh lg:grid-cols-2">
 	<div class="flex flex-col gap-4 p-6 md:p-10">
 		<div class="flex justify-center gap-2 md:justify-start">
-			<a href="/" class="flex items-center gap-2 font-medium">
+			<a href={resolve('/')} class="flex items-center gap-2 font-medium">
 				<div
 					class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground"
 				>

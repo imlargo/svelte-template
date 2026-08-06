@@ -4,11 +4,12 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLFormAttributes } from 'svelte/elements';
+	import { resolve } from '$app/paths';
 	import { config } from '$lib/config';
 	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
 	import { untrack } from 'svelte';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { LoginSchema, type LoginInput } from '$lib/features/auth/schemas';
+	import { LoginSchema } from '$lib/features/auth/schemas';
 
 	let {
 		ref = $bindable(null),
@@ -28,7 +29,7 @@
 			invalidateAll: false
 		}
 	);
-	const { form: fields, errors, message, enhance } = form;
+	const { form: fields, message, enhance } = form;
 
 	const showPassword = config.auth.methods.password;
 	const showGoogle = config.auth.methods.google.enabled;
@@ -139,6 +140,7 @@
 					{#snippet children({ props })}
 						<div class="flex items-center">
 							<Form.Label>Password</Form.Label>
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /forgot-password has no route yet; add one and wrap in resolve() when it does -->
 							<a href="/forgot-password" class="ml-auto text-sm underline-offset-4 hover:underline">
 								Forgot your password?
 							</a>
@@ -161,6 +163,6 @@
 
 	<div class="text-center text-sm">
 		Don't have an account?
-		<a href="/register" class="underline underline-offset-4">Sign up</a>
+		<a href={resolve('/register')} class="underline underline-offset-4">Sign up</a>
 	</div>
 </form>

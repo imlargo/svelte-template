@@ -7,9 +7,6 @@
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import ActivityIcon from '@lucide/svelte/icons/activity';
 	import InboxIcon from '@lucide/svelte/icons/inbox';
-	import type { PageProps } from './$types';
-
-	let { data }: PageProps = $props();
 
 	const viewState = new ViewState();
 	let items: string[] = $state([]);
@@ -73,27 +70,25 @@
 	<section>
 		<h2 class="mb-3 text-sm font-medium text-muted-foreground">AsyncView demo</h2>
 		<AsyncView {viewState}>
-			{#snippet children()}
-				{#if items.length > 0}
-					<ul class="divide-y rounded-lg border">
-						{#each items as item}
-							<li class="px-4 py-3 text-sm">{item}</li>
-						{/each}
-					</ul>
-				{:else}
-					<EmptyState
-						title="No items yet"
-						description="Click 'Load demo data' to see the AsyncView pattern in action."
-					>
-						{#snippet icon()}
-							<InboxIcon class="size-5" />
-						{/snippet}
-						{#snippet action()}
-							<Button variant="outline" size="sm" onclick={loadItems}>Load demo data</Button>
-						{/snippet}
-					</EmptyState>
-				{/if}
-			{/snippet}
+			{#if items.length > 0}
+				<ul class="divide-y rounded-lg border">
+					{#each items as item (item)}
+						<li class="px-4 py-3 text-sm">{item}</li>
+					{/each}
+				</ul>
+			{:else}
+				<EmptyState
+					title="No items yet"
+					description="Click 'Load demo data' to see the AsyncView pattern in action."
+				>
+					{#snippet icon()}
+						<InboxIcon class="size-5" />
+					{/snippet}
+					{#snippet action()}
+						<Button variant="outline" size="sm" onclick={loadItems}>Load demo data</Button>
+					{/snippet}
+				</EmptyState>
+			{/if}
 		</AsyncView>
 	</section>
 </div>

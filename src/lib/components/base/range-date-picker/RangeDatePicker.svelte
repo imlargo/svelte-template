@@ -1,6 +1,5 @@
 <script lang="ts">
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
-	import type { DateRange } from 'bits-ui';
 	import {
 		CalendarDate,
 		DateFormatter,

@@ -1,5 +1,1 @@
-<script lang="ts">
-	import type { PageData } from './$types';
-
-	let { data }: { data: PageData } = $props();
-</script>
+<!-- +page.server.ts always redirects; this file only exists because the route needs one. -->

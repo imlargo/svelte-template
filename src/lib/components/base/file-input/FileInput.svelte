@@ -21,6 +21,7 @@
 		maxSize = 5 * 1024 * 1024, // 5MB
 		maxFiles = 5,
 		disabled = false,
+		// eslint-disable-next-line no-useless-assignment -- write-only bindable prop, read by the parent via binding
 		value = $bindable(),
 		onFilesChange,
 		showFiles = true

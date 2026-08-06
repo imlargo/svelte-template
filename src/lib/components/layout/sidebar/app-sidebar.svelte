@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import LayoutIcon from '@lucide/svelte/icons/layout-dashboard';
 	import type { ComponentProps } from 'svelte';
@@ -13,7 +14,6 @@
 	import { UserRole } from '$lib/types/auth/roles';
 	import { hasAnyPermission } from '$lib/features/auth';
 	import NavMain from './nav-main.svelte';
-	import NavSecondary from './nav-secondary.svelte';
 	import NavUser from './nav-user.svelte';
 
 	const sidebar = Sidebar.useSidebar();
@@ -76,7 +76,7 @@
 					class="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!p-0"
 				>
 					{#snippet child({ props })}
-						<a href="/" {...props}>
+						<a href={resolve('/')} {...props}>
 							<div
 								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
 							>

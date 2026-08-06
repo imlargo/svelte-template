@@ -4,6 +4,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLFormAttributes } from 'svelte/elements';
+	import { resolve } from '$app/paths';
 	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
 	import { untrack } from 'svelte';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -123,6 +124,6 @@
 
 	<div class="text-center text-sm">
 		Already have an account?
-		<a href="/login" class="underline underline-offset-4">Sign in</a>
+		<a href={resolve('/login')} class="underline underline-offset-4">Sign in</a>
 	</div>
 </form>

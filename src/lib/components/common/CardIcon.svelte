@@ -3,7 +3,7 @@
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		icon: Snippet<[{ props?: Record<string, any> }]>;
+		icon: Snippet<[{ props?: Record<string, unknown> }]>;
 		title: string;
 		description: string;
 		children: Snippet;

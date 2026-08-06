@@ -30,7 +30,7 @@
 		if (value && isValidDate(value)) {
 			try {
 				internalValue = parseDate(value);
-			} catch (error) {
+			} catch {
 				// Invalid date format, set to undefined
 				internalValue = undefined;
 			}

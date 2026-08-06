@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -75,7 +76,7 @@
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item>
 					{#snippet child({ props }: { props: Record<string, unknown> })}
-						<a href="/logout" {...props}>
+						<a href={resolve('/logout')} {...props}>
 							<LogOutIcon />
 							Sign out
 						</a>
