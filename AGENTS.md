@@ -1,3 +1,13 @@
+## Contexto del proyecto
+
+**Antes de tocar código, lee `docs/README.md`.** Esa carpeta es el contrato del proyecto:
+arquitectura vigente (`docs/ARCHITECTURE.md`), estado actual y plan de refactor (`docs/AUDIT.md`),
+y lo que está deliberadamente fuera de scope (`docs/BACKLOG.md`).
+
+El `architecture.md` de la raíz está obsoleto — no lo uses.
+
+---
+
 ## Project Configuration
 
 - **Language**: TypeScript
