@@ -11,6 +11,8 @@ Verificado contra `@sveltejs/kit@2.61.1` y `svelte@5.56.0` — las versiones ins
 
 ---
 
+(Deprecado pq es uno muy antiguo)
+
 ## 1. Qué es esto
 
 Un punto de partida para aplicaciones web con interfaz autenticada que consumen **una API externa
@@ -107,7 +109,6 @@ La tercera repetición justifica una abstracción. La primera y la segunda, no.
 src/
 ├── app.html
 ├── app.d.ts                       ← tipado de App.Locals, App.Error
-├── app.config.ts                  ← configuración leída de env, tipada
 ├── hooks.server.ts                ← auth + autorización + cabeceras + handleError
 ├── hooks.client.ts                ← handleError del cliente
 │
@@ -120,6 +121,7 @@ src/
 │   │   └── view-state.svelte.ts   ← ViewState<T> + AsyncViewState
 │   │
 │   ├── config/
+│   │   ├── app.ts                 ← configuración leída de env, tipada. Único objeto `config`.
 │   │   └── domain/                ← constantes del negocio. Datos, sin lógica.
 │   │       ├── permissions.ts     ← roles, PermissionKey, matriz ruta→roles
 │   │       └── navigation.ts      ← items del menú
@@ -750,8 +752,9 @@ para `+error.svelte`.
 
 ## 12. Configuración y entorno
 
-- **Todo lo público** se lee en `src/app.config.ts` desde `$env/dynamic/public` y se expone como un
-  objeto tipado. Los componentes leen `config`, nunca `env` directamente.
+- **Todo lo público** se lee en `lib/config/app.ts` desde `$env/dynamic/public` y se expone como un
+  objeto tipado, importado siempre como `$lib/config/app`. Los componentes leen `config`, nunca
+  `env` directamente.
 - **Todo lo privado** se lee con `$env/dynamic/private`, y **solo** desde archivos server-only.
 - `PUBLIC_*` significa que **llega al bundle del navegador**. Asume que es visible para cualquiera.
   Un secreto nunca lleva ese prefijo.
