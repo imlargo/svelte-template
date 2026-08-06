@@ -31,7 +31,8 @@ src/
     └── (app)/         # Protected pages with sidebar layout
 ```
 
-See `architecture.md` for the full layered architecture guide.
+See [`docs/`](./docs/) for the full architecture guide, the current-state audit, and the
+refactor plan. Start at [`docs/README.md`](./docs/README.md).
 
 ## Getting started
 
