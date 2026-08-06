@@ -1,9 +1,12 @@
 /**
- * BaseService — thin HTTP service base class.
+ * BaseService — wires a service to an air client with token resolution.
  *
- * Decoupled from auth: the token is supplied via the constructor or per-call.
- * Services that need auth should receive the token from the caller (server load
- * functions, stores, actions) rather than reading from a global store directly.
+ * Decoupled from auth: the token is supplied via the constructor. Services that
+ * need auth should receive the token from the caller (server load functions,
+ * stores, actions) rather than reading from a global store directly.
+ *
+ * Subclasses call `this.api.get/post/put/patch/delete(...)` directly — see
+ * https://github.com/imlargo/air for the request options (`body`, `query`, ...).
  *
  * @example
  * // Server-side (receives token from cookies/locals)
@@ -17,38 +20,11 @@ import type { AirClient } from '@korastd/air';
 
 export class BaseService {
 	protected api: AirClient;
-	private _token: string | (() => string | null);
 
 	constructor(token: string | (() => string | null) = '') {
-		this._token = token;
-		// Each service gets its own client so getToken closures work correctly
+		// Each service gets its own client so the getToken closure resolves correctly.
 		this.api = createApiClient({
-			getToken: () => this.resolveToken()
+			getToken: () => (typeof token === 'function' ? token() : token)
 		});
-	}
-
-	protected resolveToken(): string {
-		if (typeof this._token === 'function') return this._token() ?? '';
-		return this._token;
-	}
-
-	protected async get<T>(endpoint: string): Promise<T> {
-		return this.api.get<T>(endpoint);
-	}
-
-	protected async post<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
-		return this.api.post<T>(endpoint, { body: data });
-	}
-
-	protected async put<T, D = unknown>(endpoint: string, data: D): Promise<T> {
-		return this.api.put<T>(endpoint, { body: data });
-	}
-
-	protected async patch<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
-		return this.api.patch<T>(endpoint, { body: data });
-	}
-
-	protected async delete<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
-		return this.api.delete<T>(endpoint, { body: data });
 	}
 }
