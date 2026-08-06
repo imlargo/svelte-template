@@ -16,9 +16,13 @@ Verificado contra `@sveltejs/kit@2.61.1` y `svelte@5.56.0` — las versiones ins
 Un punto de partida para aplicaciones web con interfaz autenticada que consumen **una API externa
 ya existente**. Clonas, configuras la URL de la API, y empiezas a escribir pantallas.
 
-**SvelteKit es el BFF (backend for frontend).** No es un frontend que llama a la API desde el
-navegador: es un servidor que llama a la API y le entrega al navegador solo lo que necesita ver.
-Esta es la decisión que gobierna todo el resto del documento.
+**SvelteKit es full-stack, y la capa de servicios es isomorfa.** Un servicio se instancia igual
+desde un `+page.server.ts` que desde un componente: el mismo código, el mismo tipado, la misma
+API. Lo único que cambia es de dónde sale el token. Esta es la decisión que gobierna todo el resto
+del documento, y el motivo por el que `air` (un wrapper de `fetch`, sin dependencias de Node) es
+el cliente HTTP.
+
+Que sea posible desde ambos lados no significa que dé igual: §5 fija cuándo se usa cada uno.
 
 ### Qué NO es
 
@@ -66,9 +70,10 @@ tamaño: es que alguien tenga que entenderla dentro de un año.
 
 ## 3. Principios
 
-**1. El servidor es la frontera de confianza.**
-El navegador no ve secretos, no ve tokens, y no habla con la API externa. Todo pasa por el
-servidor de SvelteKit. Si un dato no debería estar en el HTML, no se devuelve desde un `load`.
+**1. El refresh token nunca llega al navegador.**
+Es la única línea que no se cruza. El access token sí puede estar en el cliente —es de vida
+corta y es lo que hace posible la capa de servicios isomorfa— pero el refresh token vive en una
+cookie `httpOnly` y solo el servidor lo toca. Ver §7.
 
 **2. Deny by default.**
 Rol desconocido → sin permisos. Ruta no declarada → denegada. Un olvido debe producir un 403, no
