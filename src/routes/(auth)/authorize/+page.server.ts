@@ -1,7 +1,6 @@
 import { AuthService } from '$lib/features/auth';
 import { serverAuthCookies } from '$lib/features/auth/server';
 import { decodeRedirect } from '$lib/features/auth/redirect';
-import type { SignInResponse } from '$lib/features/auth/types';
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
@@ -27,7 +26,6 @@ export const load = (async ({ url, cookies }) => {
 
 	const authService = new AuthService();
 
-	let _authData: null | SignInResponse = null;
 	let destination = '/logout';
 
 	try {
@@ -37,7 +35,6 @@ export const load = (async ({ url, cookies }) => {
 			response.tokens.access_token,
 			response.tokens.refresh_token
 		);
-		_authData = response;
 		destination = redirectTo ?? config.auth.defaultRedirectPath;
 	} catch (error) {
 		serverAuthCookies.clearTokens(cookies);
