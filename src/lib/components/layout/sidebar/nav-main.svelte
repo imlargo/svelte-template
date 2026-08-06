@@ -7,7 +7,7 @@
 	type NavItem = {
 		title: string;
 		// Not Pathname: some configured routes (e.g. /settings, /admin) don't exist
-		// yet in this starter. See lib/config/domain/navigation.ts.
+		// yet in this starter. See lib/config/navigation.ts.
 		url: string;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		icon: any;

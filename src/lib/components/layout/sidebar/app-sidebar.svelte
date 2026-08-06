@@ -9,8 +9,8 @@
 		NAVIGATION_ITEMS,
 		NAVIGATION_GROUP_LABELS,
 		NavigationGroup
-	} from '$lib/config/domain/navigation';
-	import { ROLE_LABELS } from '$lib/config/domain/permissions';
+	} from '$lib/config/navigation';
+	import { ROLE_LABELS } from '$lib/config/permissions';
 	import { UserRole } from '$lib/types/auth/roles';
 	import { hasAnyPermission } from '$lib/features/auth';
 	import NavMain from './nav-main.svelte';

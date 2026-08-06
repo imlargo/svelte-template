@@ -7,7 +7,7 @@
 	type NavItem = {
 		title: string;
 		// Not Pathname: nav items may point at routes this starter doesn't ship
-		// yet. See lib/config/domain/navigation.ts.
+		// yet. See lib/config/navigation.ts.
 		url: string;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		icon: any;
