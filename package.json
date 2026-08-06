@@ -62,6 +62,7 @@
 		"vitest-browser-svelte": "^2.1.0"
 	},
 	"dependencies": {
+		"@korastd/air": "^0.1.0",
 		"zod": "^4.4.3"
 	}
 }
