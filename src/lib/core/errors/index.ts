@@ -180,15 +180,3 @@ export function normalizeError(err: unknown): AppError {
 export function getErrorMessage(err: unknown): string {
 	return normalizeError(err).getMessage();
 }
-
-// True when `err` is an air/API error carrying a `{status, message}` shape.
-export function isApiErrorResponse(err: unknown): boolean {
-	return isAirError(err) || ApiError.isShape(err);
-}
-
-export function toApiError(err: unknown): ApiError {
-	const normalized = normalizeError(err);
-	return normalized instanceof ApiError
-		? normalized
-		: new ApiError(0, 'UNKNOWN_ERROR', normalized.message);
-}

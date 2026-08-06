@@ -6,22 +6,17 @@ export type ApiClient = AirClient;
 
 export type ApiClientOptions = {
 	baseUrl: string;
-	/** Optional static token used for every request. */
-	defaultToken?: string;
-	/**
-	 * Optional callback that returns the current auth token dynamically.
-	 * Takes precedence over `defaultToken`.
-	 */
+	/** Called on every request so a refreshed token is always picked up. */
 	getToken?: () => string | null;
 };
 
 export function createApiClient(options: ApiClientOptions): ApiClient {
-	const { baseUrl, defaultToken, getToken } = options;
+	const { baseUrl, getToken } = options;
 
 	return create({
 		baseURL: baseUrl,
 		headers: (): Record<string, string> => {
-			const token = getToken?.() ?? defaultToken;
+			const token = getToken?.();
 			return token ? { Authorization: `Bearer ${token}` } : {};
 		}
 	});

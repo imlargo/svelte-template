@@ -10,8 +10,6 @@ import { createApiClient as createClient } from './client';
 import type { ApiClient, ApiClientOptions } from './client';
 
 export type { ApiClient, ApiOptions, ApiClientOptions } from './client';
-export { isAirError, AirError } from '@korastd/air';
-export { ApiError, isApiErrorResponse, toApiError, getErrorMessage } from '$lib/core/errors';
 
 /**
  * Create an air-based client using the app's configured base URL.
