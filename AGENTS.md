@@ -1,41 +1,132 @@
-## Contexto del proyecto
+# AGENTS.md
 
-**Antes de tocar código, lee `docs/README.md`.** Esa carpeta es el contrato del proyecto:
-arquitectura vigente (`docs/ARCHITECTURE.md`), estado actual y plan de refactor (`docs/AUDIT.md`),
-y lo que está deliberadamente fuera de scope (`docs/BACKLOG.md`).
+## Qué es este repo
 
-El `architecture.md` de la raíz está obsoleto — no lo uses.
+Un template de SvelteKit 2 + Svelte 5 que sirve de base para proyectos de consultoría. Consume una
+**API externa** (no tiene base de datos) y trae resuelto lo aburrido: autenticación con cookies,
+permisos, layout con sidebar, formularios, componentes.
+
+**No es un framework y no queremos que lo sea.** El objetivo es que se clone y se empiece a
+construir sin fricción ni sorpresas.
+
+## En qué fase estamos
+
+Refactor del código existente. No se añaden features. Concretamente:
+
+- Simplificar lo que hay, **sin perder funcionalidad**
+- Hacerlo idiomático a Svelte 5 y SvelteKit 2
+- Cerrar los bugs reales, sobre todo los de seguridad
+- Dejarlo en un punto desde el que **más adelante** se pueda crecer
+
+Fuera de scope ahora: generadores de código, tipos desde OpenAPI, CI/CD, observabilidad,
+multi-marca, i18n. Están en `docs/BACKLOG.md` con el disparador que los reactiva.
+
+## Antes de tocar código
+
+**Lee `docs/README.md`.** Es el punto de entrada al contrato del proyecto:
+
+| Documento | Qué es | Cuándo |
+|---|---|---|
+| `docs/ARCHITECTURE.md` | Arquitectura vigente: estructura, reglas, patrones, anti-patrones, convenciones, definición de "terminado" | Siempre. Es la fuente de verdad |
+| `docs/AUDIT.md` | Estado actual verificado y plan de refactor en tandas (T0–T4) | Antes de tocar código |
+| `docs/BACKLOG.md` | Deliberadamente fuera de scope | Solo si se pide explícitamente |
 
 ---
 
-## Project Configuration
+## Filosofía
 
-- **Language**: TypeScript
-- **Package Manager**: npm
+### 1. El repo contiene solo lo que el repo usa
+
+Cero exports sin consumidor. Cero abstracciones "por si acaso". Si escribes algo para cuando lo
+necesites, bórralo: la versión que escribas cuando lo necesites de verdad será mejor y costará lo
+mismo. Todo lo que sobra es una decisión que alguien vuelve a tomar cada vez que abre el repo, y
+una pista falsa para el siguiente agente.
+
+### 2. Una sola forma de hacer cada cosa
+
+Un estilo de import, un patrón de estado async, un lugar para cada tipo de dato. La segunda forma
+equivalente no da flexibilidad — da una decisión que se toma cada vez, y que un agente toma al azar.
+
+### 3. `$state` a nivel de módulo está prohibido para datos del usuario
+
+En SSR los módulos son singletons por proceso, no por request. Un `$state` exportado con datos de
+usuario filtra datos entre usuarios. Es la única de estas reglas cuya violación es un incidente de
+seguridad y no una molestia. El estado por request va en `locals`, en `data`, o en contexto de
+Svelte.
+
+Si te encuentras escribiendo `if (browser)` alrededor de una mutación de estado global, eso no es
+una guarda: es la señal de que el estado está en el sitio equivocado.
+
+### 4. Deny by default
+
+Rol desconocido → sin permisos. Ruta no declarada → denegada. Un olvido debe producir un 403, no
+un acceso. Fallar ruidoso y a la primera, no silencioso y en producción.
+
+### 5. Borrar antes que abstraer
+
+La tercera repetición justifica una abstracción. La primera y la segunda, no.
+
+### 6. Idiomático antes que ingenioso
+
+Si SvelteKit ya lo resuelve (`afterNavigate`, `load`, form actions, `page.url`), se usa eso. No se
+reimplementa con `$effect` y estado auxiliar. `$effect` es una vía de escape para sincronizar con
+algo externo a Svelte — no para comunicar componentes, no para derivar valores.
+
+---
+
+## Cómo trabajar
+
+**Antes de modificar**, entiende por qué el código está como está. `docs/AUDIT.md` §1 lista
+explícitamente lo que **ya es correcto y no se toca** — refactorizarlo es trabajo negativo.
+
+**Antes de borrar**, verifica los usos reales con grep en todo `src/`. Varias abstracciones del
+repo parecen centrales y tienen cero consumidores; otras parecen muertas y no lo están.
+
+**Antes de añadir**, cita la sección de `docs/ARCHITECTURE.md` que lo justifica. Si no hay sección,
+no entra. Este es el mecanismo que impide que el template derive hacia framework.
+
+**Si hay ambigüedad real** (dos soluciones razonables con impacto distinto), pregunta. Si es un
+juicio de ingeniería rutinario, decide y sigue.
+
+**No arrastres deuda entre tareas.** Cada tanda deja el repo en verde.
+
+## Antes de dar algo por terminado
+
+```sh
+npm run lint     # sin errores
+npm run check    # cero errores Y cero warnings
+npm run test     # verde
+```
+
+Ejecútalos de verdad y lee la salida — no asumas que compiló. Los warnings de `svelte-check` como
+`state_referenced_locally` son bugs de reactividad, no ruido. Criterios completos en
+`docs/ARCHITECTURE.md` §18.
+
+Al terminar, resume en un párrafo qué cambió y qué verificaste. No hace falta narrar el proceso.
+
+---
+
+## Configuración del proyecto
+
+- **Lenguaje**: TypeScript
+- **Gestor de paquetes**: npm
 - **Add-ons**: prettier, eslint, vitest, tailwindcss, sveltekit-adapter, mcp
 
 ---
 
-You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
+## Servidor MCP de Svelte
 
-## Available Svelte MCP Tools:
+Tienes acceso a documentación completa de Svelte 5 y SvelteKit. Úsala — este proyecto depende de
+detalles de versión que cambian, y la memoria del modelo se queda atrás.
 
-### 1. list-sections
+**1. `list-sections`** — Úsalo PRIMERO para descubrir las secciones disponibles. Devuelve títulos,
+`use_cases` y rutas. Ante cualquier duda sobre Svelte o SvelteKit, empieza aquí.
 
-Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths.
-When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
+**2. `get-documentation`** — Recupera el contenido completo de secciones concretas. Tras
+`list-sections`, analiza los `use_cases` y trae TODAS las secciones relevantes de una vez.
 
-### 2. get-documentation
+**3. `svelte-autofixer`** — Analiza código Svelte y devuelve problemas y sugerencias. **Úsalo
+siempre antes de entregar código Svelte.** Repite hasta que no devuelva nada.
 
-Retrieves full documentation content for specific sections. Accepts single or multiple sections.
-After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user's task.
-
-### 3. svelte-autofixer
-
-Analyzes Svelte code and returns issues and suggestions.
-You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
-
-### 4. playground-link
-
-Generates a Svelte Playground link with the provided code.
-After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
+**4. `playground-link`** — Genera un enlace al Playground. Solo tras confirmación del usuario, y
+NUNCA si el código se escribió en archivos del proyecto.
