@@ -11,25 +11,22 @@ import { BaseService } from '$lib/core/service';
 
 export class AuthService extends BaseService {
 	async login(data: SignInRequest) {
-		return await this.post<SignInResponse, SignInRequest>('/auth/login', data);
+		return await this.api.post<SignInResponse>('/auth/login', { body: data });
 	}
 
 	async register(data: SignUpRequest) {
-		return await this.post<SignUpResponse, SignUpRequest>('/auth/register', data);
+		return await this.api.post<SignUpResponse>('/auth/register', { body: data });
 	}
 
 	async loginWithGoogle(code: string) {
-		return await this.post<SignInResponse>('/auth/google/login', { code });
+		return await this.api.post<SignInResponse>('/auth/google/login', { body: { code } });
 	}
 
 	async getMe() {
-		return await this.get<User>('/auth/me');
+		return await this.api.get<User>('/auth/me');
 	}
 
 	async changePassword(data: ChangePasswordRequest) {
-		return await this.post<ChangePasswordResponse, ChangePasswordRequest>(
-			'/auth/change-password',
-			data
-		);
+		return await this.api.post<ChangePasswordResponse>('/auth/change-password', { body: data });
 	}
 }
