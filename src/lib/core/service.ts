@@ -13,10 +13,10 @@
  * const service = new UserService(() => authStore.getAccessToken());
  */
 import { createApiClient } from '$lib/core/api';
-import type { ApiClient } from '$lib/core/api';
+import type { AirClient } from '@korastd/air';
 
 export class BaseService {
-	protected api: ApiClient;
+	protected api: AirClient;
 	private _token: string | (() => string | null);
 
 	constructor(token: string | (() => string | null) = '') {

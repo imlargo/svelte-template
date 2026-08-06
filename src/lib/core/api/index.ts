@@ -5,19 +5,24 @@
  *   import { createApiClient } from '$lib/core/api';
  *   const client = createApiClient({ getToken: () => authStore.getAccessToken() });
  */
+import { create } from '@korastd/air';
+import type { AirClient } from '@korastd/air';
 import { config } from '$lib/config';
-import { createApiClient as createClient } from './client';
-import type { ApiClient, ApiClientOptions } from './client';
 
-export type { ApiClient, ApiOptions, ApiClientOptions } from './client';
+export type ApiClientOptions = {
+	baseUrl?: string;
+	/** Called on every request so a refreshed token is always picked up. */
+	getToken?: () => string | null;
+};
 
-/**
- * Create an air-based client using the app's configured base URL.
- * Call this inside constructors or functions, not at module top-level.
- */
-export function createApiClient(options: Partial<ApiClientOptions> = {}): ApiClient {
-	return createClient({
-		baseUrl: config.api.baseUrl,
-		...options
+export function createApiClient(options: ApiClientOptions = {}): AirClient {
+	const { baseUrl = config.api.baseUrl, getToken } = options;
+
+	return create({
+		baseURL: baseUrl,
+		headers: (): Record<string, string> => {
+			const token = getToken?.();
+			return token ? { Authorization: `Bearer ${token}` } : {};
+		}
 	});
 }

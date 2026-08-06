@@ -1,6 +1,7 @@
-// API client
+// API client — built on air (https://github.com/imlargo/air); import `AirClient`/
+// `AirOptions` straight from '@korastd/air' when you need those types.
 export { createApiClient } from './api';
-export type { ApiClient, ApiOptions, ApiClientOptions } from './api';
+export type { ApiClientOptions } from './api';
 
 // Errors
 export { AppError, ApiError, ValidationError, normalizeError, getErrorMessage } from './errors';

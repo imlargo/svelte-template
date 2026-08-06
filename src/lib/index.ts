@@ -10,9 +10,10 @@ export type { AppConfig } from './config'
 export { AppError, ApiError, ValidationError, normalizeError, getErrorMessage } from './core/errors'
 export type { ErrorCode } from './core/errors'
 
-// API client
+// API client — built on air (https://github.com/imlargo/air); import `AirClient`/
+// `AirOptions` straight from '@korastd/air' when you need those types.
 export { createApiClient } from './core/api'
-export type { ApiClient, ApiOptions, ApiClientOptions } from './core/api'
+export type { ApiClientOptions } from './core/api'
 
 // Service base class
 export { BaseService } from './core/service'
