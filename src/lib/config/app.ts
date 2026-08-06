@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/public';
-import { AUTH_PUBLIC_ROUTE_PREFIXES } from '$lib/config/domain/permissions';
+import { AUTH_PUBLIC_ROUTE_PREFIXES } from '$lib/config/permissions';
 
 export interface AppConfig {
 	api: {
