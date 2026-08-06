@@ -1,3 +1,14 @@
+> # ⚠️ OBSOLETO — NO USAR
+>
+> Este documento describe un stack que **no existe en este repo** (Drizzle, Lucia, Stripe,
+> Uploadthing, Bun, `lib/server/db`). El código real consume una API externa vía `@korastd/air`,
+> sin base de datos.
+>
+> La arquitectura vigente está en **`docs/ARCHITECTURE.md`**. Este archivo se conserva solo hasta
+> completar el refactor descrito en `docs/AUDIT.md`, y entonces se borra.
+
+---
+
 # Arquitectura SvelteKit SaaS — Guía Técnica Definitiva
 
 > Arquitectura Domain-First Layered para aplicaciones SaaS construidas con SvelteKit 2 + Svelte 5.
