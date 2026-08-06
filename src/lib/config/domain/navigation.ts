@@ -13,6 +13,8 @@ export interface NavigationItem {
 	// Lucide icon component — typed as `any` to avoid per-icon import generics
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	icon: any;
+	// Not typed as $app/types' Pathname: /settings and /admin are placeholders
+	// for routes this starter doesn't ship yet. Add the routes, then tighten this.
 	to: string;
 	group: NavigationGroup;
 	requiredPermissions: PermissionKey[];
