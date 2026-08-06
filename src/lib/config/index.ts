@@ -15,4 +15,4 @@ export {
 	NAVIGATION_GROUP_LABELS,
 	NavigationGroup
 } from './domain';
-export type { PermissionGroup, PermissionRole, NavigationItem } from './domain';
+export type { NavigationItem } from './domain';

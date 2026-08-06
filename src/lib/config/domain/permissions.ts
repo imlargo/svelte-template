@@ -8,9 +8,6 @@ export enum PermissionKey {
 	Admin = 'Admin'
 }
 
-export type PermissionGroup = PermissionKey;
-export type PermissionRole = UserRole;
-
 // ─── Role metadata ────────────────────────────────────────────────────────────
 export const ROLE_PRIORITY: UserRole[] = [UserRole.ADMIN, UserRole.MEMBER];
 

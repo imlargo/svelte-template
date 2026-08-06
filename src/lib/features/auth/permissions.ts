@@ -1,5 +1,9 @@
-import { PERMISSION_GROUPS, AUTH_ROUTE_PERMISSIONS, AUTH_DEFAULT_ROUTES } from '$lib/config/domain';
-import type { PermissionGroup } from '$lib/config/domain';
+import {
+	PERMISSION_GROUPS,
+	AUTH_ROUTE_PERMISSIONS,
+	AUTH_DEFAULT_ROUTES,
+	PermissionKey
+} from '$lib/config/domain';
 import { UserRole } from '$lib/types/auth/roles';
 
 function normalizeRole(role: string | null | undefined): UserRole {
@@ -11,7 +15,7 @@ export function resolveRole(role: string | null | undefined): UserRole {
 	return normalizeRole(role);
 }
 
-export function hasPermission(role: string | null | undefined, key: PermissionGroup): boolean {
+export function hasPermission(role: string | null | undefined, key: PermissionKey): boolean {
 	const normalized = normalizeRole(role);
 	const allowed = PERMISSION_GROUPS[key] as readonly string[];
 	return allowed.includes(normalized);
@@ -19,7 +23,7 @@ export function hasPermission(role: string | null | undefined, key: PermissionGr
 
 export function hasAnyPermission(
 	role: string | null | undefined,
-	keys: readonly PermissionGroup[]
+	keys: readonly PermissionKey[]
 ): boolean {
 	return keys.some((key) => hasPermission(role, key));
 }
