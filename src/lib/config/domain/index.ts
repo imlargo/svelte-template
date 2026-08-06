@@ -9,9 +9,5 @@ export {
 } from './permissions';
 export { FEATURE_FLAGS } from './feature-flags';
 export { PAGINATION_DEFAULTS } from './pagination';
-export {
-	NAVIGATION_ITEMS,
-	NAVIGATION_GROUP_LABELS,
-	NavigationGroup
-} from './navigation';
+export { NAVIGATION_ITEMS, NAVIGATION_GROUP_LABELS, NavigationGroup } from './navigation';
 export type { NavigationItem } from './navigation';

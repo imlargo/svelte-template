@@ -20,10 +20,13 @@
 
 	const id = $props.id();
 
-	const form = superForm(untrack(() => formData), {
-		validators: zodClient(RegisterSchema),
-		invalidateAll: false
-	});
+	const form = superForm(
+		untrack(() => formData),
+		{
+			validators: zodClient(RegisterSchema),
+			invalidateAll: false
+		}
+	);
 	const { form: fields, message, enhance } = form;
 </script>
 
@@ -37,9 +40,7 @@
 >
 	<div class="flex flex-col items-center gap-2 text-center">
 		<h1 class="text-2xl font-bold">Create an account</h1>
-		<p class="text-sm text-balance text-muted-foreground">
-			Fill in your details to get started.
-		</p>
+		<p class="text-sm text-balance text-muted-foreground">Fill in your details to get started.</p>
 	</div>
 
 	{#if $message}

@@ -8,4 +8,4 @@
 //     aiAssistant:   false,              // deshabilitado globalmente
 //     betaDashboard: import.meta.env.DEV, // solo en desarrollo
 //   } as const
-export const FEATURE_FLAGS = {} as const
+export const FEATURE_FLAGS = {} as const;

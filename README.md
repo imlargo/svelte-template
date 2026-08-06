@@ -4,14 +4,14 @@ A production-ready SvelteKit 2 + Svelte 5 starter template with a layered archit
 
 ## Stack
 
-| Layer | Tool |
-|---|---|
-| Framework | SvelteKit 2 + Svelte 5 (Runes) |
-| Language | TypeScript (strict) |
-| Styling | TailwindCSS v4 + shadcn-svelte |
-| Forms | sveltekit-superforms + formsnap |
-| Testing | Vitest + Playwright |
-| Linting | ESLint + Prettier |
+| Layer     | Tool                            |
+| --------- | ------------------------------- |
+| Framework | SvelteKit 2 + Svelte 5 (Runes)  |
+| Language  | TypeScript (strict)             |
+| Styling   | TailwindCSS v4 + shadcn-svelte  |
+| Forms     | sveltekit-superforms + formsnap |
+| Testing   | Vitest + Playwright             |
+| Linting   | ESLint + Prettier               |
 
 ## Architecture
 
@@ -45,18 +45,18 @@ The dev server starts on http://localhost:3000.
 
 ## Environment variables
 
-| Variable | Description | Default |
-|---|---|---|
-| `PUBLIC_API_URL` | Backend API base URL | — |
-| `PUBLIC_AUTH_BASE_URL` | Auth service base URL (if separate) | — |
-| `PUBLIC_AUTH_ENABLED` | Enable/disable auth middleware | `true` |
-| `PUBLIC_AUTH_PASSWORD_ENABLED` | Show password login form | `true` |
-| `PUBLIC_AUTH_GOOGLE_ENABLED` | Show Google OAuth button | `false` |
-| `PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID | — |
-| `AUTH_COOKIE_DOMAIN` | Cookie domain | — |
-| `AUTH_COOKIE_SECURE` | Secure cookie flag | `false` (dev) |
-| `AUTH_COOKIE_MAX_AGE` | Cookie lifetime in seconds | `604800` (7d) |
-| `AUTH_COOKIE_SAMESITE` | SameSite policy | `lax` |
+| Variable                       | Description                         | Default       |
+| ------------------------------ | ----------------------------------- | ------------- |
+| `PUBLIC_API_URL`               | Backend API base URL                | —             |
+| `PUBLIC_AUTH_BASE_URL`         | Auth service base URL (if separate) | —             |
+| `PUBLIC_AUTH_ENABLED`          | Enable/disable auth middleware      | `true`        |
+| `PUBLIC_AUTH_PASSWORD_ENABLED` | Show password login form            | `true`        |
+| `PUBLIC_AUTH_GOOGLE_ENABLED`   | Show Google OAuth button            | `false`       |
+| `PUBLIC_GOOGLE_CLIENT_ID`      | Google OAuth client ID              | —             |
+| `AUTH_COOKIE_DOMAIN`           | Cookie domain                       | —             |
+| `AUTH_COOKIE_SECURE`           | Secure cookie flag                  | `false` (dev) |
+| `AUTH_COOKIE_MAX_AGE`          | Cookie lifetime in seconds          | `604800` (7d) |
+| `AUTH_COOKIE_SAMESITE`         | SameSite policy                     | `lax`         |
 
 ## Auth methods
 

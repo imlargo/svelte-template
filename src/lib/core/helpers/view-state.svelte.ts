@@ -5,11 +5,21 @@ export class ViewState {
 	state: AsyncViewState = $state('idle');
 	error: string | null = $state(null);
 
-	get isIdle() { return this.state === 'idle'; }
-	get isLoading() { return this.state === 'loading'; }
-	get isSuccess() { return this.state === 'success'; }
-	get isError() { return this.state === 'error'; }
-	get isEmpty() { return this.state === 'empty'; }
+	get isIdle() {
+		return this.state === 'idle';
+	}
+	get isLoading() {
+		return this.state === 'loading';
+	}
+	get isSuccess() {
+		return this.state === 'success';
+	}
+	get isError() {
+		return this.state === 'error';
+	}
+	get isEmpty() {
+		return this.state === 'empty';
+	}
 
 	setLoading() {
 		this.state = 'loading';

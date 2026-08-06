@@ -21,10 +21,13 @@
 
 	const id = $props.id();
 
-	const form = superForm(untrack(() => formData), {
-		validators: zodClient(LoginSchema),
-		invalidateAll: false
-	});
+	const form = superForm(
+		untrack(() => formData),
+		{
+			validators: zodClient(LoginSchema),
+			invalidateAll: false
+		}
+	);
 	const { form: fields, errors, message, enhance } = form;
 
 	const showPassword = config.auth.methods.password;
@@ -136,10 +139,7 @@
 					{#snippet children({ props })}
 						<div class="flex items-center">
 							<Form.Label>Password</Form.Label>
-							<a
-								href="/forgot-password"
-								class="ml-auto text-sm underline-offset-4 hover:underline"
-							>
+							<a href="/forgot-password" class="ml-auto text-sm underline-offset-4 hover:underline">
 								Forgot your password?
 							</a>
 						</div>

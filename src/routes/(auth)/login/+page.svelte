@@ -26,10 +26,7 @@
 			</div>
 		</div>
 	</div>
-	<div
-		class="relative hidden items-center justify-center bg-muted lg:flex"
-		aria-hidden="true"
-	>
+	<div class="relative hidden items-center justify-center bg-muted lg:flex" aria-hidden="true">
 		<!-- Replace with a hero image, illustration, or brand pattern -->
 	</div>
 </div>

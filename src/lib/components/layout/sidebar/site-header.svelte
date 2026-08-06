@@ -10,9 +10,10 @@
 
 	let pageTitle = $derived.by(() => {
 		const pathname = page.url.pathname;
-		const match = sortedItems.find(
-			(item) =>
-				(item.to === '/' ? pathname === '/' : pathname === item.to || pathname.startsWith(item.to + '/'))
+		const match = sortedItems.find((item) =>
+			item.to === '/'
+				? pathname === '/'
+				: pathname === item.to || pathname.startsWith(item.to + '/')
 		);
 		return match?.title ?? 'App';
 	});

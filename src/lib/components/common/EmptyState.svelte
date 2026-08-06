@@ -24,7 +24,9 @@
 	)}
 >
 	{#if icon}
-		<div class="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+		<div
+			class="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
+		>
 			{@render icon()}
 		</div>
 	{/if}

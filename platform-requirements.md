@@ -18,18 +18,18 @@ sea una copia divergente del #1.
 
 ### Hallazgos concretos
 
-| # | Hallazgo | Impacto |
-|---|---|---|
-| H1 | `architecture.md` describe un stack (Drizzle, Lucia, Stripe, Uploadthing, Bun, `lib/server/db`) que **no existe en el código**. El código real es un cliente de una API externa (`PUBLIC_API_URL` + `@korastd/air`), sin base de datos ni `lib/server/`. | Crítico. El documento es el contrato con tu yo futuro y con los agentes de IA. Un doc que miente produce código equivocado en cada sesión. |
-| H2 | Dos lockfiles coexisten: `package-lock.json` y `pnpm-lock.yaml`, más `pnpm-workspace.yaml`. `CLAUDE.md` dice npm. | Alto. Builds no reproducibles, CI ambigua, resolución de dependencias divergente entre tu máquina y producción. |
-| H3 | No hay `.github/workflows`. Ninguna verificación automatizada. | Alto. `lint`, `check` y `test` dependen de disciplina manual. En consultoría con carga alta, la disciplina manual es lo primero que cae. |
-| H4 | Un solo test en todo el repo (`redirect.test.ts`), sobre 365 componentes. No hay E2E pese a tener Playwright instalado. | Alto. Sin red de seguridad no puedes refactorizar la base sin romper los productos que ya la usan. |
-| H5 | `adapter-auto` sin adapter fijo, sin `.nvmrc`, sin Dockerfile. No hay camino de despliegue definido. | Alto. "Time to first deploy" es la métrica que más te cuesta hoy. |
-| H6 | Los tipos de la API externa se escriben a mano en `lib/types/domain/`. No hay generación desde un contrato (OpenAPI). | Alto. Es la fuente #1 de bugs en runtime en arquitecturas frontend + API separada. |
-| H7 | No hay observabilidad: ni error tracking, ni Web Vitals, ni logging estructurado. `handleError` hace `console.error`. | Medio-alto. En producción no te enteras de los errores de tus clientes hasta que te llaman. |
-| H8 | No hay i18n, ni capa de theming multi-marca, ni tokens de diseño más allá de los defaults de shadcn. | Medio. Cada cliente nuevo va a querer sus colores; hoy eso es buscar y reemplazar. |
-| H9 | La reutilización es por *fork del template*. No hay estrategia de propagar mejoras a proyectos ya entregados. | **Crítico para tu modelo de negocio.** Es el problema real, y ninguna decisión de arquitectura lo resuelve sola. |
-| H10 | No hay generadores/scaffolding. Crear un CRUD nuevo es copiar-pegar-renombrar el feature de `auth`. | Medio-alto. Es donde más horas repetidas se van. |
+| #   | Hallazgo                                                                                                                                                                                                                                                 | Impacto                                                                                                                                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| H1  | `architecture.md` describe un stack (Drizzle, Lucia, Stripe, Uploadthing, Bun, `lib/server/db`) que **no existe en el código**. El código real es un cliente de una API externa (`PUBLIC_API_URL` + `@korastd/air`), sin base de datos ni `lib/server/`. | Crítico. El documento es el contrato con tu yo futuro y con los agentes de IA. Un doc que miente produce código equivocado en cada sesión. |
+| H2  | Dos lockfiles coexisten: `package-lock.json` y `pnpm-lock.yaml`, más `pnpm-workspace.yaml`. `CLAUDE.md` dice npm.                                                                                                                                        | Alto. Builds no reproducibles, CI ambigua, resolución de dependencias divergente entre tu máquina y producción.                            |
+| H3  | No hay `.github/workflows`. Ninguna verificación automatizada.                                                                                                                                                                                           | Alto. `lint`, `check` y `test` dependen de disciplina manual. En consultoría con carga alta, la disciplina manual es lo primero que cae.   |
+| H4  | Un solo test en todo el repo (`redirect.test.ts`), sobre 365 componentes. No hay E2E pese a tener Playwright instalado.                                                                                                                                  | Alto. Sin red de seguridad no puedes refactorizar la base sin romper los productos que ya la usan.                                         |
+| H5  | `adapter-auto` sin adapter fijo, sin `.nvmrc`, sin Dockerfile. No hay camino de despliegue definido.                                                                                                                                                     | Alto. "Time to first deploy" es la métrica que más te cuesta hoy.                                                                          |
+| H6  | Los tipos de la API externa se escriben a mano en `lib/types/domain/`. No hay generación desde un contrato (OpenAPI).                                                                                                                                    | Alto. Es la fuente #1 de bugs en runtime en arquitecturas frontend + API separada.                                                         |
+| H7  | No hay observabilidad: ni error tracking, ni Web Vitals, ni logging estructurado. `handleError` hace `console.error`.                                                                                                                                    | Medio-alto. En producción no te enteras de los errores de tus clientes hasta que te llaman.                                                |
+| H8  | No hay i18n, ni capa de theming multi-marca, ni tokens de diseño más allá de los defaults de shadcn.                                                                                                                                                     | Medio. Cada cliente nuevo va a querer sus colores; hoy eso es buscar y reemplazar.                                                         |
+| H9  | La reutilización es por _fork del template_. No hay estrategia de propagar mejoras a proyectos ya entregados.                                                                                                                                            | **Crítico para tu modelo de negocio.** Es el problema real, y ninguna decisión de arquitectura lo resuelve sola.                           |
+| H10 | No hay generadores/scaffolding. Crear un CRUD nuevo es copiar-pegar-renombrar el feature de `auth`.                                                                                                                                                      | Medio-alto. Es donde más horas repetidas se van.                                                                                           |
 
 ### El requerimiento cero
 
@@ -48,7 +48,7 @@ modelo de datos. Intentar cubrir ambas duplica el trabajo y no te da velocidad e
 tienes construido y funcionando; (2) encaja con consultoría donde el backend a veces ya existe o
 lo escribe otro equipo; (3) B sin A es un lock-in a SvelteKit para lógica de negocio que
 sobrevivirá al framework. Si un proyecto necesita persistencia propia, se añade `src/lib/server/db`
-como *módulo opcional* del mismo template, no como el default.
+como _módulo opcional_ del mismo template, no como el default.
 
 Todo lo que sigue asume A. Los puntos marcados 🅱️ indican el trabajo extra si eliges B.
 
@@ -62,6 +62,7 @@ Todo lo que sigue asume A. Los puntos marcados 🅱️ indican el trabajo extra 
 sesión: un agente que lea ese archivo va a escribir `import { db } from '$lib/server/db'`.
 
 **Criterio de aceptación**
+
 - Cada snippet del documento compila contra el código actual del repo.
 - El stack listado coincide 1:1 con `package.json`.
 - Un test de CI valida que los ejemplos de código en el doc referencian rutas que existen
@@ -75,6 +76,7 @@ sesión: un agente que lea ese archivo va a escribir `import { db } from '$lib/s
 prosa, se rompe en el mes tres. Escrita como regla de ESLint, no se rompe nunca.
 
 **Criterio de aceptación**
+
 - `eslint-plugin-boundaries` (o `import/no-restricted-paths`) configurado con las capas:
   `core` → `config` → `types`/`utils` → `stores` → `features` → `components` → `routes`.
 - Reglas mínimas, que fallan el build:
@@ -107,12 +109,14 @@ lib/features/<domain>/
 ```
 
 **Reglas duras**
+
 - El orquestador no hace HTTP. Los services sí. Los stores llaman a services.
 - Ningún componente importa un store o un service directamente; solo el orquestador.
 - `index.ts` exporta: el factory del orquestador, los tipos públicos, y nada más.
 - Un slice se puede borrar entero (`rm -rf`) y el proyecto compila salvo por sus rutas.
 
 **Criterio de aceptación**
+
 - Existe un segundo slice de ejemplo, no trivial y no-auth (recomendado: `users`, CRUD completo
   con listado paginado + filtros + detalle + create/edit/delete), que sirve de referencia viva.
 - Ese slice tiene tests unitarios del orquestador y un E2E del flujo completo.
@@ -120,7 +124,7 @@ lib/features/<domain>/
 
 ### R1.4 — Decidir la política de data fetching: load functions vs remote functions ⬤ P1
 
-**Por qué.** SvelteKit estabilizó las *remote functions* (`query` / `form` / `command` /
+**Por qué.** SvelteKit estabilizó las _remote functions_ (`query` / `form` / `command` /
 `prerender` en archivos `.remote.ts`) junto a Svelte 5.49 y maduraron en 5.55 / SvelteKit 2.57
 — versiones que **ya tienes instaladas**. Eliminan el boilerplate de `+server.ts` y de mantener
 tipos sincronizados entre request y response, y traen `single-flight mutations` y refresco de
@@ -130,16 +134,17 @@ Si no fijas una política, terminarás con tres estilos de fetching conviviendo 
 
 **Política recomendada**
 
-| Caso | Mecanismo |
-|---|---|
-| Datos necesarios para el primer render de una página | `+page.server.ts` `load` |
-| Datos secundarios, bajo demanda, o refrescables desde la UI | `query()` en `.remote.ts` |
-| Mutación desde un `<form>` | `form()` en `.remote.ts`, o form action + superforms |
-| Mutación fuera de un form (botón, drag&drop) | `command()` |
-| Contenido estático conocido en build | `prerender()` |
+| Caso                                                                | Mecanismo                                             |
+| ------------------------------------------------------------------- | ----------------------------------------------------- |
+| Datos necesarios para el primer render de una página                | `+page.server.ts` `load`                              |
+| Datos secundarios, bajo demanda, o refrescables desde la UI         | `query()` en `.remote.ts`                             |
+| Mutación desde un `<form>`                                          | `form()` en `.remote.ts`, o form action + superforms  |
+| Mutación fuera de un form (botón, drag&drop)                        | `command()`                                           |
+| Contenido estático conocido en build                                | `prerender()`                                         |
 | Llamada desde el cliente a la API externa sin pasar por el servidor | Solo si el token es del cliente y hay razón explícita |
 
 **Criterio de aceptación**
+
 - La política está documentada con un ejemplo de cada fila en el slice de referencia.
 - Está resuelto y documentado dónde vive el token de acceso en cada caso (cookie httpOnly leída
   en el servidor vs. store del cliente) — hoy `BaseService` soporta ambos pero no dice cuándo usar cuál.
@@ -152,6 +157,7 @@ Si no fijas una política, terminarás con tres estilos de fetching conviviendo 
 tenancy es de las refactorizaciones más caras que existen.
 
 **Criterio de aceptación**
+
 - `locals` tipado en `app.d.ts` con `user`, `session` y (si aplica) `org`/`tenant`.
 - El tenant activo se resuelve una sola vez en `hooks.server.ts` y se propaga por `locals` →
   `load` → contexto de Svelte. Ningún componente lo lee de un singleton global.
@@ -170,12 +176,13 @@ frontend + API separada, los tipos escritos a mano son documentación desactuali
 de seguridad de tipos: el compilador te da luz verde sobre una mentira.
 
 **Criterio de aceptación**
+
 - `openapi-typescript` (tipos) y opcionalmente `openapi-fetch`/generador de cliente, con
   `npm run api:types` que regenera `src/lib/types/api/generated.ts`.
 - El archivo generado está commiteado (para builds reproducibles) y marcado como no editable en
   `.prettierignore` y en las reglas de ESLint.
 - CI falla si el archivo generado difiere de regenerarlo contra el spec fijado.
-- Los tipos de dominio en `lib/types/domain/` son *derivaciones* de los generados
+- Los tipos de dominio en `lib/types/domain/` son _derivaciones_ de los generados
   (`type User = components['schemas']['User']`), no copias.
 - Los schemas Zod validan solo en los bordes donde el dato entra del usuario (forms) o donde no
   confías en el backend, no en cada respuesta.
@@ -187,6 +194,7 @@ de seguridad de tipos: el compilador te da luz verde sobre una mentira.
 Ya existe `lib/core/errors` con `normalizeError` y `ApiError` — está bien encaminado. Falta cerrarlo.
 
 **Criterio de aceptación**
+
 - Taxonomía cerrada de errores: `network` | `auth` | `validation` | `not_found` | `permission` |
   `conflict` | `server` | `unknown`, con mapeo desde códigos HTTP.
 - Mensajes de usuario separados de mensajes de log. Nunca se muestra un stack o un mensaje del
@@ -203,10 +211,11 @@ Ya existe `lib/core/errors` con `normalizeError` y `ApiError` — está bien enc
 ### R3.1 — Formalizar el patrón de estado sobre runes ⬤ P1
 
 **Por qué.** El template ya usa factories con getters (`createFilterStore`, `createDisclosure`),
-que funciona bien. La convención de la comunidad se movió hacia *clases reactivas* con `$state`
+que funciona bien. La convención de la comunidad se movió hacia _clases reactivas_ con `$state`
 en campos, que evita el boilerplate de getters. Cualquiera de las dos sirve; mezclarlas no.
 
 **Criterio de aceptación**
+
 - Una sola convención documentada, aplicada en todos los stores existentes.
 - Regla explícita sobre estado global: prohibido `$state` a nivel de módulo en código que corra
   en el servidor (se comparte entre requests y filtra datos entre usuarios — es un bug de
@@ -220,6 +229,7 @@ ya es CSS-first con `@theme` y variables CSS, así que esto es barato si se hace
 y caro si se hace después.
 
 **Criterio de aceptación**
+
 - Tres niveles de tokens: primitivos (paleta OKLCH) → semánticos (`--color-surface`,
   `--color-danger`) → de componente. Los componentes **solo** referencian semánticos.
 - Cambiar de marca = reemplazar un archivo de tokens. Verificado con dos temas de ejemplo en el repo.
@@ -234,6 +244,7 @@ y caro si se hace después.
 componente que ya existe porque no recordabas su nombre.
 
 **Criterio de aceptación**
+
 - Una ruta `/(dev)/kitchen-sink` (excluida del build de producción por variable de entorno) que
   renderiza cada componente de `base/`, `common/` y `blocks/` en sus variantes y estados
   (default, loading, error, vacío, dark).
@@ -243,6 +254,7 @@ componente que ya existe porque no recordabas su nombre.
 ### R3.4 — Estados de UI obligatorios ⬤ P1
 
 **Criterio de aceptación**
+
 - Todo componente de vista que consuma datos async maneja los cinco estados de `AsyncViewState`:
   `idle`, `loading` (skeleton, no spinner), `error` (con reintento), `empty` (con acción), `success`.
 - `AsyncView` ya existe en `components/common/` — debe ser el único camino, y el generador de
@@ -259,6 +271,7 @@ componente que ya existe porque no recordabas su nombre.
 El riesgo es que el chequeo viva solo en el cliente (ocultar un botón no es autorización).
 
 **Criterio de aceptación**
+
 - Todo permiso se evalúa en el servidor (`hooks.server.ts` o `+layout.server.ts`), y el cliente
   solo lo usa para presentación.
 - Una ruta nueva sin entrada en `AUTH_ROUTE_PERMISSIONS` es **denegada por defecto**, no permitida.
@@ -268,6 +281,7 @@ El riesgo es que el chequeo viva solo en el cliente (ocultar un botón no es aut
 ### R4.2 — Endurecimiento de la capa web ⬤ P1
 
 **Criterio de aceptación**
+
 - Cabeceras de seguridad en `hooks.server.ts`: CSP (con nonce para los scripts inline de
   SvelteKit), `Strict-Transport-Security`, `X-Content-Type-Options`, `Referrer-Policy`,
   `Permissions-Policy`.
@@ -281,6 +295,7 @@ El riesgo es que el chequeo viva solo en el cliente (ocultar un botón no es aut
 ### R4.3 — Manejo del token de acceso ⬤ P0
 
 **Criterio de aceptación**
+
 - Documentado y consistente: dónde vive el access token, quién lo refresca, qué pasa cuando
   expira a mitad de una navegación, y qué pasa con requests concurrentes durante un refresh
   (deduplicación del refresh — sin esto, un token expirado dispara N refreshes simultáneos).
@@ -298,14 +313,15 @@ base que da miedo tocar deja de mejorar.
 
 **Pirámide propuesta**
 
-| Nivel | Qué cubre | Herramienta | Meta |
-|---|---|---|---|
-| Unitario | utils, orquestadores, permisos, mapeo de errores, schemas | Vitest (node) | ≥80% en `lib/core`, `lib/utils`, `lib/features/*/[orquestador]` |
-| Componente | componentes de `base/` y `common/` en sus estados | vitest-browser-svelte | Los componentes con lógica, no los de puro markup |
-| Contrato | que los tipos generados coinciden con el spec | script en CI | Bloqueante |
-| E2E | los flujos que si se rompen, el cliente llama | Playwright | login, logout, sesión expirada, CRUD del slice de referencia, guard de permisos |
+| Nivel      | Qué cubre                                                 | Herramienta           | Meta                                                                            |
+| ---------- | --------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------- |
+| Unitario   | utils, orquestadores, permisos, mapeo de errores, schemas | Vitest (node)         | ≥80% en `lib/core`, `lib/utils`, `lib/features/*/[orquestador]`                 |
+| Componente | componentes de `base/` y `common/` en sus estados         | vitest-browser-svelte | Los componentes con lógica, no los de puro markup                               |
+| Contrato   | que los tipos generados coinciden con el spec             | script en CI          | Bloqueante                                                                      |
+| E2E        | los flujos que si se rompen, el cliente llama             | Playwright            | login, logout, sesión expirada, CRUD del slice de referencia, guard de permisos |
 
 **Criterio de aceptación**
+
 - Umbrales de cobertura configurados en `vitest.config` y **bloqueantes en CI** solo sobre
   `lib/core/**`, `lib/utils/**` y los orquestadores. No pongas umbral global: te va a empujar a
   escribir tests basura de componentes de presentación.
@@ -316,6 +332,7 @@ base que da miedo tocar deja de mejorar.
 ### R5.2 — TypeScript estricto de verdad ⬤ P1
 
 **Criterio de aceptación**
+
 - Añadir a `tsconfig.json`: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
   `noImplicitOverride`, `verbatimModuleSyntax`.
 - `@typescript-eslint/no-explicit-any` en `error`, con excepciones justificadas por comentario.
@@ -329,6 +346,7 @@ incorpora WCAG 2.2. Si vendes a clientes con operación en la UE, esto es contra
 Auditar contra **WCAG 2.2 AA** te deja cubierto hoy y con margen.
 
 **Criterio de aceptación**
+
 - `eslint-plugin-svelte` con las reglas a11y activas en `error`, no en `warn`.
 - `axe-core` corriendo en los E2E sobre las páginas principales y sobre el kitchen sink; falla CI
   ante violaciones serias o críticas.
@@ -343,6 +361,7 @@ Auditar contra **WCAG 2.2 AA** te deja cubierto hoy y con margen.
 ### R6.1 — Un solo package manager, una sola versión de Node ⬤ P0
 
 **Criterio de aceptación**
+
 - Elegir uno (recomendado **pnpm**: instalación más rápida, `node_modules` estricto que impide
   dependencias fantasma, workspaces nativos si algún día partes el repo). Borrar el otro lockfile.
 - `packageManager` fijado en `package.json` + Corepack.
@@ -352,6 +371,7 @@ Auditar contra **WCAG 2.2 AA** te deja cubierto hoy y con margen.
 ### R6.2 — CI como puerta de calidad ⬤ P0
 
 **Criterio de aceptación**
+
 - `.github/workflows/ci.yml` en cada push y PR: instalar → `check` → `lint` → `test` →
   `test:e2e` → `build`. Todos bloqueantes.
 - Caché de dependencias y de Playwright para que el pipeline baje de ~5 minutos.
@@ -362,6 +382,7 @@ Auditar contra **WCAG 2.2 AA** te deja cubierto hoy y con margen.
 ### R6.3 — Preflight local: rápido, automático, no negociable ⬤ P1
 
 **Criterio de aceptación**
+
 - Husky + lint-staged: en pre-commit corre Prettier y ESLint **solo sobre los archivos tocados**
   (< 3 segundos). `svelte-check` completo no va en pre-commit — va en pre-push o solo en CI.
 - Conventional commits validados con commitlint (habilita el changelog automático de R9.2).
@@ -375,10 +396,11 @@ maduras es "servicio nuevo desplegado en menos de tres minutos" — tu equivalen
 funcionando en menos de cinco".
 
 **Criterio de aceptación**
+
 - `npm run gen:feature <nombre>` genera el slice completo de R1.3: types, schema Zod, service,
   store, orquestador, componente View con los cinco estados, ruta, y tests de esqueleto.
 - `npm run gen:page <ruta>` genera una thin page + `+page.server.ts` + entrada de navegación
-  + entrada en `AUTH_ROUTE_PERMISSIONS`.
+  - entrada en `AUTH_ROUTE_PERMISSIONS`.
 - `npm run gen:component <nombre> --layer base|common|blocks` con la forma canónica de props.
 - Implementación: `plop` o un script propio con templates. No sobre-ingenierices — 150 líneas
   de Node bien puestas te devuelven el tiempo en el segundo proyecto.
@@ -387,6 +409,7 @@ funcionando en menos de cinco".
 ### R6.5 — Onboarding de proyecto nuevo en un comando ⬤ P1
 
 **Criterio de aceptación**
+
 - `npm run init:project` pregunta nombre, marca, colores base, URL de API, métodos de auth, y deja
   el repo listo: reemplaza nombres y logos, aplica tokens, escribe `.env`, borra el slice de
   ejemplo, resetea el historial de git, actualiza el README.
@@ -397,6 +420,7 @@ funcionando en menos de cinco".
 ### R6.6 — Configuración del entorno de desarrollo ⬤ P2
 
 **Criterio de aceptación**
+
 - `.vscode/extensions.json` ya existe; añadir `settings.json` con format-on-save y el plugin de
   Svelte, y un `devcontainer.json` si trabajas desde varias máquinas.
 - `AGENTS.md` / `CLAUDE.md` mantenidos como contrato con los agentes (ver R10.2).
@@ -411,6 +435,7 @@ funcionando en menos de cinco".
 cambia según dónde se construya, y no puedes probar en local lo que corre en producción.
 
 **Criterio de aceptación**
+
 - Adapter explícito. Recomendado `adapter-node` + Dockerfile multi-stage: corre igual en tu
   máquina, en un VPS, en Cloud Run, en el Kubernetes del cliente. Es la opción que no te ata a
   un proveedor — importante cuando el cliente decide dónde se hospeda.
@@ -422,6 +447,7 @@ cambia según dónde se construya, y no puedes probar en local lo que corre en p
 ### R7.2 — Entornos y configuración ⬤ P1
 
 **Criterio de aceptación**
+
 - Matriz de entornos definida: local → preview (por PR) → staging → producción.
 - Toda la configuración por variables de entorno, validadas al arrancar (R4.2). Cero secretos
   en el repo. `.env.example` completo y verificado por un test.
@@ -434,6 +460,7 @@ cambia según dónde se construya, y no puedes probar en local lo que corre en p
 un mensaje del cliente.
 
 **Criterio de aceptación**
+
 - **Errores**: Sentry (o equivalente) cableado en `handleError` server y client, con source maps
   subidos en el build y el `correlationId` de R2.2 adjunto. Filtrado de PII configurado.
 - **Logs**: logging estructurado JSON en el servidor (pino), con request id. Nada de `console.error`
@@ -453,11 +480,12 @@ un mensaje del cliente.
 ### R8.1 — Endurecer dependencias ⬤ P0
 
 **Por qué.** 2026 ha sido el peor año registrado para npm: axios comprometido en marzo, TanStack
-en mayo vía el gusano *Mini Shai-Hulud*, los paquetes de `@redhat-cloud-services` en junio. Ya
+en mayo vía el gusano _Mini Shai-Hulud_, los paquetes de `@redhat-cloud-services` en junio. Ya
 no es un riesgo teórico. Tienes ~60 dependencias de desarrollo y entregas código a clientes: eres
 un vector de cadena de suministro para ellos.
 
 **Criterio de aceptación**
+
 - `minimumReleaseAge` configurado en el package manager (p. ej. 3–7 días). La inmensa mayoría de
   los paquetes comprometidos se detectan y despublican en las primeras horas; esperar unos días
   antes de instalar una versión nueva neutraliza casi todo el riesgo, a coste cero.
@@ -473,6 +501,7 @@ un vector de cadena de suministro para ellos.
 ### R8.2 — Higiene de secretos ⬤ P1
 
 **Criterio de aceptación**
+
 - `gitleaks` en pre-commit y en CI.
 - Procedimiento de rotación documentado.
 - Ningún secreto en variables `PUBLIC_*` — verificado por un test que inspecciona el bundle.
@@ -493,6 +522,7 @@ mantienes siete bases de código divergentes que se parecen entre sí lo justo p
 ### R9.1 — Extraer el núcleo estable a paquetes versionados ⬤ P0
 
 **Criterio de aceptación**
+
 - Separación explícita entre:
   - **Núcleo** (estable, compartido, versionado): `lib/core/`, `lib/utils/`, `lib/stores/`,
     `lib/components/{ui,base,common}`, el handler de auth, el modelo de errores, los generadores.
@@ -513,6 +543,7 @@ el código a un cliente. Los paquetes versionados son la respuesta duradera.
 ### R9.2 — Versionado y changelog del núcleo ⬤ P1
 
 **Criterio de aceptación**
+
 - Changesets o semantic-release, con changelog generado desde los conventional commits de R6.3.
 - Publicación automatizada desde CI, nunca desde una máquina local.
 - Guía de migración escrita para cada versión mayor. Sin esto, tus proyectos antiguos nunca
@@ -521,6 +552,7 @@ el código a un cliente. Los paquetes versionados son la respuesta duradera.
 ### R9.3 — El template debe ser instalable y probado como tal ⬤ P1
 
 **Criterio de aceptación**
+
 - Un job de CI que, semanalmente, crea un proyecto desde cero con el template, corre `init`,
   `build` y los E2E. Si el camino de creación se rompe, te enteras esa semana y no el día que
   arranca un cliente.
@@ -532,11 +564,12 @@ el código a un cliente. Los paquetes versionados son la respuesta duradera.
 ### R10.1 — Documentación que se mantiene sola o no se mantiene ⬤ P1
 
 **Criterio de aceptación**
+
 - `README.md`: qué es, cómo arrancar, cómo desplegar. Nada más.
 - `architecture.md`: la arquitectura real (R1.1), con snippets verificados en CI.
 - `docs/adr/`: un ADR corto por cada decisión estructural (una página: contexto, decisión,
   consecuencias). Las decisiones de las secciones 0, 1.4, 7.1 y 9.1 son los primeros ADRs.
-  El valor no es el documento — es que dentro de un año recuerdes *por qué*, y que un cliente
+  El valor no es el documento — es que dentro de un año recuerdes _por qué_, y que un cliente
   al que le pasas el código lo entienda sin ti.
 - `docs/recipes/`: cómo añadir un feature, cómo añadir un rol, cómo cambiar de marca, cómo
   añadir un idioma. Cada receta corresponde a un generador de R6.4 y termina siendo su documentación.
@@ -549,6 +582,7 @@ ESLint, generadores y tests es una base donde un agente no puede desviarse mucho
 aceptar su output sin revisarlo línea por línea.
 
 **Criterio de aceptación**
+
 - `AGENTS.md` contiene: las reglas de capa, la política de data fetching (R1.4), la convención de
   estado (R3.1), las convenciones de naming, y un enlace al slice de referencia como ejemplo
   canónico a imitar.
@@ -566,17 +600,17 @@ aceptar su output sin revisarlo línea por línea.
 No van en la base por defecto. Van documentados como extensiones con receta de instalación, para
 que el día que un proyecto los pida no partas de cero.
 
-| Módulo | Cuándo | Nota |
-|---|---|---|
-| i18n | Cliente con más de un idioma | Paraglide (compile-time, tree-shakeable, integración oficial con SvelteKit). Decide **ahora** si las claves se extraen desde el día uno aunque solo haya un idioma — retrofitear i18n es caro. |
-| Persistencia propia 🅱️ | El producto no tiene backend | Drizzle + Postgres en `lib/server/db`. Trae consigo migraciones, seeds y tests de integración. |
-| Billing | SaaS con suscripción | Stripe checkout + webhooks. Los webhooks necesitan idempotencia y verificación de firma. |
-| Uploads | Archivos de usuario | S3 compatible con URLs prefirmadas. No proxies archivos por el servidor de la app. |
-| Realtime | Colaboración, notificaciones | SSE primero; WebSockets solo si SSE no alcanza. |
-| Trabajos en background | Emails, reportes, exports | Fuera del proceso de SvelteKit. |
-| Tablas de datos | Dashboards | `@tanstack/table-core` ya está instalado; falta el componente `DataTable` con paginación, orden, filtros y selección, cableado a `PaginationStore` y `FilterStore`. **Este debería subir a P1** — es el componente que reimplementas en todos los proyectos. |
-| Exportación | CSV/Excel/PDF | Petición recurrente en producto interno de empresa. |
-| Feature flags en runtime | Rollouts progresivos | Hoy `FEATURE_FLAGS` es estático en build. Suficiente por ahora. |
+| Módulo                   | Cuándo                       | Nota                                                                                                                                                                                                                                                         |
+| ------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| i18n                     | Cliente con más de un idioma | Paraglide (compile-time, tree-shakeable, integración oficial con SvelteKit). Decide **ahora** si las claves se extraen desde el día uno aunque solo haya un idioma — retrofitear i18n es caro.                                                               |
+| Persistencia propia 🅱️   | El producto no tiene backend | Drizzle + Postgres en `lib/server/db`. Trae consigo migraciones, seeds y tests de integración.                                                                                                                                                               |
+| Billing                  | SaaS con suscripción         | Stripe checkout + webhooks. Los webhooks necesitan idempotencia y verificación de firma.                                                                                                                                                                     |
+| Uploads                  | Archivos de usuario          | S3 compatible con URLs prefirmadas. No proxies archivos por el servidor de la app.                                                                                                                                                                           |
+| Realtime                 | Colaboración, notificaciones | SSE primero; WebSockets solo si SSE no alcanza.                                                                                                                                                                                                              |
+| Trabajos en background   | Emails, reportes, exports    | Fuera del proceso de SvelteKit.                                                                                                                                                                                                                              |
+| Tablas de datos          | Dashboards                   | `@tanstack/table-core` ya está instalado; falta el componente `DataTable` con paginación, orden, filtros y selección, cableado a `PaginationStore` y `FilterStore`. **Este debería subir a P1** — es el componente que reimplementas en todos los proyectos. |
+| Exportación              | CSV/Excel/PDF                | Petición recurrente en producto interno de empresa.                                                                                                                                                                                                          |
+| Feature flags en runtime | Rollouts progresivos         | Hoy `FEATURE_FLAGS` es estático en build. Suficiente por ahora.                                                                                                                                                                                              |
 
 ---
 
@@ -585,6 +619,7 @@ que el día que un proyecto los pida no partas de cero.
 Ordenado por retorno sobre esfuerzo, no por sección.
 
 ### Fase 1 — Fundamentos (1–2 semanas). Sin esto, lo demás se construye sobre arena.
+
 1. R1.1 Reescribir `architecture.md` para que refleje el código real
 2. R6.1 Un solo package manager + versión de Node fijada
 3. R6.2 CI bloqueante
@@ -593,6 +628,7 @@ Ordenado por retorno sobre esfuerzo, no por sección.
 6. R4.2 Validación de env con Zod + cabeceras de seguridad
 
 ### Fase 2 — El multiplicador (2–3 semanas). Aquí es donde ganas velocidad de verdad.
+
 7. R2.1 Tipos generados desde OpenAPI
 8. R1.3 Slice de referencia (`users`) completo y con tests
 9. R6.4 Generadores (`gen:feature`, `gen:page`, `gen:component`)
@@ -601,6 +637,7 @@ Ordenado por retorno sobre esfuerzo, no por sección.
 12. DataTable (de la sección 11, promovido)
 
 ### Fase 3 — Producción (1–2 semanas)
+
 13. R7.3 Observabilidad (Sentry + logs estructurados + Web Vitals + presupuestos)
 14. R2.2 Modelo de errores cerrado con correlation id
 15. R4.1 / R4.3 Autorización deny-by-default + flujo de refresh de token
@@ -608,6 +645,7 @@ Ordenado por retorno sobre esfuerzo, no por sección.
 17. R3.2 Design tokens y theming
 
 ### Fase 4 — Escala (continuo)
+
 18. R9.1 Extraer el núcleo a paquetes versionados
 19. R6.5 `init:project` en un comando
 20. R9.2 / R9.3 Versionado, changelog y test del template
@@ -620,16 +658,16 @@ Ordenado por retorno sobre esfuerzo, no por sección.
 Si la plataforma funciona, estos números se mueven. Si no se mueven, estás haciendo arquitectura
 para tu propio disfrute y no para tu negocio. Mídelos en el primer proyecto y compáralos en el tercero.
 
-| Métrica | Objetivo |
-|---|---|
-| Time to first deploy (repo vacío → staging con auth funcionando) | < 1 hora |
-| Time to first feature (CRUD nuevo completo, con tests) | < 1 día |
-| Tiempo de CI (push → verde) | < 5 minutos |
-| Dev server frío | < 3 segundos |
-| Propagar un arreglo de seguridad a todos los proyectos entregados | < 1 día |
+| Métrica                                                              | Objetivo         |
+| -------------------------------------------------------------------- | ---------------- |
+| Time to first deploy (repo vacío → staging con auth funcionando)     | < 1 hora         |
+| Time to first feature (CRUD nuevo completo, con tests)               | < 1 día          |
+| Tiempo de CI (push → verde)                                          | < 5 minutos      |
+| Dev server frío                                                      | < 3 segundos     |
+| Propagar un arreglo de seguridad a todos los proyectos entregados    | < 1 día          |
 | Bugs de producción atribuibles a la base (no al dominio del cliente) | tendencia a cero |
-| Proporción de código de un proyecto que es específico del cliente | > 70% |
-| Sesiones con agentes de IA que pasan `verify` al primer intento | > 80% |
+| Proporción de código de un proyecto que es específico del cliente    | > 70%            |
+| Sesiones con agentes de IA que pasan `verify` al primer intento      | > 80%            |
 
 ---
 

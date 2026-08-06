@@ -32,7 +32,11 @@ export const load = (async ({ url, cookies }) => {
 
 	try {
 		const response = await authService.loginWithGoogle(credentials.code);
-		serverAuthCookies.setTokens(cookies, response.tokens.access_token, response.tokens.refresh_token);
+		serverAuthCookies.setTokens(
+			cookies,
+			response.tokens.access_token,
+			response.tokens.refresh_token
+		);
 		_authData = response;
 		destination = redirectTo ?? config.auth.defaultRedirectPath;
 	} catch (error) {

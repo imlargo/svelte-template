@@ -27,10 +27,7 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<PageHeader
-		title="Dashboard"
-		description="Welcome to your app. Start building here."
-	>
+	<PageHeader title="Dashboard" description="Welcome to your app. Start building here.">
 		{#snippet actions()}
 			<Button size="sm" onclick={loadItems}>Load demo data</Button>
 		{/snippet}

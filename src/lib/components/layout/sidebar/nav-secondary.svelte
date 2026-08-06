@@ -31,11 +31,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton isActive={isActive(item.url)} tooltipContent={item.title}>
 						{#snippet child({ props })}
-							<a
-								href={item.url}
-								{...props}
-								aria-current={isActive(item.url) ? 'page' : undefined}
-							>
+							<a href={item.url} {...props} aria-current={isActive(item.url) ? 'page' : undefined}>
 								<item.icon />
 								<span>{item.title}</span>
 							</a>
