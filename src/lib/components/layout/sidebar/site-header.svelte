@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { NAVIGATION_ITEMS } from '$lib/config/domain';
+	import { NAVIGATION_ITEMS } from '$lib/config/domain/navigation';
 
 	// Derive page title from NAVIGATION_ITEMS by matching the current pathname.
 	// Longer routes are checked first so /admin/users matches "Admin" not a shallower route.

@@ -323,8 +323,8 @@ entregas el repo) y aplícalo.
 | H2  | **Formato inconsistente**                    | Prettier reporta 420 archivos. `lib/stores/*` y `lib/index.ts` están escritos sin punto y coma; el resto con. Un `npm run format` lo cierra, pero conviene hacerlo en un commit aislado para no contaminar el diff del refactor.                                                                                                             |
 | H3  | **Dos lockfiles**                            | `package-lock.json` + `pnpm-lock.yaml` + `pnpm-workspace.yaml`, y `CLAUDE.md` dice npm. Elige uno y borra el otro; hoy no sabes cuál resolución de dependencias es la real.                                                                                                                                                                  |
 | H4  | **`console.error` suelto**                   | `hooks.server.ts:24`, `hooks.client.ts:6`, `authorize/+page.server.ts:40`. Suficiente por ahora, pero céntralo en una función para poder cambiarlo de sitio el día que quieras Sentry, sin tocar tres archivos.                                                                                                                              |
-| H5  | **`architecture.md` describe otro proyecto** | Drizzle, Lucia, Stripe, Bun, `lib/server/db`: nada de eso existe. Es el archivo que consumen los agentes. Mientras el refactor esté en marcha, márcalo como obsoleto; al final, reescríbelo desde el código que quede.                                                                                                                       |
-| H6  | **`AGENTS.md` no describe la arquitectura**  | Solo habla del MCP de Svelte. Es el sitio natural para las tres o cuatro reglas duras (prohibido `$state` de módulo, un solo estilo de import, dónde va cada cosa).                                                                                                                                                                          |
+| H5  | ~~**`architecture.md` describe otro proyecto**~~ | **RESUELTO.** Eliminado y sustituido por `docs/ARCHITECTURE.md`, escrito desde el código real.                                                                                                                                                                                                                                          |
+| H6  | ~~**`AGENTS.md` no describe la arquitectura**~~ | **RESUELTO.** `AGENTS.md` lleva ahora la filosofía, la fase actual y las reglas duras; `CLAUDE.md` apunta a él en vez de duplicarlo.                                                                                                                                                                                                    |
 
 ---
 
@@ -341,7 +341,7 @@ Para que los diffs siguientes se lean.
 2. `npm run format` en un commit aislado (H2)
 3. Arreglar los 26 errores de lint (H1)
 4. Arreglar los 3 warnings de `state_referenced_locally` (N5)
-5. Marcar `architecture.md` como obsoleto con una nota arriba
+5. ~~Marcar `architecture.md` como obsoleto~~ — hecho: eliminado, sustituido por `docs/ARCHITECTURE.md`
 
 **Salida:** `lint`, `check` y `test` en verde. A partir de aquí, romperlos se nota.
 
@@ -391,8 +391,8 @@ Es donde está el riesgo real.
     exactamente lo que, si se rompe, rompe la seguridad.
 24. Un E2E de Playwright: login → dashboard → logout, más "member no entra a /admin".
     Ya tienes Playwright instalado y sin usar.
-25. Reescribir `architecture.md` desde el código que quedó, con snippets que compilen
-26. `AGENTS.md` con las reglas duras y el enlace al patrón canónico
+25. Revisar `docs/ARCHITECTURE.md` contra el código que quedó: los snippets deben compilar
+26. Añadir a `AGENTS.md` el enlace al slice de referencia como patrón canónico a imitar
 
 **Salida:** puedes refactorizar sin miedo, y los agentes producen código alineado al primer intento.
 

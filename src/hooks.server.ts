@@ -1,5 +1,5 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { config } from '$lib/config';
+import { config } from '$lib/config/app';
 import { AuthService, createAuthHandler } from '$lib/features/auth';
 import { serverAuthCookies } from '$lib/features/auth/server';
 import { normalizeError } from '$lib/core/errors';

@@ -5,7 +5,7 @@
 	import { cn, type WithElementRef } from '$lib/utils.js';
 	import type { HTMLFormAttributes } from 'svelte/elements';
 	import { resolve } from '$app/paths';
-	import { config } from '$lib/config';
+	import { config } from '$lib/config/app';
 	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
 	import { untrack } from 'svelte';
 	import { zodClient } from 'sveltekit-superforms/adapters';

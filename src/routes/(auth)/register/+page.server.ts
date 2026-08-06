@@ -1,7 +1,7 @@
 import { AuthService } from '$lib/features/auth';
 import { RegisterSchema } from '$lib/features/auth/schemas';
 import { serverAuthCookies } from '$lib/features/auth/server';
-import { config } from '$lib/config';
+import { config } from '$lib/config/app';
 import { fail, redirect } from '@sveltejs/kit';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';

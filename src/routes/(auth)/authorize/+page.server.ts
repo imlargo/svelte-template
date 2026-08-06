@@ -3,7 +3,7 @@ import { serverAuthCookies } from '$lib/features/auth/server';
 import { decodeRedirect } from '$lib/features/auth/redirect';
 import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-import { config } from '$lib/config';
+import { config } from '$lib/config/app';
 
 type GoogleOAuthResponse = {
 	code: string;

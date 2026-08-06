@@ -7,7 +7,7 @@
  */
 import { create } from '@korastd/air';
 import type { AirClient } from '@korastd/air';
-import { config } from '$lib/config';
+import { config } from '$lib/config/app';
 
 export type ApiClientOptions = {
 	baseUrl?: string;

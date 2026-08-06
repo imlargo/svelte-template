@@ -16,9 +16,9 @@ define qué es el template, en qué estado está, y qué está permitido hacer.
 Los tres se leen en ese orden. `ARCHITECTURE.md` dice a dónde vamos, `AUDIT.md` dice desde dónde
 partimos, `BACKLOG.md` dice qué **no** hacemos todavía.
 
-> El archivo `architecture.md` en la raíz del repo está **obsoleto** — describe un stack
-> (Drizzle, Lucia, Stripe, Bun) que no existe en el código. No lo uses. Lo sustituye
-> `docs/ARCHITECTURE.md` y debe borrarse.
+> El antiguo `architecture.md` de la raíz (que describía un stack con Drizzle, Lucia y Stripe que
+> nunca existió en el código) fue **eliminado**. Lo sustituye `docs/ARCHITECTURE.md`. Si lo
+> necesitas por algún motivo, sigue en el historial de git.
 
 ---
 
