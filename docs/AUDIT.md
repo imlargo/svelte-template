@@ -410,11 +410,11 @@ la razón escrita.
 | Generadores de código / scaffolding          | Cuando hayas escrito el mismo slice a mano tres veces y te moleste                                                               |
 | Tipos generados desde OpenAPI                | Cuando un cambio del backend te rompa producción sin avisar                                                                      |
 | Extraer el núcleo a paquetes npm versionados | Cuando tengas 3+ proyectos entregados y un arreglo que propagar                                                                  |
-| CI, Docker, adapter fijo, observabilidad     | Cuando el primer proyecto real vaya a producción. Entonces vuelve a `platform-requirements.md`                                   |
+| CI, Docker, adapter fijo, observabilidad     | Cuando el primer proyecto real vaya a producción. Entonces vuelve a `BACKLOG.md`                                   |
 | Design tokens multi-marca, i18n, Storybook   | Cuando un cliente lo pida                                                                                                        |
 | Segundo slice de ejemplo (`users`)           | Discutible: podría entrar en la Tanda 4 si quieres que el template enseñe un CRUD completo. Cuesta un día más. Decisión abierta. |
 
-`platform-requirements.md` se queda en el repo como backlog de "más adelante". Este documento
+`BACKLOG.md` se queda en el repo como backlog de "más adelante". Este documento
 es lo que se ejecuta ahora.
 
 ---
