@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@korastd/air':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -286,8 +286,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@korastd/air@0.1.0':
-    resolution: {integrity: sha512-V8o8iCcuSjCg+BHYQ4GNICHBpwl4D6C6fPCjTYAzw9XqH/R5CAGWi+LpdJsINUzmyBC/2zkhb31MCfNMQupqtQ==}
+  '@korastd/air@0.2.0':
+    resolution: {integrity: sha512-k27e6RembzbKGhLQlnEeEXTUhsVtot17fTB2D40iFW47wcSwYXHU6GFoSgB5eZL4nsjFb67UElTaCKGjFirpDA==}
     engines: {node: '>=18'}
 
   '@layerstack/svelte-actions@1.0.1-next.18':
@@ -2129,7 +2129,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@korastd/air@0.1.0': {}
+  '@korastd/air@0.2.0': {}
 
   '@layerstack/svelte-actions@1.0.1-next.18':
     dependencies:

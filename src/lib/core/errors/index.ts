@@ -93,13 +93,26 @@ export class ApiError extends AppError {
 	readonly httpCode: number;
 	readonly status: string;
 	readonly payload?: Record<string, unknown>;
+	/**
+	 * Which call failed. Deliberately method and URL only — air also exposes the
+	 * resolved request headers, but those carry the Authorization token, and this
+	 * object ends up in logs.
+	 */
+	readonly request?: { method: string; url: string };
 
-	constructor(httpCode: number, status: string, message: string, payload?: Record<string, unknown>) {
+	constructor(
+		httpCode: number,
+		status: string,
+		message: string,
+		payload?: Record<string, unknown>,
+		request?: { method: string; url: string }
+	) {
 		super(message, STATUS_TO_CODE[status] ?? codeForHttpStatus(httpCode));
 		this.name = 'ApiError';
 		this.httpCode = httpCode;
 		this.status = status;
 		this.payload = payload;
+		this.request = request;
 	}
 
 	static isShape(err: unknown): err is { status: string; message: string; code?: number } {
@@ -127,7 +140,10 @@ export class ApiError extends AppError {
 				? (data.payload as Record<string, unknown>)
 				: undefined;
 
-		return new ApiError(err.status ?? 0, status, message, payload);
+		return new ApiError(err.status ?? 0, status, message, payload, {
+			method: err.request.method,
+			url: err.request.url
+		});
 	}
 }
 
