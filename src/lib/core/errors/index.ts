@@ -1,3 +1,5 @@
+import { isAirError, type AirError } from '@korastd/air';
+
 // Error codes — union type, extend as needed for your API
 export type ErrorCode =
 	| 'NETWORK'
@@ -65,13 +67,35 @@ const STATUS_TO_CODE: Record<string, ErrorCode> = {
 	INTERNAL_SERVER_ERROR: 'SERVER_ERROR'
 };
 
+// Fallback for responses whose body doesn't carry a recognized `status` string —
+// derive an ErrorCode straight from the HTTP status instead.
+function codeForHttpStatus(httpCode: number): ErrorCode {
+	switch (httpCode) {
+		case 0:
+			return 'NETWORK';
+		case 400:
+		case 422:
+			return 'BAD_REQUEST';
+		case 401:
+			return 'UNAUTHORIZED';
+		case 403:
+			return 'FORBIDDEN';
+		case 404:
+			return 'NOT_FOUND';
+		case 409:
+			return 'CONFLICT';
+		default:
+			return httpCode >= 500 ? 'SERVER_ERROR' : 'UNKNOWN';
+	}
+}
+
 export class ApiError extends AppError {
 	readonly httpCode: number;
 	readonly status: string;
 	readonly payload?: Record<string, unknown>;
 
 	constructor(httpCode: number, status: string, message: string, payload?: Record<string, unknown>) {
-		super(message, STATUS_TO_CODE[status] ?? 'UNKNOWN');
+		super(message, STATUS_TO_CODE[status] ?? codeForHttpStatus(httpCode));
 		this.name = 'ApiError';
 		this.httpCode = httpCode;
 		this.status = status;
@@ -85,6 +109,25 @@ export class ApiError extends AppError {
 			typeof (err as Record<string, unknown>).status === 'string' &&
 			typeof (err as Record<string, unknown>).message === 'string'
 		);
+	}
+
+	// Builds an ApiError from air's AirError, thrown for network failures and
+	// non-2xx responses alike. Expects a JSON error body shaped like
+	// `{ status, message, code, payload }`; falls back to the HTTP status when
+	// the body doesn't follow that convention.
+	static fromAirError(err: AirError): ApiError {
+		const data =
+			err.data && typeof err.data === 'object' ? (err.data as Record<string, unknown>) : {};
+
+		const status =
+			typeof data.status === 'string' ? data.status : err.response ? 'HTTP_ERROR' : 'NETWORK_ERROR';
+		const message = typeof data.message === 'string' ? data.message : err.message;
+		const payload =
+			data.payload && typeof data.payload === 'object'
+				? (data.payload as Record<string, unknown>)
+				: undefined;
+
+		return new ApiError(err.status ?? 0, status, message, payload);
 	}
 }
 
@@ -120,6 +163,7 @@ export class ValidationError extends AppError {
 
 export function normalizeError(err: unknown): AppError {
 	if (err instanceof AppError) return err;
+	if (isAirError(err)) return ApiError.fromAirError(err);
 	if (ApiError.isShape(err)) {
 		return new ApiError(
 			(err as { code?: number }).code ?? 0,
@@ -135,4 +179,16 @@ export function normalizeError(err: unknown): AppError {
 // Returns a user-facing message from any thrown value.
 export function getErrorMessage(err: unknown): string {
 	return normalizeError(err).getMessage();
+}
+
+// True when `err` is an air/API error carrying a `{status, message}` shape.
+export function isApiErrorResponse(err: unknown): boolean {
+	return isAirError(err) || ApiError.isShape(err);
+}
+
+export function toApiError(err: unknown): ApiError {
+	const normalized = normalizeError(err);
+	return normalized instanceof ApiError
+		? normalized
+		: new ApiError(0, 'UNKNOWN_ERROR', normalized.message);
 }

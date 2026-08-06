@@ -11,8 +11,8 @@ export { AppError, ApiError, ValidationError, normalizeError, getErrorMessage } 
 export type { ErrorCode } from './core/errors'
 
 // API client
-export { createApiClient, ApiClient } from './core/api'
-export type { ApiOptions, ApiClientOptions } from './core/api'
+export { createApiClient } from './core/api'
+export type { ApiClient, ApiOptions, ApiClientOptions } from './core/api'
 
 // Service base class
 export { BaseService } from './core/service'

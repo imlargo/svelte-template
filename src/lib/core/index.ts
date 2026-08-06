@@ -1,6 +1,6 @@
 // API client
-export { createApiClient, ApiClient } from './api';
-export type { ApiOptions, ApiClientOptions } from './api';
+export { createApiClient } from './api';
+export type { ApiClient, ApiOptions, ApiClientOptions } from './api';
 
 // Errors
 export { AppError, ApiError, ValidationError, normalizeError, getErrorMessage } from './errors';
