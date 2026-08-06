@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - '@korastd/air@0.1.0'
