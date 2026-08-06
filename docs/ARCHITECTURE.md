@@ -120,11 +120,10 @@ src/
 │   │   ├── logger.ts              ← log(...) — único punto de salida de logs
 │   │   └── view-state.svelte.ts   ← ViewState<T> + AsyncViewState
 │   │
-│   ├── config/
+│   ├── config/                     ← plano, sin subcarpetas: 3 archivos no justifican una.
 │   │   ├── app.ts                 ← configuración leída de env, tipada. Único objeto `config`.
-│   │   └── domain/                ← constantes del negocio. Datos, sin lógica.
-│   │       ├── permissions.ts     ← roles, PermissionKey, matriz ruta→roles
-│   │       └── navigation.ts      ← items del menú
+│   │   ├── permissions.ts         ← roles, PermissionKey, matriz ruta→roles
+│   │   └── navigation.ts          ← items del menú
 │   │
 │   ├── types/                     ← SOLO tipos usados por más de un slice
 │   │   └── user.ts                ← User, UserRole, BaseEntity
@@ -622,7 +621,7 @@ Con snippets opcionales para `loading`, `empty` y `error`, y defaults razonables
 | `base/` | Átomos propios: componentes que shadcn no trae o que necesitan variantes de marca (`Combobox`, `DatePicker`, `FileInput`). | `ui/` |
 | `common/` | Moléculas sin conocimiento de dominio: `PageHeader`, `EmptyState`, `AsyncView`, `CardIcon`. | `ui/`, `base/` |
 | `blocks/` | Organismos sin dominio: composiciones grandes reutilizables. | `ui/`, `base/`, `common/` |
-| `layout/` | El chrome de la app: sidebar, header. Conoce `config/domain/navigation`. | todos los anteriores, `config/` |
+| `layout/` | El chrome de la app: sidebar, header. Conoce `config/navigation`. | todos los anteriores, `config/` |
 | `features/<d>/components/` | UI del dominio. | todos los anteriores, su propio slice |
 
 **Ninguno de `ui/`, `base/`, `common/`, `blocks/` puede importar de `features/`.** La flecha va en
@@ -793,7 +792,7 @@ components/base/   → components/ui, utils/
 components/ui/     → bits-ui, utils/   ✗ nada más
 core/              → types/            ✗ no conoce config/ ni features/
 utils/             → nada
-config/domain/     → types/
+config/            → types/
 features/<d>/services/ → core/, config/, types/, sus propios types
                      ✗ NADA específico de un entorno ($env/private, node:*, $app/state):
                        rompe el isomorfismo
@@ -912,7 +911,7 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 
 1. Crear `routes/(app)/<ruta>/+page.svelte` (thin) y `+page.server.ts` (`load`).
 2. **Añadir la entrada en `AUTH_ROUTE_PERMISSIONS`.** Sin esto la ruta da 403 — es deliberado.
-3. Si va en el menú, añadir el item en `config/domain/navigation.ts` con sus `requiredPermissions`.
+3. Si va en el menú, añadir el item en `config/navigation.ts` con sus `requiredPermissions`.
 4. `npm run lint && npm run check && npm run test`.
 
 ### Añadir un slice
