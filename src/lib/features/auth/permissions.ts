@@ -3,7 +3,7 @@ import {
 	AUTH_ROUTE_PERMISSIONS,
 	AUTH_DEFAULT_ROUTES,
 	PermissionKey
-} from '$lib/config/domain';
+} from '$lib/config/domain/permissions';
 import { UserRole } from '$lib/types/auth/roles';
 
 function normalizeRole(role: string | null | undefined): UserRole {

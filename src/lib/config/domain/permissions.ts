@@ -9,8 +9,6 @@ export enum PermissionKey {
 }
 
 // ─── Role metadata ────────────────────────────────────────────────────────────
-export const ROLE_PRIORITY: UserRole[] = [UserRole.ADMIN, UserRole.MEMBER];
-
 export const ROLE_LABELS: Record<UserRole, string> = {
 	[UserRole.ADMIN]: 'Admin',
 	[UserRole.MEMBER]: 'Member'
