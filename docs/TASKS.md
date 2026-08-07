@@ -13,17 +13,19 @@ Leyenda: ✅ hecho · 🔄 parcial · ⬜ pendiente · ⚠️ decisión tuya
 
 ## Estado actual del repo
 
-| Verificación | Estado |
-|---|---|
-| `npm run lint` | ✅ 0 errores (eran 26) |
-| `npm run check` | 🔄 0 errores, **3 warnings** pendientes |
-| `npm run test` | ✅ 8 tests pasando |
-| Prettier | 🔄 4 archivos (solo `docs/`) |
-| Lockfiles | ✅ solo `pnpm-lock.yaml` |
+| Verificación    | Estado                   |
+| --------------- | ------------------------ |
+| `npm run lint`  | ✅ 0 errores (eran 26)   |
+| `npm run check` | ✅ 0 errores, 0 warnings |
+| `npm run test`  | ✅ 24 tests pasando      |
+| Prettier        | ✅ limpio                |
+| Lockfiles       | ✅ solo `pnpm-lock.yaml` |
 
 ---
 
-## ⚠️ D1 — Decisión pendiente: dónde vive la config
+## ⚠️ D1 — Decisión pendiente: dónde vive la config ✅ CERRADO
+
+**Resuelto:** se actualizó el documento; `config/` se queda plano.
 
 **Bloquea:** nada, pero cuanto antes se cierre, menos divergencia.
 
@@ -45,7 +47,7 @@ tenía sentido cuando había un `config/` técnico al lado, y ya no lo hay.
 
 ### T0.1 ✅ Lint · T0.2 ✅ Formato · T0.3 ✅ Lockfile único · T0.5 ✅ `architecture.md` eliminado
 
-### T0.4 ⬜ Los 3 warnings de reactividad
+### T0.4 ✅ Los 3 warnings de reactividad
 
 Son bugs reales: esos componentes capturan el valor inicial de una prop y nunca ven los cambios.
 
@@ -76,6 +78,10 @@ Falta el resto. **Máximo retorno, mínimo riesgo: nada de esto tiene consumidor
 
 ### T1.1 ⬜ Abstracciones sin uso
 
+**Ya hecho** en el refactor de auth: `with-loading`, `core/index.ts`, `core/helpers/index.ts`,
+`types/domain/`, `(auth)/verify/` y `resolveRole`. **Queda:** `lib/stores/` completo,
+`components/domain/` y `ApiError.isShape`.
+
 > Ejecuta la Tanda 1 de `docs/AUDIT.md` sobre lo que queda. Verifica con grep en todo `src/` que
 > cada símbolo tiene cero consumidores antes de borrarlo, y borra: `lib/stores/` completo
 > (`FilterStore`, `PaginationStore`, `Disclosure`), `core/helpers/with-loading.svelte.ts`,
@@ -94,12 +100,19 @@ en todo el repo: todo el código importa por `$lib/`.
 
 ---
 
-## T2 — Seguridad ⬜
+## T2 — Seguridad ✅
 
-**Nada hecho.** Es la tanda con riesgo real y donde está el valor diferencial del template.
-Cuatro tareas, en este orden. Referencia: `docs/ARCHITECTURE.md` §7 y §8.
+**Hecha entera**, en el refactor de auth de la rama `refactor/auth`. Además de B1–B7 se borró el
+registro y `/verify`, se aplanó `AuthCookiesManager` en tres funciones (`session.server.ts`), y
+`createAuthHandler` pasó de fábrica con nueve opciones a un `Handle` concreto (`handleAuth`).
+Los checks de permisos viven ahora en `core/permissions.ts`, con la matriz pasada por argumento.
 
-### T2.1 ⬜ Tokens y contexto de auth  *(B1 + B2)*
+**Pendiente de ti:** arranca la app contra tu backend y haz un login real. Los checks están en
+verde y el flujo se probó contra el dev server (redirect a login preservando destino, logout por
+POST que borra cookies, callback OAuth rechazando `state` no coincidente), pero nada de eso
+sustituye a un login de verdad.
+
+### T2.1 ✅ Tokens y contexto de auth _(B1 + B2)_
 
 El cambio más grande. Van juntos porque son el mismo refactor.
 
@@ -113,7 +126,7 @@ El cambio más grande. Van juntos porque son el mismo refactor.
 **⚠️ Después de esta tarea, arranca la app y haz login tú mismo.** Es el punto donde un agente
 puede dejarte una sesión rota con todos los checks en verde.
 
-### T2.2 ⬜ Autorización real  *(B3 + B4)*
+### T2.2 ✅ Autorización real _(B3 + B4)_
 
 `canAccessRoute` existe y solo se llama a sí misma desde `resolveDefaultRoute`. **Ninguna ruta
 está protegida por rol**: un `member` escribe `/admin` y entra.
@@ -124,14 +137,14 @@ está protegida por rol**: un `member` escribe `/admin` y entra.
 > `AUTH_ROUTE_PERMISSIONS` denegada. El match de rutas debe ser por prefijo más largo, no por el
 > primero que coincida.
 
-### T2.3 ⬜ Logout por POST  *(B7)*
+### T2.3 ✅ Logout por POST _(B7)_
 
 Hoy el logout es un `load`, que corre en GET. El prefetch de SvelteKit puede cerrar la sesión sola.
 
 > Ejecuta B7 de `docs/AUDIT.md`: convierte el logout en una form action POST con `use:enhance`.
 > La página pasa a ser un formulario con un botón, que debe funcionar también sin JavaScript.
 
-### T2.4 ⬜ Callback OAuth  *(B5 + B6)*
+### T2.4 ✅ Callback OAuth _(B5 + B6)_
 
 > Ejecuta B5 y B6 de `docs/AUDIT.md`: convierte `(auth)/authorize/` de página a `+server.ts`,
 > añade generación y verificación del parámetro `state` (nonce en cookie) contra CSRF de OAuth, y
@@ -144,7 +157,9 @@ Hoy el logout es un `load`, que corre en GET. El prefetch de SvelteKit puede cer
 
 Referencia: `docs/ARCHITECTURE.md` §8 y §9.
 
-### T3.1 ⬜ Los dos `$effect` mal usados
+### T3.1 🔄 Los dos `$effect` mal usados
+
+**Hecho N2** (`app-sidebar` usa `afterNavigate`). **Queda N1**: el `$effect` de `Select.svelte`.
 
 > Ejecuta N1 y N2 de `docs/AUDIT.md`. En `base/select/Select.svelte`, elimina el `$effect` que
 > llama a `onchange` (se dispara al montar y hace eco cuando el padre reasigna); invoca el
@@ -163,7 +178,11 @@ El más importante de esta tanda: es el ejemplo que se copia en cada página nue
 > `$state` paralelo y vuelve a comprobar el vacío dentro del snippet de éxito, contradiciendo el
 > propio estado `empty`.
 
-### T3.3 ⬜ Limpieza de tipos y consistencia
+### T3.3 🔄 Limpieza de tipos y consistencia
+
+**Hecho:** N6 (`icon` tipado como `LucideIcon`), N7 (Zod 4 con el adaptador `zod4`) y H4
+(`core/logger.ts`, sin `console.error` sueltos). **Queda N8**: barrer el repo en busca de
+comentarios y textos en español fuera de `docs/`.
 
 > Ejecuta N6, N7 y N8 de `docs/AUDIT.md` más H4: tipa el `icon` de `config/navigation.ts` como
 > componente Svelte en vez de `any`; unifica en Zod 4 (hoy `schemas.ts` importa `zod/v3` con Zod 4
@@ -175,7 +194,11 @@ El más importante de esta tanda: es el ejemplo que se copia en cada página nue
 
 ## T4 — Red de seguridad ⬜
 
-### T4.1 ⬜ Tests de lo que importa
+### T4.1 🔄 Tests de lo que importa
+
+**Hecho:** la matriz rol × ruta completa en `core/permissions.test.ts`, incluidos rol
+desconocido, ruta no declarada y prefijo más largo. **Queda:** el mapeo de `core/errors.ts` y
+`handleAuth`.
 
 > Escribe los tests obligatorios de `docs/ARCHITECTURE.md` §15: la matriz completa rol × ruta de
 > `features/auth/permissions.ts` incluyendo rol desconocido y ruta no declarada; el mapeo de
