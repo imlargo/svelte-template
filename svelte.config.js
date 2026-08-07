@@ -15,7 +15,7 @@ const config = {
 			$components: './src/lib/components',
 			$ui: './src/lib/components/ui',
 			$core: './src/lib/core',
-			$stores: './src/lib/stores',
+			$hooks: './src/lib/hooks',
 			$types: './src/lib/types',
 			$utils: './src/lib/utils'
 		}
