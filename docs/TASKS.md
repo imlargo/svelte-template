@@ -5,7 +5,8 @@ Lista ordenada. Una tarea = una sesión de agente = un commit. Cada tarea deja e
 **Cómo usarla:** el agente lee `docs/README.md` (contexto) y luego le das la tarea. El texto en
 blockquote de cada punto es copiable tal cual.
 
-**Estado medido el 2026-08-06** contra el working tree actual, no contra el commit inicial.
+**Estado medido el 2026-08-07** contra `main`, tras el merge de `refactor/auth` (PR #6,
+commit `951edf8`) y su corrección posterior (`f054f25`).
 
 Leyenda: ✅ hecho · 🔄 parcial · ⬜ pendiente · ⚠️ decisión tuya
 
@@ -17,9 +18,18 @@ Leyenda: ✅ hecho · 🔄 parcial · ⬜ pendiente · ⚠️ decisión tuya
 | --------------- | ------------------------ |
 | `npm run lint`  | ✅ 0 errores (eran 26)   |
 | `npm run check` | ✅ 0 errores, 0 warnings |
-| `npm run test`  | ✅ 24 tests pasando      |
+| `npm run test`  | ✅ 26 tests pasando      |
 | Prettier        | ✅ limpio                |
 | Lockfiles       | ✅ solo `pnpm-lock.yaml` |
+
+**Auditado con ojos frescos** (subagente sin contexto del refactor, 2026-08-07): trazó el flujo
+completo de login/OAuth/logout/permisos contra el código real, corrió lint/check/test él mismo, y
+comparó `ARCHITECTURE.md` contra el código citado línea por línea. Veredicto: sin hallazgos de
+seguridad bloqueantes. Dos hallazgos de calidad menores, ambos corregidos en `f054f25`:
+`setLogger` sin consumidor (se le añadió `core/logger.test.ts`) y un comentario obsoleto en
+`redirect.ts` que aún nombraba `createAuthHandler` en vez de `handleAuth`. Confirmó además que
+`core/permissions.ts` no importa de `config/` ni `features/` (cumple §13), y que no queda ningún
+`$state` de módulo en `core/` ni `features/auth/`.
 
 ---
 
@@ -102,15 +112,16 @@ en todo el repo: todo el código importa por `$lib/`.
 
 ## T2 — Seguridad ✅
 
-**Hecha entera**, en el refactor de auth de la rama `refactor/auth`. Además de B1–B7 se borró el
-registro y `/verify`, se aplanó `AuthCookiesManager` en tres funciones (`session.server.ts`), y
-`createAuthHandler` pasó de fábrica con nueve opciones a un `Handle` concreto (`handleAuth`).
-Los checks de permisos viven ahora en `core/permissions.ts`, con la matriz pasada por argumento.
+**Hecha entera y mergeada a `main`** (PR #6). Además de B1–B7 se borró el registro y `/verify`,
+se aplanó `AuthCookiesManager` en tres funciones (`session.server.ts`), y `createAuthHandler`
+pasó de fábrica con nueve opciones a un `Handle` concreto (`handleAuth`). Los checks de permisos
+viven ahora en `core/permissions.ts`, con la matriz pasada por argumento. Auditado con ojos
+frescos el 2026-08-07: sin hallazgos de seguridad.
 
-**Pendiente de ti:** arranca la app contra tu backend y haz un login real. Los checks están en
-verde y el flujo se probó contra el dev server (redirect a login preservando destino, logout por
-POST que borra cookies, callback OAuth rechazando `state` no coincidente), pero nada de eso
-sustituye a un login de verdad.
+**Sigue pendiente de ti:** arranca la app contra tu backend y haz un login real. Ni los checks ni
+la auditoría sustituyen eso — nadie, ni yo ni el subagente que audita, ha visto el flujo feliz
+completo (credenciales válidas → `/auth/me` resuelve → sidebar pinta el rol) contra una API de
+verdad.
 
 ### T2.1 ✅ Tokens y contexto de auth _(B1 + B2)_
 
@@ -151,6 +162,15 @@ Hoy el logout es un `load`, que corre en GET. El prefetch de SvelteKit puede cer
 > separa el `maxAge` del access token del refresh token en `AuthCookiesManager` — hoy comparten
 > valor, lo que anula el sentido de tener dos tokens.
 
+### T2.5 ✅ Auditoría con ojos frescos y correcciones
+
+> Se lanzó un subagente sin contexto del refactor a auditar `main` tras el merge, contra
+> `docs/ARCHITECTURE.md` como fuente de verdad. Sin hallazgos de seguridad. Dos hallazgos de
+> calidad, ambos corregidos en el commit `f054f25`: `setLogger` (`core/logger.ts`) no tenía
+> consumidor — se le dio uno real en vez de borrarlo, con `core/logger.test.ts`, porque borrarlo
+> anulaba el punto de tener una interfaz `Logger` intercambiable; y `redirect.ts` citaba
+> `createAuthHandler`, que el refactor había renombrado a `handleAuth`.
+
 ---
 
 ## T3 — Idiomático ⬜
@@ -181,8 +201,11 @@ El más importante de esta tanda: es el ejemplo que se copia en cada página nue
 ### T3.3 🔄 Limpieza de tipos y consistencia
 
 **Hecho:** N6 (`icon` tipado como `LucideIcon`), N7 (Zod 4 con el adaptador `zod4`) y H4
-(`core/logger.ts`, sin `console.error` sueltos). **Queda N8**: barrer el repo en busca de
-comentarios y textos en español fuera de `docs/`.
+(`core/logger.ts`, ahora una interfaz `Logger` + `ConsoleLogger`, sin `console.error` sueltos).
+**Queda N8**: el ejemplo original de `AUDIT.md` (`logout/+page.svelte`) ya no existe, pero la
+auditoría del 2026-08-07 encontró otros dos: etiquetas en español en `utils/date.ts:16-22` y un
+comentario en `NumberInput.svelte:52`. El hallazgo sigue vivo, solo cambiaron los ejemplos —
+conviene un grep de barrido, no arreglar solo estos dos.
 
 > Ejecuta N6, N7 y N8 de `docs/AUDIT.md` más H4: tipa el `icon` de `config/navigation.ts` como
 > componente Svelte en vez de `any`; unifica en Zod 4 (hoy `schemas.ts` importa `zod/v3` con Zod 4
@@ -196,9 +219,13 @@ comentarios y textos en español fuera de `docs/`.
 
 ### T4.1 🔄 Tests de lo que importa
 
-**Hecho:** la matriz rol × ruta completa en `core/permissions.test.ts`, incluidos rol
-desconocido, ruta no declarada y prefijo más largo. **Queda:** el mapeo de `core/errors.ts` y
-`handleAuth`.
+**Hecho:** la matriz rol × ruta completa en `core/permissions.test.ts` (16 tests), incluidos rol
+desconocido, ruta no declarada y prefijo más largo — validado por la auditoría del 2026-08-07,
+que solo señaló como hueco menor el caso específico `/admin` vs `/admin-panel` (la
+implementación lo resuelve bien, el test no lo fija explícitamente). También se sumó
+`core/logger.test.ts`, fuera del alcance original de esta tarea pero mismo criterio: cubre lo
+que el propio diseño necesita probar (que `setLogger` intercambia la implementación de verdad).
+**Queda:** el mapeo de `core/errors.ts` y `handleAuth`.
 
 > Escribe los tests obligatorios de `docs/ARCHITECTURE.md` §15: la matriz completa rol × ruta de
 > `features/auth/permissions.ts` incluyendo rol desconocido y ruta no declarada; el mapeo de
@@ -241,18 +268,14 @@ construirías el ejemplo sobre patrones que vas a cambiar.
 ## Resumen del orden
 
 ```
-D1  → decisión de config (5 min, tú)
-T0.4, T0.6                          ← cerrar la base
-T1.1, T1.2                          ← borrar (hace T2 más pequeña)
-T2.1 → verificar login a mano ← T2.2 → T2.3 → T2.4
-T3.1 → T3.2 → T3.3
-T4.1 → T4.2 → T4.3
+D1 ✅ · T0.4 ✅ · T2 ✅ (auditada, mergeada)      ← cerrado
+T0.6                                              ← queda, es rápido
+T1.1, T1.2                                        ← borrar lo que sigue muerto
+T3.1 (falta N1) → T3.2 → T3.3 (falta barrido N8)
+T4.1 (falta errors.ts + handleAuth) → T4.2 → T4.3
 O1 (opcional, tras T3)
 ```
 
-**T1 antes que T2** no es negociable: borrar `authStore` en T1 hace T2.1 mucho más pequeña. Al
-revés, refactorizas código que ibas a borrar.
-
-**Al terminar T2 y T4**, pide una verificación con ojos frescos: un subagente que no escribió el
-código, revisando contra la sección correspondiente de `docs/ARCHITECTURE.md`. Los agentes son
-malos auditando su propio trabajo.
+**Al terminar T4**, repite la verificación con ojos frescos igual que se hizo para T2: un
+subagente sin contexto del trabajo, revisando contra `docs/ARCHITECTURE.md`. Ya se demostró que
+detecta cosas reales (`setLogger` sin consumidor) que quien escribe el código no ve.
