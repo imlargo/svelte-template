@@ -3,20 +3,15 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { NAVIGATION_ITEMS } from '$lib/config/navigation';
+	import { isPrefixOf } from '$lib/core/permissions';
 
-	// Derive page title from NAVIGATION_ITEMS by matching the current pathname.
-	// Longer routes are checked first so /admin/users matches "Admin" not a shallower route.
-	const sortedItems = [...NAVIGATION_ITEMS].sort((a, b) => b.to.length - a.to.length);
+	// Page title from NAVIGATION_ITEMS. Longest route first, so /admin/users
+	// resolves to "Admin" rather than to a shallower entry.
+	const byDepth = [...NAVIGATION_ITEMS].sort((a, b) => b.to.length - a.to.length);
 
-	let pageTitle = $derived.by(() => {
-		const pathname = page.url.pathname;
-		const match = sortedItems.find((item) =>
-			item.to === '/'
-				? pathname === '/'
-				: pathname === item.to || pathname.startsWith(item.to + '/')
-		);
-		return match?.title ?? 'App';
-	});
+	let pageTitle = $derived(
+		byDepth.find((item) => isPrefixOf(item.to, page.url.pathname))?.title ?? 'App'
+	);
 </script>
 
 <header

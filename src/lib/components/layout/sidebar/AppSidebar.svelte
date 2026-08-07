@@ -2,7 +2,6 @@
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import LayoutIcon from '@lucide/svelte/icons/layout-dashboard';
 	import type { ComponentProps } from 'svelte';
 	import type { User } from '$lib/types/user';
 	import {
@@ -10,6 +9,7 @@
 		NAVIGATION_GROUP_LABELS,
 		NavigationGroup
 	} from '$lib/config/navigation';
+	import { config } from '$lib/config/app';
 	import { ROLE_PERMISSIONS, ROLE_LABELS } from '$lib/config/permissions';
 	import { hasPermission } from '$lib/core/permissions';
 	import NavMain from './NavMain.svelte';
@@ -25,10 +25,14 @@
 	} & Omit<ComponentProps<typeof Sidebar.Root>, 'children'> = $props();
 
 	// Presentation only — hiding a link is not access control. The hook enforces it.
+	// With auth off there is no user and therefore no role, so filtering would
+	// leave the menu empty in the very mode meant for working without a backend.
 	let visibleItems = $derived(
-		NAVIGATION_ITEMS.filter((item) =>
-			hasPermission(ROLE_PERMISSIONS, user?.role, item.requiredPermission)
-		)
+		config.auth.enabled
+			? NAVIGATION_ITEMS.filter((item) =>
+					hasPermission(ROLE_PERMISSIONS, user?.role, item.requiredPermission)
+				)
+			: NAVIGATION_ITEMS
 	);
 
 	let navMainGroups = $derived.by(() => {
@@ -72,11 +76,10 @@
 							<div
 								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
 							>
-								<LayoutIcon class="size-4" />
+								<img src={config.branding.logo} alt="" class="size-4" />
 							</div>
 							<div class="grid flex-1 text-start text-sm leading-tight">
-								<!-- Replace "App" with your application name -->
-								<span class="truncate font-semibold">App</span>
+								<span class="truncate font-semibold">{config.branding.name}</span>
 							</div>
 						</a>
 					{/snippet}
