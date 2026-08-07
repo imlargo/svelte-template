@@ -1,4 +1,7 @@
-import type { UserRole } from './roles';
+export enum UserRole {
+	ADMIN = 'admin',
+	MEMBER = 'member'
+}
 
 export interface BaseEntity {
 	id: string;

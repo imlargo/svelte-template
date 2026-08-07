@@ -1,18 +1,17 @@
 <script lang="ts">
-	import { page } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import LayoutIcon from '@lucide/svelte/icons/layout-dashboard';
 	import type { ComponentProps } from 'svelte';
-	import type { User } from '$lib/types/auth/user';
+	import type { User } from '$lib/types/user';
 	import {
 		NAVIGATION_ITEMS,
 		NAVIGATION_GROUP_LABELS,
 		NavigationGroup
 	} from '$lib/config/navigation';
-	import { ROLE_LABELS } from '$lib/config/permissions';
-	import { UserRole } from '$lib/types/auth/roles';
-	import { hasAnyPermission } from '$lib/features/auth';
+	import { PERMISSION_GROUPS, ROLE_LABELS } from '$lib/config/permissions';
+	import { hasAnyPermission } from '$lib/core/permissions';
 	import NavMain from './nav-main.svelte';
 	import NavUser from './nav-user.svelte';
 
@@ -25,10 +24,11 @@
 		user: User | null;
 	} & Omit<ComponentProps<typeof Sidebar.Root>, 'children'> = $props();
 
-	let currentRole = $derived(user?.role ?? UserRole.MEMBER);
-
+	// Presentation only — hiding a link is not access control. The hook enforces it.
 	let visibleItems = $derived(
-		NAVIGATION_ITEMS.filter((item) => hasAnyPermission(currentRole, item.requiredPermissions))
+		NAVIGATION_ITEMS.filter((item) =>
+			hasAnyPermission(PERMISSION_GROUPS, user?.role, item.requiredPermissions)
+		)
 	);
 
 	let navMainGroups = $derived.by(() => {
@@ -53,16 +53,8 @@
 		avatar: user?.avatar ?? null
 	});
 
-	// Close mobile sidebar on navigation
-	let previousPathname = $state(page.url.pathname);
-	$effect(() => {
-		const nextPathname = page.url.pathname;
-		if (nextPathname !== previousPathname) {
-			previousPathname = nextPathname;
-			if (sidebar.isMobile && sidebar.openMobile) {
-				sidebar.setOpenMobile(false);
-			}
-		}
+	afterNavigate(() => {
+		if (sidebar.isMobile && sidebar.openMobile) sidebar.setOpenMobile(false);
 	});
 </script>
 

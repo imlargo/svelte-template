@@ -2,7 +2,7 @@
 	import { PageHeader, AsyncView, EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { ViewState } from '$lib/core/helpers/view-state.svelte';
+	import { ViewState } from '$lib/core/view-state.svelte';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import ActivityIcon from '@lucide/svelte/icons/activity';

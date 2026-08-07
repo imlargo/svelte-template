@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { AsyncViewState } from '$lib/types/ui/view-state';
-	import type { ViewState } from '$lib/core/helpers/view-state.svelte';
+	import type { AsyncViewState, ViewState } from '$lib/core/view-state.svelte';
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 
