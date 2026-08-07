@@ -22,7 +22,7 @@ function userWith(role: string): User {
 /** Returns the HTTP status the guard threw, or null if it let the call pass. */
 function statusFor(user: User | null, permission: Permission): number | null {
 	try {
-		createPermissionGuard(user)(permission);
+		createPermissionGuard(() => user)(permission);
 		return null;
 	} catch (err) {
 		if (isHttpError(err)) return err.status;

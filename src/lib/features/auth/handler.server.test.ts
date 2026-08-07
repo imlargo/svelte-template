@@ -39,10 +39,17 @@ type Outcome =
 	| { kind: 'redirect'; location: string }
 	| { kind: 'error'; status: number };
 
-async function callAuth(pathname: string, cookies: Record<string, string> = {}) {
+async function callAuth(
+	pathname: string,
+	cookies: Record<string, string> = {},
+	routeId: string | null = pathname
+) {
 	const clearedCookies: string[] = [];
 	const event = {
 		url: new URL(`http://localhost${pathname}`),
+		// Non-null unless the caller is testing an unmatched path: SvelteKit
+		// resolves the route before handle() runs.
+		route: { id: routeId },
 		locals: {} as App.Locals,
 		cookies: {
 			get: (name: string) => cookies[name],
@@ -180,6 +187,15 @@ describe('handleAuth on page routes', () => {
 		const { outcome } = await callAuth('/reports', SESSION);
 
 		expect(outcome).toEqual({ kind: 'error', status: 403 });
+	});
+
+	it('leaves a path with no route behind it alone, so SvelteKit can 404 it', async () => {
+		// A mistyped URL is not a permission problem. Answering 403 here would
+		// also mean a round trip to /auth/me for every bad path a crawler tries.
+		const { outcome } = await callAuth('/nope', SESSION, null);
+
+		expect(outcome).toEqual({ kind: 'resolved' });
+		expect(getMe).not.toHaveBeenCalled();
 	});
 });
 

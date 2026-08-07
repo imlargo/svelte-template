@@ -33,7 +33,13 @@ export const ROLE_LABELS: Record<UserRole, string> = {
  * an empty grant list and can do nothing until you decide otherwise.
  */
 export const ROLE_PERMISSIONS = {
-	[UserRole.ADMIN]: ['dashboard:read', 'settings:read', 'users:read', 'users:write', 'users:delete'],
+	[UserRole.ADMIN]: [
+		'dashboard:read',
+		'settings:read',
+		'users:read',
+		'users:write',
+		'users:delete'
+	],
 	[UserRole.MEMBER]: ['dashboard:read', 'settings:read']
 } as const satisfies Record<UserRole, readonly Permission[]>;
 
