@@ -65,7 +65,7 @@
 				<Sidebar.MenuButton
 					size="lg"
 					tooltipContent="Home"
-					class="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!p-0"
+					class="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
 				>
 					{#snippet child({ props })}
 						<a href={resolve('/')} {...props}>
