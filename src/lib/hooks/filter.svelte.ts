@@ -1,6 +1,6 @@
 // Generic filter state — extend or instantiate per feature.
-// Usage: const filter = new FilterStore({ search: '', status: '' })
-export class FilterStore<T extends Record<string, unknown>> {
+// Usage: const filter = new Filters({ search: '', status: '' })
+export class Filters<T extends Record<string, unknown>> {
 	filters = $state<T>({} as T);
 	private initial: T;
 

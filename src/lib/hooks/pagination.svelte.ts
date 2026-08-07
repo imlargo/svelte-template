@@ -1,6 +1,6 @@
 // Generic pagination state.
-// Usage: const pagination = new PaginationStore()
-export class PaginationStore {
+// Usage: const pagination = new Pagination()
+export class Pagination {
 	page = $state(1);
 	pageSize = $state(20);
 	total = $state(0);
