@@ -22,16 +22,15 @@ src/
 │   ├── config/        # App config + constants (permissions, navigation)
 │   ├── types/         # Types shared by more than one slice
 │   ├── utils/         # Pure utility functions (date, string, number, form)
-│   ├── stores/        # Generic reactive stores (FilterStore, PaginationStore, Disclosure)
-│   ├── hooks/         # Composable functions (isMobile, etc.)
-│   ├── features/      # Vertical slices (auth, ...)
+│   ├── hooks/         # Stateful runes classes (Disclosure, Filters, Pagination, IsMobile)
+│   ├── features/      # Vertical slices (auth, users, ...)
 │   └── components/    # UI: ui/ (shadcn), base/, common/, layout/
 └── routes/
     ├── (auth)/        # Unauthenticated: login, logout, authorize (OAuth callback)
     └── (app)/         # Protected pages with sidebar layout
 ```
 
-See [`docs/`](./docs/) for the philosophy and rules behind how this is structured.
+See [`AGENTS.md`](./AGENTS.md) for the rules and conventions to follow when building here.
 
 ## Getting started
 
