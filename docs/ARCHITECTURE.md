@@ -54,7 +54,8 @@ Lo que se borra es lo que está muerto **por diseño**, no por calendario:
 - Configuración de una pieza que no existe (`PUBLIC_AUTH_BASE_URL`, sin servicio de auth aparte).
 - Código que contradice una regla de este documento. Si §8 dice que los filtros van en la URL, un
   `FilterStore` en memoria no es una utilidad pendiente de estrenar: es una trampa.
-- Segundas formas de hacer algo que ya se hace: barrels, aliases duplicados, alias de funciones.
+- Segundas formas de hacer algo que ya se hace: barrels, alias de funciones (`resolveRole` sobre
+  `normalizeRole`), azúcar sobre un método que ya existe (`isAuth()` sobre `is('UNAUTHORIZED')`).
 
 La prueba: **¿existe un caso de uso previsto para esto en este template?** Si la respuesta necesita
 un "bueno, si algún día...", está muerto. Si es "el primer CRUD que escriba", se queda.
