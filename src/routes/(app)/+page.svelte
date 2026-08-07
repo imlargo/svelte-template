@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { PageHeader, AsyncView, EmptyState } from '$lib/components/common';
+	import PageHeader from '$lib/components/common/PageHeader.svelte';
+	import AsyncView from '$lib/components/common/AsyncView.svelte';
+	import EmptyState from '$lib/components/common/EmptyState.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { createQuery } from '$lib/core/query.svelte';
