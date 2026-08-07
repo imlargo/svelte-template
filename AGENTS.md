@@ -111,9 +111,9 @@ juicio de ingeniería rutinario, decide y sigue.
 ## Antes de dar algo por terminado
 
 ```sh
-npm run lint     # sin errores
-npm run check    # cero errores Y cero warnings
-npm run test     # verde
+pnpm run lint     # sin errores
+pnpm run check    # cero errores Y cero warnings
+pnpm run test     # verde
 ```
 
 Ejecútalos de verdad y lee la salida — no asumas que compiló. Los warnings de `svelte-check` como

@@ -1154,8 +1154,12 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 ### Cambiar la marca
 
 1. Tokens de color en `src/routes/layout.css` (`@theme`).
-2. Nombre y logo: `AppSidebar.svelte` y la página de login.
-3. `favicon.svg` en `lib/assets/`.
+2. Nombre, logo, favicon y SEO: un solo punto de configuración, `config.branding` en
+   `lib/config/app.ts`. Hardcodeado a propósito, no por variable de entorno: cambia una vez por
+   proyecto, no una vez por entorno de despliegue. Edita los valores ahí y reemplaza los
+   placeholders en `lib/assets/logo.svg` y `lib/assets/favicon.svg`. `AppSidebar.svelte`, la
+   página de login y `+layout.svelte` (favicon + `<title>`/meta SEO por defecto) leen de ahí — no
+   se tocan para cambiar de marca.
 
 ---
 
