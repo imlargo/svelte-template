@@ -1,10 +1,7 @@
 # CLAUDE.md
 
-Las instrucciones de este proyecto viven en **[`AGENTS.md`](./AGENTS.md)**. Léelo.
+Template de SvelteKit 2 + Svelte 5 para proyectos de consultoría. El código es la fuente de verdad
+de la arquitectura — no hay una guía aparte que la documente.
 
-Resumen de por dónde empezar:
-
-- `AGENTS.md` — filosofía, fase actual, cómo trabajar aquí
-- `docs/README.md` — punto de entrada al contrato del proyecto
-- `docs/ARCHITECTURE.md` — arquitectura vigente (fuente de verdad)
-- `docs/AUDIT.md` — estado actual y plan de refactor
+- [`README.md`](./README.md) — stack, estructura de carpetas, cómo arrancar
+- [`docs/README.md`](./docs/README.md) — filosofía y reglas para seguir construyendo aquí

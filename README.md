@@ -31,8 +31,7 @@ src/
     └── (app)/         # Protected pages with sidebar layout
 ```
 
-See [`docs/`](./docs/) for the full architecture guide, the current-state audit, and the
-refactor plan. Start at [`docs/README.md`](./docs/README.md).
+See [`docs/`](./docs/) for the philosophy and rules behind how this is structured.
 
 ## Getting started
 
