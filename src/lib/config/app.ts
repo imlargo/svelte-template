@@ -23,7 +23,7 @@ export interface AppConfig {
 			};
 		};
 	};
-	/** Single source of truth for name/logo/favicon/SEO. See docs/ARCHITECTURE.md §17. */
+	/** Single source of truth for name/logo/favicon/SEO. */
 	branding: {
 		name: string;
 		logo: string;

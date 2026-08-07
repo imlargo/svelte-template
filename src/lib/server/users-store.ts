@@ -4,8 +4,8 @@
  * An in-memory stand-in for the users endpoint of your API, so the admin CRUD
  * works on a fresh clone with no setup. State lives in a module-level array,
  * which is a per-process singleton: fine here because this is shared seed data,
- * never per-user state. Do not copy this pattern for anything user-scoped
- * (docs/ARCHITECTURE.md §3, principle 3).
+ * never per-user state. Do not copy this pattern for anything user-scoped —
+ * module-level $state with user data leaks across requests under SSR.
  *
  * Restarting the dev server resets it.
  */

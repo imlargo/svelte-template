@@ -2,9 +2,9 @@
  * The session cookies, and the only place that knows their names and options.
  *
  * Both tokens are httpOnly and share a lifetime: the template has no refresh
- * flow (see docs/ARCHITECTURE.md §7), so a shorter access cookie would only
- * sign users out sooner, not buy security. If your API issues short-lived
- * access tokens, add the refresh flow and split the two lifetimes together.
+ * flow, so a shorter access cookie would only sign users out sooner, not buy
+ * security. If your API issues short-lived access tokens, add the refresh
+ * flow and split the two lifetimes together.
  */
 import { env } from '$env/dynamic/private';
 import type { Cookies } from '@sveltejs/kit';
