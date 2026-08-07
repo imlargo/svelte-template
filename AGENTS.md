@@ -35,12 +35,27 @@ multi-marca, i18n. Están en `docs/BACKLOG.md` con el disparador que los reactiv
 
 ## Filosofía
 
-### 1. El repo contiene solo lo que el repo usa
+### 1. Se borra lo que no se va a usar, no lo que no se usa todavía
 
-Cero exports sin consumidor. Cero abstracciones "por si acaso". Si escribes algo para cuando lo
-necesites, bórralo: la versión que escribas cuando lo necesites de verdad será mejor y costará lo
-mismo. Todo lo que sobra es una decisión que alguien vuelve a tomar cada vez que abre el repo, y
-una pista falsa para el siguiente agente.
+Un template existe para traer resuelto lo que vas a necesitar: `Disclosure` no tiene consumidores
+hoy y los tendrá el primer día que alguien abra un modal — **eso se queda**. Aplicar "cero usos →
+borrar" a un template lo vacía hasta dejarlo inútil.
+
+Se borra lo muerto **por diseño**: código inalcanzable, código de una forma de trabajar que este
+template descartó, configuración de piezas que no existen, código que contradice una regla de
+`docs/ARCHITECTURE.md`, y segundas formas de hacer algo que ya se hace.
+
+La prueba: **¿hay un caso de uso previsto para esto aquí?** Si la respuesta necesita un "bueno, si
+algún día...", está muerto. Si es "el primer CRUD que escriba", se queda.
+
+**Borrar es borrar.** Mover un módulo a otra carpeta no lo borra, y añadirle un test tampoco lo
+convierte en usado.
+
+### 1b. Cero barrels y cero aliases duplicados
+
+Nada de `index.ts` que reexporte. Todo se importa por su ruta real, y `svelte.config.js` declara
+solo `$lib`. Un barrel oculta de dónde viene cada cosa, arrastra módulos al bundle, y es una
+segunda forma de escribir el mismo import.
 
 ### 2. Una sola forma de hacer cada cosa
 

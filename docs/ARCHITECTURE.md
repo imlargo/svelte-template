@@ -38,10 +38,28 @@ Que sea posible desde ambos lados no significa que dé igual: §5 fija cuándo s
 
 ### La regla que mantiene esto vivo
 
-> **El template contiene solo lo que el template usa.**
+> **Se borra lo que no se va a usar, no lo que no se usa todavía.**
 
-Cero exports sin consumidor. Si escribes una abstracción "para cuando la necesite", bórrala: la
-versión que escribas cuando la necesites de verdad será mejor y te costará lo mismo. Todo lo que
+La distinción importa, y es fácil equivocarse en las dos direcciones.
+
+Un template existe precisamente para traer resuelto lo que vas a necesitar. `Disclosure` no tiene
+consumidores hoy y los tendrá el primer día que abras un modal: **eso se queda**. Aplicar "cero
+usos → borrar" a un template lo vacía hasta dejarlo inútil.
+
+Lo que se borra es lo que está muerto **por diseño**, no por calendario:
+
+- Código que ningún camino puede alcanzar (`ApiError.isShape`, si `air` ya normaliza).
+- Código para una forma de trabajar que este template descartó (`ValidationError`, cuando la
+  validación de formularios la hace Superforms).
+- Configuración de una pieza que no existe (`PUBLIC_AUTH_BASE_URL`, sin servicio de auth aparte).
+- Código que contradice una regla de este documento. Si §8 dice que los filtros van en la URL, un
+  `FilterStore` en memoria no es una utilidad pendiente de estrenar: es una trampa.
+- Segundas formas de hacer algo que ya se hace: barrels, aliases duplicados, alias de funciones.
+
+La prueba: **¿existe un caso de uso previsto para esto en este template?** Si la respuesta necesita
+un "bueno, si algún día...", está muerto. Si es "el primer CRUD que escriba", se queda.
+
+Lo que sí es absoluto: cero exports sin consumidor **ni caso de uso previsto**. Todo lo que
 sobra es una decisión que vuelves a tomar cada vez que abres el repo, y una pista falsa para
 cualquier agente que lo lea.
 
@@ -177,16 +195,28 @@ estado compartido, lo declara en su propio `.svelte.ts`.
 **No hay `lib/hooks/`.** `IsMobile` es un caso de `MediaQuery` de `svelte/reactivity`; vive donde
 se use o en `core/` si se usa en varios sitios.
 
-**No hay barrels intermedios.** Nada de `lib/index.ts`, `lib/core/index.ts`,
-`lib/config/index.ts`. Un barrel se justifica solo para exponer la API pública de un slice
-(`features/<domain>/index.ts`) o un conjunto de componentes (`components/common/index.ts`).
-Todo lo demás se importa por ruta directa: los barrels intermedios encadenan imports que arrastran
-módulos innecesarios al bundle y ocultan de dónde viene cada cosa.
+**No hay barrels. Ninguno, en ninguna capa.** Ni `lib/index.ts`, ni `core/index.ts`, ni
+`components/common/index.ts`, ni `features/<domain>/index.ts`. Todo se importa por su ruta real:
 
-**`features/auth` es la excepción y no tiene barrel.** Es el único slice que mezcla módulos
-server-only (`session.server.ts`, `handler.server.ts`) con módulos isomorfos (`services/`,
-`context.ts`). Un barrel sobre esa mezcla es la forma más fácil de arrastrar cookies y
-`$env/dynamic/private` al bundle del navegador sin darse cuenta. Se importa por ruta directa.
+```ts
+import AsyncView from '$lib/components/common/AsyncView.svelte'; // ✅
+import { AsyncView } from '$lib/components/common'; // ❌
+```
+
+Tres razones, en orden de importancia:
+
+1. **Ocultan de dónde viene cada cosa.** Un import por ruta real te dice el archivo. Un barrel te
+   obliga a abrirlo para averiguarlo, y eso es exactamente el trabajo que un agente hace mal.
+2. **Arrastran módulos al bundle.** Importar un símbolo de un barrel evalúa el módulo entero. El
+   tree-shaking lo arregla a veces; los efectos de importación y las dependencias transitivas, no.
+   En `features/auth`, donde conviven módulos server-only (`session.server.ts`) con isomorfos
+   (`services/`, `context.ts`), un barrel es la forma más fácil de arrastrar `$env/dynamic/private`
+   al navegador sin enterarte.
+3. **Son una segunda forma de importar lo mismo**, y eso ya lo prohíbe el principio 4.
+
+Por el mismo motivo **`svelte.config.js` declara solo `$lib`**. Los aliases extra (`$components`,
+`$ui`, `$core`, `$stores`, `$types`, `$utils`) son barrels a nivel de ruta: n formas de escribir
+el mismo import. El plural de "atajo" es "inconsistencia".
 
 **Un módulo de `core/` es un archivo, no una carpeta.** Una carpeta por módulo obliga a un
 `index.ts` por módulo, que es justo el barrel intermedio que la regla anterior prohíbe. La carpeta
