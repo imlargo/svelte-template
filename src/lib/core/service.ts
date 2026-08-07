@@ -8,6 +8,9 @@
  * Subclasses call `this.api.get/post/put/patch/delete(...)` directly — see
  * https://github.com/imlargo/air for the request options (`body`, `query`, ...).
  *
+ * `baseUrl` exists because auth and data can live on different hosts: a service
+ * overrides it to target another API. Omit it to use `config.api.baseUrl`.
+ *
  * @example
  * // Server-side (receives token from cookies/locals)
  * const service = new UserService(accessToken);
@@ -22,9 +25,10 @@ import type { AirClient } from '@korastd/air';
 export class BaseService {
 	protected api: AirClient;
 
-	constructor(token: string | (() => string | null) = '') {
+	constructor(token: string | (() => string | null) = '', baseUrl?: string) {
 		// Each service gets its own client so the getToken closure resolves correctly.
 		this.api = createApiClient({
+			baseUrl,
 			getToken: () => (typeof token === 'function' ? token() : token)
 		});
 	}
