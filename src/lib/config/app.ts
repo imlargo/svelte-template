@@ -6,6 +6,7 @@ export interface AppConfig {
 		baseUrl: string;
 	};
 	auth: {
+		/** Base URL when auth lives on its own host. Empty falls back to the data API. */
 		baseUrl: string;
 		enabled: boolean;
 		loginPath: string;
