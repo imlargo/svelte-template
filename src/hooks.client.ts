@@ -1,8 +1,7 @@
-import { normalizeError } from '$lib/core/errors';
 import type { HandleClientError } from '@sveltejs/kit';
+import { logError } from '$lib/core/logger';
 
 export const handleError: HandleClientError = ({ error, status }) => {
-	const err = normalizeError(error);
-	if (status !== 404) console.error('[client error]', err);
-	return { message: err.getMessage() };
+	if (status === 404) return { message: 'Not found.' };
+	return { message: logError('client', error) };
 };

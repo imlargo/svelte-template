@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoginForm from '$lib/features/auth/components/login/login-form.svelte';
+	import LoginForm from '$lib/features/auth/components/LoginForm.svelte';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
@@ -23,7 +23,7 @@
 		</div>
 		<div class="flex flex-1 items-center justify-center">
 			<div class="w-full max-w-xs">
-				<LoginForm form={data.form} />
+				<LoginForm form={data.form} signInError={data.signInError} />
 			</div>
 		</div>
 	</div>

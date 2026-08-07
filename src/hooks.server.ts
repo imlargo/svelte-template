@@ -1,27 +1,14 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
-import { AuthService, createAuthHandler } from '$lib/features/auth';
-import { serverAuthCookies } from '$lib/features/auth/server';
-import { normalizeError } from '$lib/core/errors';
+import { logError } from '$lib/core/logger';
+import { handleAuth } from '$lib/features/auth/handler.server';
 
 export const handle: Handle = config.auth.enabled
-	? createAuthHandler({
-			cookieManager: serverAuthCookies,
-
-			fetchUser: (accessToken) => new AuthService(accessToken).getMe(),
-
-			publicRoutes: config.auth.publicRoutes,
-			loginPath: config.auth.loginPath,
-			defaultRedirectPath: config.auth.defaultRedirectPath,
-
-			onAuthError: (error) => {
-				console.error('[auth]', normalizeError(error).getMessage());
-			}
-		})
+	? handleAuth
 	: ({ event, resolve }) => resolve(event);
 
 export const handleError: HandleServerError = ({ error, status }) => {
-	const err = normalizeError(error);
-	if (status !== 404) console.error('[server error]', err);
-	return { message: err.getMessage() };
+	// 404s are noise: they say more about crawlers than about the app.
+	if (status === 404) return { message: 'Not found.' };
+	return { message: logError('server', error) };
 };

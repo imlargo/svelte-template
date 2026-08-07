@@ -3,8 +3,13 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
+	import { setAuth } from '$lib/features/auth/context';
+	import type { LayoutProps } from './$types';
 
-	let { children } = $props();
+	let { data, children }: LayoutProps = $props();
+
+	// A getter, not a value: this way the token stays current across navigations.
+	setAuth(() => ({ user: data.user, accessToken: data.accessToken }));
 </script>
 
 <svelte:head>
