@@ -6,6 +6,11 @@
  * Deny by default, and it falls out of the data rather than being bolted on: a
  * role only passes when it is listed explicitly, so an unknown role coming from
  * the backend is denied instead of inheriting the permissions of a known one.
+ *
+ * The one exception is deliberate, not an omission: an entry declared with an
+ * empty role list means "no role restriction" and lets everyone through. Not
+ * declaring the entry at all still denies — that is the case that must fail
+ * shut, because it is the one you get by forgetting.
  */
 
 /** Maps a permission key to the roles that hold it. */
@@ -20,20 +25,28 @@ export function hasPermission<K extends string, R extends string>(
 	key: K
 ): boolean {
 	const allowed: readonly string[] | undefined = groups[key];
-	return !!role && !!allowed && allowed.includes(role);
+	if (!allowed) return false;
+	if (allowed.length === 0) return true;
+	return !!role && allowed.includes(role);
 }
 
+/** No keys required means nothing to check, so it passes. */
 export function hasAnyPermission<K extends string, R extends string>(
 	groups: PermissionGroups<K, R>,
 	role: string | null | undefined,
 	keys: readonly K[]
 ): boolean {
+	if (keys.length === 0) return true;
 	return keys.some((key) => hasPermission(groups, role, key));
 }
 
 /**
  * Whether `role` may reach `pathname`. A route not declared in `routes` is
  * denied, so forgetting to register a new page fails loudly on the first click.
+ * A route declared with an empty role list is open to any role — inside this
+ * app that means any signed-in user, since callers run it after resolving the
+ * session. Routes that must be reachable without signing in are a separate
+ * list (`AUTH_PUBLIC_ROUTE_PREFIXES`), checked before this ever runs.
  */
 export function canAccessRoute<R extends string>(
 	routes: RoutePermissions<R>,
@@ -42,6 +55,7 @@ export function canAccessRoute<R extends string>(
 ): boolean {
 	const allowed = matchLongestPrefix(routes, pathname);
 	if (!allowed) return false;
+	if (allowed.length === 0) return true;
 	return !!role && allowed.includes(role);
 }
 
