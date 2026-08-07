@@ -3,6 +3,7 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { createQuery } from '$lib/core/query.svelte';
+	import { toast } from 'svelte-sonner';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import ActivityIcon from '@lucide/svelte/icons/activity';
@@ -10,18 +11,24 @@
 
 	const items = createQuery<string[]>();
 
-	function loadItems() {
-		items.run(async () => {
+	// The toast goes here, not inside `run`: core knows nothing about the UI, and
+	// only the caller knows whether this particular failure is worth interrupting for.
+	async function load(fail = false) {
+		await items.run(async () => {
 			await new Promise((r) => setTimeout(r, 800));
+			if (fail) throw new Error('The demo endpoint is unreachable.');
 			return ['Item A', 'Item B', 'Item C'];
 		});
+
+		if (items.error) toast.error(items.error.getMessage());
 	}
 </script>
 
 <div class="flex flex-col gap-6">
 	<PageHeader title="Dashboard" description="Welcome to your app. Start building here.">
 		{#snippet actions()}
-			<Button size="sm" onclick={loadItems}>Load demo data</Button>
+			<Button variant="outline" size="sm" onclick={() => load(true)}>Simulate failure</Button>
+			<Button size="sm" onclick={() => load()}>Load demo data</Button>
 		{/snippet}
 	</PageHeader>
 
@@ -82,7 +89,7 @@
 						<InboxIcon class="size-5" />
 					{/snippet}
 					{#snippet action()}
-						<Button variant="outline" size="sm" onclick={loadItems}>Load demo data</Button>
+						<Button variant="outline" size="sm" onclick={() => load()}>Load demo data</Button>
 					{/snippet}
 				</EmptyState>
 			{/snippet}

@@ -684,6 +684,11 @@ sería una segunda forma de hacer lo mismo.
 </script>
 ```
 
+El toast vive en el llamante, no dentro de `run`: `core` no conoce la UI, y solo el llamante sabe
+si ese fallo concreto merece interrumpir al usuario. Ojo con duplicar el reporte — si la vista ya
+pinta el error con `AsyncView`, un toast encima dice lo mismo dos veces. Los toasts son sobre todo
+para fallos sin sitio inline donde mostrarse (una mutación, una acción de un botón).
+
 Para cargar al montar no hace falta `onMount` ni `$effect`: `run` no lanza, así que se dispara en
 el top-level del `<script>`, que corre una sola vez al crear el componente.
 
