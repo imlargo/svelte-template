@@ -27,14 +27,15 @@
 
 	const triggerContent = $derived(options.find((op) => op.value === value)?.label ?? placeholder);
 
-	$effect(() => {
-		if (onchange) {
-			onchange(value || '');
-		}
-	});
+	// Called from the change handler, not an $effect: an effect would also fire on
+	// mount and again whenever the parent reassigns `value`, echoing back at it.
+	function onValueChange(next: string) {
+		value = next;
+		onchange?.(next);
+	}
 </script>
 
-<Select.Root type="single" bind:value {disabled}>
+<Select.Root type="single" {value} {onValueChange} {disabled}>
 	<Select.Trigger class="w-full">
 		{#if children}
 			{@render children(triggerContent)}

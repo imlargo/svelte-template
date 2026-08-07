@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Progress } from '$lib/components/ui/progress/index.js';
 	import { X, Upload, File as FileIcon, AlertCircle } from '@lucide/svelte';
-	import { ScrollArea } from '$components/ui/scroll-area';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 
 	type Props = {
 		variant?: 'single' | 'multiple';

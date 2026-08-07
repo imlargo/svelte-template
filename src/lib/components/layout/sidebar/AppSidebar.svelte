@@ -12,8 +12,8 @@
 	} from '$lib/config/navigation';
 	import { PERMISSION_GROUPS, ROLE_LABELS } from '$lib/config/permissions';
 	import { hasAnyPermission } from '$lib/core/permissions';
-	import NavMain from './nav-main.svelte';
-	import NavUser from './nav-user.svelte';
+	import NavMain from './NavMain.svelte';
+	import NavUser from './NavUser.svelte';
 
 	const sidebar = Sidebar.useSidebar();
 

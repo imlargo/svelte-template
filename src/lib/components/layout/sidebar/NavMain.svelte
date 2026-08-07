@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { Pathname } from '$app/types';
+	import type { LucideIcon } from '@lucide/svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	type NavItem = {
@@ -9,8 +10,7 @@
 		// Not Pathname: some configured routes (e.g. /settings, /admin) don't exist
 		// yet in this starter. See lib/config/navigation.ts.
 		url: string;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		icon: any;
+		icon: LucideIcon;
 	};
 
 	type NavGroup = {
