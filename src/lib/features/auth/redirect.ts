@@ -1,7 +1,7 @@
 /**
  * Handling of the `?redirect=` parameter used by the auth flow.
  *
- * `createAuthHandler` encodes the path the user was trying to reach, and the
+ * `handleAuth` encodes the path the user was trying to reach, and the
  * login/authorize pages decode it after a successful sign-in. Checking that the
  * decoded value starts with `/` is NOT enough: `//evil.com` passes that test but
  * is a protocol-relative URL, so redirecting to it leaves the site. Every value
