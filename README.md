@@ -25,7 +25,7 @@ src/
 │   ├── stores/        # Generic reactive stores (FilterStore, PaginationStore, Disclosure)
 │   ├── hooks/         # Composable functions (isMobile, etc.)
 │   ├── features/      # Vertical slices (auth, ...)
-│   └── components/    # UI: ui/ (shadcn), base/, common/, blocks/, layout/
+│   └── components/    # UI: ui/ (shadcn), base/, common/, layout/
 └── routes/
     ├── (auth)/        # Unauthenticated: login, logout, authorize (OAuth callback)
     └── (app)/         # Protected pages with sidebar layout

@@ -168,8 +168,8 @@ src/
 │   │   ├── ui/                    ← shadcn-svelte vendorizado. NO SE TOCA.
 │   │   ├── base/                  ← átomos propios sobre ui/ o bits-ui
 │   │   ├── common/                ← moléculas sin dominio (PageHeader, EmptyState, AsyncView)
-│   │   ├── blocks/                ← organismos sin dominio
 │   │   └── layout/                ← chrome de la app (sidebar, header)
+│   │                                 (blocks/ es un nivel previsto, sin componentes todavía)
 │   │
 │   └── assets/
 │
@@ -214,9 +214,25 @@ Tres razones, en orden de importancia:
    al navegador sin enterarte.
 3. **Son una segunda forma de importar lo mismo**, y eso ya lo prohíbe el principio 4.
 
-Por el mismo motivo **`svelte.config.js` declara solo `$lib`**. Los aliases extra (`$components`,
-`$ui`, `$core`, `$stores`, `$types`, `$utils`) son barrels a nivel de ruta: n formas de escribir
-el mismo import. El plural de "atajo" es "inconsistencia".
+**Los aliases sí se quedan**, y no contradicen lo anterior: un alias resuelve a un archivo
+concreto, así que sigues viendo qué importas y no arrastras nada extra. Lo que hace un barrel
+—ocultar el origen y evaluar el módulo entero— un alias no lo hace.
+
+```js
+// svelte.config.js
+alias: {
+    $components: './src/lib/components',   // el más usado
+    $ui: './src/lib/components/ui',
+    $core: './src/lib/core',
+    $hooks: './src/lib/hooks',
+    $types: './src/lib/types',
+    $utils: './src/lib/utils'
+}
+```
+
+La única regla: **un alias debe apuntar a un directorio que exista.** Un alias huérfano es peor
+que no tenerlo, porque el editor lo autocompleta y el fallo aparece en build. (`$stores` apuntaba
+a `src/lib/stores/` después de que esa carpeta pasara a ser `hooks/`; por eso ahora es `$hooks`.)
 
 **Un módulo de `core/` es un archivo, no una carpeta.** Una carpeta por módulo obliga a un
 `index.ts` por módulo, que es justo el barrel intermedio que la regla anterior prohíbe. La carpeta
@@ -554,14 +570,20 @@ Nada de esto depende del backend: el `state` es un contrato entre esta app y Goo
 
 Antes de crear estado, comprueba en orden:
 
-1. **¿Puede estar en la URL?** Filtros, orden, paginación, tab activa, término de búsqueda → query
-   params. Sobreviven al reload, se comparten por enlace, participan en el SSR, y el `load` los lee.
+1. **¿Debería sobrevivir a un reload o poder compartirse por enlace?** → query params. Es el caso
+   de filtros, orden, paginación y tab activa **cuando el servidor pagina o filtra**: el `load` los
+   lee, participan en el SSR, y el usuario puede mandar la URL a un compañero.
 2. **¿Viene del servidor?** → `data` de `load`. No lo copies a `$state`; si necesitas derivarlo,
    `$derived`.
 3. **¿Es local a un componente?** → `$state` dentro del componente.
 4. **¿Lo necesitan varios componentes de un subárbol?** → contexto.
 5. **¿Nada de lo anterior?** → una clase con campos `$state` en un `.svelte.ts`, **instanciada**
    por quien la use. Nunca exportada ya instanciada.
+
+**La URL es una preferencia, no una obligación.** Filtrar o paginar en el cliente sobre una lista
+que ya tienes en memoria no necesita pasar por la URL, y forzarlo añade navegaciones y ruido al
+historial. `lib/hooks/` trae `FilterStore` y `PaginationStore` para ese caso; para el caso servidor,
+los mismos valores van en los search params. Elige según quién hace el trabajo, no por dogma.
 
 ### Contexto
 
@@ -754,7 +776,7 @@ a preguntar por el vacío. Si tu noción de "vacío" es otra, va dentro de `chil
 | `ui/`                      | shadcn-svelte vendorizado. **No se modifica ni se envuelve sin motivo.** Se actualiza con el CLI de shadcn.                | bits-ui, `$lib/utils`                 |
 | `base/`                    | Átomos propios: componentes que shadcn no trae o que necesitan variantes de marca (`Combobox`, `DatePicker`, `FileInput`). | `ui/`                                 |
 | `common/`                  | Moléculas sin conocimiento de dominio: `PageHeader`, `EmptyState`, `AsyncView`, `CardIcon`.                                | `ui/`, `base/`                        |
-| `blocks/`                  | Organismos sin dominio: composiciones grandes reutilizables.                                                               | `ui/`, `base/`, `common/`             |
+| `blocks/`                  | Organismos sin dominio: composiciones grandes reutilizables. Nivel previsto; la carpeta se crea con el primer componente.  | `ui/`, `base/`, `common/`             |
 | `layout/`                  | El chrome de la app: sidebar, header. Conoce `config/navigation`.                                                          | todos los anteriores, `config/`       |
 | `features/<d>/components/` | UI del dominio.                                                                                                            | todos los anteriores, su propio slice |
 
