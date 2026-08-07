@@ -51,11 +51,14 @@ algún día...", está muerto. Si es "el primer CRUD que escriba", se queda.
 **Borrar es borrar.** Mover un módulo a otra carpeta no lo borra, y añadirle un test tampoco lo
 convierte en usado.
 
-### 1b. Cero barrels y cero aliases duplicados
+### 1b. Cero barrels
 
-Nada de `index.ts` que reexporte. Todo se importa por su ruta real, y `svelte.config.js` declara
-solo `$lib`. Un barrel oculta de dónde viene cada cosa, arrastra módulos al bundle, y es una
-segunda forma de escribir el mismo import.
+Nada de `index.ts` que reexporte. Todo se importa por su ruta real: un barrel oculta de dónde
+viene cada cosa y arrastra módulos al bundle.
+
+Los **aliases sí se usan** (`$components`, `$ui`, `$core`, `$hooks`, `$types`, `$utils`) y no son
+lo mismo: resuelven a un archivo concreto, así que no ocultan nada ni arrastran nada. La única
+condición es que apunten a un directorio que exista.
 
 ### 2. Una sola forma de hacer cada cosa
 
