@@ -7,12 +7,12 @@ define qué es el template, en qué estado está, y qué está permitido hacer.
 
 ## Qué hay y en qué orden leerlo
 
-| Archivo | Qué es | Cuándo leerlo |
-|---|---|---|
-| **`ARCHITECTURE.md`** | La especificación del estado objetivo: estructura, reglas, patrones, anti-patrones, convenciones y definición de "terminado". | **Siempre.** Es la fuente de verdad de cómo se escribe código aquí. |
-| **`AUDIT.md`** | Auditoría verificada del estado actual: hallazgos de seguridad, abstracciones muertas, código no idiomático, y el plan de refactor en tandas (T0–T4). | Antes de tocar código. Te dice qué está roto y qué está bien. |
-| **`TASKS.md`** | El plan de trabajo vivo: qué está hecho, qué falta, y en qué orden. Cada tarea es autocontenida. | Para saber qué toca ahora. |
-| **`BACKLOG.md`** | Ideas de plataforma a largo plazo: generadores, tipos desde OpenAPI, CI/CD, observabilidad, multi-marca, paquetes versionados. | **Fuera de scope.** Consulta solo si se te pide explícitamente. |
+| Archivo               | Qué es                                                                                                                                                | Cuándo leerlo                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **`ARCHITECTURE.md`** | La especificación del estado objetivo: estructura, reglas, patrones, anti-patrones, convenciones y definición de "terminado".                         | **Siempre.** Es la fuente de verdad de cómo se escribe código aquí. |
+| **`AUDIT.md`**        | Auditoría verificada del estado actual: hallazgos de seguridad, abstracciones muertas, código no idiomático, y el plan de refactor en tandas (T0–T4). | Antes de tocar código. Te dice qué está roto y qué está bien.       |
+| **`TASKS.md`**        | El plan de trabajo vivo: qué está hecho, qué falta, y en qué orden. Cada tarea es autocontenida.                                                      | Para saber qué toca ahora.                                          |
+| **`BACKLOG.md`**      | Ideas de plataforma a largo plazo: generadores, tipos desde OpenAPI, CI/CD, observabilidad, multi-marca, paquetes versionados.                        | **Fuera de scope.** Consulta solo si se te pide explícitamente.     |
 
 Los tres se leen en ese orden. `ARCHITECTURE.md` dice a dónde vamos, `AUDIT.md` dice desde dónde
 partimos, `BACKLOG.md` dice qué **no** hacemos todavía.

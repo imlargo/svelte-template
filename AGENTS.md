@@ -25,11 +25,11 @@ multi-marca, i18n. Están en `docs/BACKLOG.md` con el disparador que los reactiv
 
 **Lee `docs/README.md`.** Es el punto de entrada al contrato del proyecto:
 
-| Documento | Qué es | Cuándo |
-|---|---|---|
+| Documento              | Qué es                                                                                                     | Cuándo                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------- |
 | `docs/ARCHITECTURE.md` | Arquitectura vigente: estructura, reglas, patrones, anti-patrones, convenciones, definición de "terminado" | Siempre. Es la fuente de verdad |
-| `docs/AUDIT.md` | Estado actual verificado y plan de refactor en tandas (T0–T4) | Antes de tocar código |
-| `docs/BACKLOG.md` | Deliberadamente fuera de scope | Solo si se pide explícitamente |
+| `docs/AUDIT.md`        | Estado actual verificado y plan de refactor en tandas (T0–T4)                                              | Antes de tocar código           |
+| `docs/BACKLOG.md`      | Deliberadamente fuera de scope                                                                             | Solo si se pide explícitamente  |
 
 ---
 

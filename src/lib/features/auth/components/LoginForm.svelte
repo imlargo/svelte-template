@@ -2,30 +2,28 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn, type WithElementRef } from '$lib/utils.js';
-	import type { HTMLFormAttributes } from 'svelte/elements';
-	import { resolve } from '$app/paths';
+	import { cn } from '$lib/utils.js';
 	import { config } from '$lib/config/app';
 	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
 	import { untrack } from 'svelte';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { LoginSchema } from '$lib/features/auth/schemas';
 
-	let {
-		ref = $bindable(null),
-		class: className,
-		form: formData,
-		...restProps
-	}: WithElementRef<HTMLFormAttributes> & {
+	interface Props {
 		form: SuperValidated<Infer<typeof LoginSchema>>;
-	} = $props();
+		/** Set when the user comes back from a failed OAuth round trip. */
+		signInError?: string | null;
+		class?: string;
+	}
+
+	let { form: formData, signInError = null, class: className }: Props = $props();
 
 	const id = $props.id();
 
 	const form = superForm(
 		untrack(() => formData),
 		{
-			validators: zodClient(LoginSchema),
+			validators: zod4Client(LoginSchema),
 			invalidateAll: false
 		}
 	);
@@ -33,43 +31,9 @@
 
 	const showPassword = config.auth.methods.password;
 	const showGoogle = config.auth.methods.google.enabled;
-	const showDivider = showPassword && showGoogle;
-
-	function handleGoogleLogin() {
-		const googleForm = document.createElement('form');
-		googleForm.setAttribute('method', 'GET');
-		googleForm.setAttribute('action', 'https://accounts.google.com/o/oauth2/v2/auth');
-
-		const params: Record<string, string> = {
-			client_id: config.auth.methods.google.clientId,
-			redirect_uri: `${window.location.origin}/authorize`,
-			response_type: 'code',
-			prompt: 'select_account',
-			scope: 'openid profile email',
-			include_granted_scopes: 'true'
-		};
-
-		for (const [key, value] of Object.entries(params)) {
-			const input = document.createElement('input');
-			input.setAttribute('type', 'hidden');
-			input.setAttribute('name', key);
-			input.setAttribute('value', value);
-			googleForm.appendChild(input);
-		}
-
-		document.body.appendChild(googleForm);
-		googleForm.submit();
-	}
 </script>
 
-<form
-	class={cn('flex flex-col gap-6', className)}
-	bind:this={ref}
-	method="POST"
-	action="?/login"
-	use:enhance
-	{...restProps}
->
+<div class={cn('flex flex-col gap-6', className)}>
 	<div class="flex flex-col items-center gap-2 text-center">
 		<h1 class="text-2xl font-bold">Sign in to your account</h1>
 		<p class="text-sm text-balance text-muted-foreground">
@@ -83,15 +47,16 @@
 		</p>
 	</div>
 
-	{#if $message}
+	{#if $message || signInError}
 		<p class="rounded-md bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
-			{$message}
+			{$message ?? signInError}
 		</p>
 	{/if}
 
-	<div class="grid gap-6">
-		{#if showGoogle}
-			<Button type="button" variant="outline" class="w-full" onclick={handleGoogleLogin}>
+	{#if showGoogle}
+		<!-- Its own form: the server mints the OAuth state cookie before redirecting. -->
+		<form method="POST" action="?/google">
+			<Button type="submit" variant="outline" class="w-full">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="16"
@@ -107,17 +72,19 @@
 				</svg>
 				Sign in with Google
 			</Button>
-		{/if}
+		</form>
+	{/if}
 
-		{#if showDivider}
-			<div
-				class="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border"
-			>
-				<span class="relative z-10 bg-background px-2 text-muted-foreground">or</span>
-			</div>
-		{/if}
+	{#if showPassword && showGoogle}
+		<div
+			class="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border"
+		>
+			<span class="relative z-10 bg-background px-2 text-muted-foreground">or</span>
+		</div>
+	{/if}
 
-		{#if showPassword}
+	{#if showPassword}
+		<form method="POST" action="?/login" use:enhance class="grid gap-6">
 			<Form.Field {form} name="email">
 				<Form.Control>
 					{#snippet children({ props })}
@@ -138,13 +105,7 @@
 			<Form.Field {form} name="password">
 				<Form.Control>
 					{#snippet children({ props })}
-						<div class="flex items-center">
-							<Form.Label>Password</Form.Label>
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- /forgot-password has no route yet; add one and wrap in resolve() when it does -->
-							<a href="/forgot-password" class="ml-auto text-sm underline-offset-4 hover:underline">
-								Forgot your password?
-							</a>
-						</div>
+						<Form.Label>Password</Form.Label>
 						<Input
 							{...props}
 							id="password-{id}"
@@ -158,11 +119,6 @@
 			</Form.Field>
 
 			<Button type="submit" class="w-full">Sign in</Button>
-		{/if}
-	</div>
-
-	<div class="text-center text-sm">
-		Don't have an account?
-		<a href={resolve('/register')} class="underline underline-offset-4">Sign up</a>
-	</div>
-</form>
+		</form>
+	{/if}
+</div>

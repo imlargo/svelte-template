@@ -1,7 +1,8 @@
 import HomeIcon from '@lucide/svelte/icons/house';
 import SettingsIcon from '@lucide/svelte/icons/settings';
 import ShieldIcon from '@lucide/svelte/icons/shield';
-import { PermissionKey } from './permissions';
+import type { LucideIcon } from '@lucide/svelte';
+import { PermissionKey } from '$lib/config/permissions';
 
 export enum NavigationGroup {
 	Main = 'main',
@@ -10,9 +11,7 @@ export enum NavigationGroup {
 
 export interface NavigationItem {
 	title: string;
-	// Lucide icon component — typed as `any` to avoid per-icon import generics
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	icon: any;
+	icon: LucideIcon;
 	// Not typed as $app/types' Pathname: /settings and /admin are placeholders
 	// for routes this starter doesn't ship yet. Add the routes, then tighten this.
 	to: string;

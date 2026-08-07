@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { enhance } from '$app/forms';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -74,14 +75,17 @@
 					{/if}
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item>
-					{#snippet child({ props }: { props: Record<string, unknown> })}
-						<a href={resolve('/logout')} {...props}>
-							<LogOutIcon />
-							Sign out
-						</a>
-					{/snippet}
-				</DropdownMenu.Item>
+				<!-- A POST, so link prefetching can never sign the user out on its own. -->
+				<form method="POST" action={resolve('/logout')} use:enhance>
+					<DropdownMenu.Item>
+						{#snippet child({ props }: { props: Record<string, unknown> })}
+							<button type="submit" class="w-full" {...props}>
+								<LogOutIcon />
+								Sign out
+							</button>
+						{/snippet}
+					</DropdownMenu.Item>
+				</form>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</Sidebar.MenuItem>

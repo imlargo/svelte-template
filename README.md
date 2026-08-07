@@ -18,16 +18,16 @@ A production-ready SvelteKit 2 + Svelte 5 starter template with a layered archit
 ```
 src/
 ├── lib/
-│   ├── core/          # Infrastructure: ApiClient, BaseService, error classes
-│   ├── config/        # App config + domain constants (permissions, navigation)
-│   ├── types/         # Shared TypeScript types
+│   ├── core/          # Infrastructure: api, service, errors, logger, permissions, view-state
+│   ├── config/        # App config + constants (permissions, navigation)
+│   ├── types/         # Types shared by more than one slice
 │   ├── utils/         # Pure utility functions (date, string, number, form)
 │   ├── stores/        # Generic reactive stores (FilterStore, PaginationStore, Disclosure)
 │   ├── hooks/         # Composable functions (isMobile, etc.)
 │   ├── features/      # Vertical slices (auth, ...)
 │   └── components/    # UI: ui/ (shadcn), base/, common/, blocks/, layout/
 └── routes/
-    ├── (auth)/        # Unauthenticated pages: login, register, logout, authorize
+    ├── (auth)/        # Unauthenticated: login, logout, authorize (OAuth callback)
     └── (app)/         # Protected pages with sidebar layout
 ```
 
@@ -82,11 +82,10 @@ PUBLIC_GOOGLE_CLIENT_ID=your-client-id
 ## Customization checklist
 
 - [ ] Replace the "App" name + logo icon in `src/routes/(auth)/login/+page.svelte` and `app-sidebar.svelte`
-- [ ] Add your nav items in `src/lib/config/domain/navigation.ts`
-- [ ] Add your permission keys and role mappings in `src/lib/config/domain/permissions.ts`
+- [ ] Add your nav items in `src/lib/config/navigation.ts`
+- [ ] Add your permission keys, roles and route matrix in `src/lib/config/permissions.ts`
 - [ ] Set `PUBLIC_API_URL` in `.env`
-- [ ] Add your domain types under `src/lib/types/domain/`
-- [ ] Add feature slices under `src/lib/features/`
+- [ ] Add feature slices under `src/lib/features/`, with their types in `<slice>/types.ts`
 
 ## Scripts
 

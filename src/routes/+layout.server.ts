@@ -1,9 +1,13 @@
 import type { LayoutServerLoad } from './$types';
 
-export const load = (async ({ locals }) => {
+/**
+ * Everything returned here is serialized into the page payload. The access
+ * token goes out because client-side services need it; the refresh token never
+ * does — see docs/ARCHITECTURE.md §7.
+ */
+export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		user: locals.user ?? null,
-		accessToken: locals.accessToken ?? null,
-		refreshToken: locals.refreshToken ?? null
+		accessToken: locals.accessToken ?? null
 	};
-}) satisfies LayoutServerLoad;
+};

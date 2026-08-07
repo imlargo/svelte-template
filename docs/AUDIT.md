@@ -6,6 +6,12 @@
 
 Verificado contra el código en `main` (commit `7c6bd59`).
 
+> **Estado 2026-08-06.** La Tanda 2 completa (B1–B7) está cerrada, junto con D1, D5, D7, D8, D9,
+> D10, N2, N3, N5, N6, N7 y H4. El refactor de auth fue más allá de lo que este documento
+> contemplaba: los checks de permisos viven ahora en `core/permissions.ts`, y el registro
+> desapareció junto con `/verify`. Siguen abiertos D2, D4, D6 (parcial), D11, D12, N1, N4 y N8.
+> Lo que queda vivo, en orden, está en `TASKS.md`.
+
 ---
 
 ## Veredicto
@@ -29,6 +35,12 @@ Son el núcleo real del template y sobreviven al refactor casi intactos.
 
 ## 1. Lo que está bien — no tocar
 
+> Dos filas de esta tabla ya no existen tal cual. `cookies.ts` y `handler.ts` estaban bien
+> escritos, pero el refactor de auth los sustituyó por `session.server.ts` (tres funciones en vez
+> de una clase con opciones) y `handler.server.ts` (un `Handle` concreto en vez de una fábrica con
+> nueve opciones, cuatro de ellas nunca usadas). No se corrigió código malo: se quitó estructura
+> que no tenía consumidor. `errors.ts` y `redirect.ts` siguen intactos.
+
 | Archivo                             | Por qué                                                                                                                                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/lib/features/auth/redirect.ts` | Protección de open-redirect hecha correctamente: re-parsea contra un origen falso en vez de confiar en `startsWith('/')`. Cubre `//evil.com` y `/\evil.com`. Es el único archivo con test, y el test está justificado. |
@@ -42,9 +54,9 @@ Son el núcleo real del template y sobreviven al refactor casi intactos.
 
 ## 2. Hallazgos bloqueantes — corrección y seguridad
 
-### B1 — El refresh token viaja al cliente 🔴
+### B1 — El refresh token viaja al cliente ✅ RESUELTO
 
-> **Revisado.** La primera versión de este hallazgo decía que *ningún* token debía salir del
+> **Revisado.** La primera versión de este hallazgo decía que _ningún_ token debía salir del
 > servidor. Eso era incorrecto: la capa de servicios es isomorfa por diseño (`air` funciona en
 > ambos lados y `BaseService` acepta el token como función precisamente para el caso cliente),
 > así que el **access token sí debe llegar al navegador**. El problema real es más estrecho y
@@ -77,7 +89,7 @@ tokens no aporta nada sobre un token único.
 (`src/lib/core/service.ts:36`). Es lo que hace que un servicio de vida larga en el cliente lea el
 token actual en cada request en vez de capturar el que había al construirse.
 
-### B2 — `authStore` es estado de módulo: se comparte entre requests en el servidor 🔴
+### B2 — `authStore` es estado de módulo: se comparte entre requests en el servidor ✅ RESUELTO
 
 `src/lib/features/auth/stores/auth.svelte.ts:42`
 
@@ -102,7 +114,7 @@ Los servicios del cliente leen el token de ese contexto (`ARCHITECTURE.md` §6 y
 Regla que hay que escribir en `AGENTS.md`: **`$state` a nivel de módulo está prohibido para
 cualquier dato que dependa del usuario.**
 
-### B3 — La autorización por ruta está declarada pero nunca se aplica 🔴
+### B3 — La autorización por ruta está declarada pero nunca se aplica ✅ RESUELTO
 
 `src/lib/config/domain/permissions.ts:33-37` define `AUTH_ROUTE_PERMISSIONS`.
 `src/lib/features/auth/permissions.ts:31` define `canAccessRoute`.
@@ -119,7 +131,7 @@ tener nada porque el `AUTH_ROUTE_PERMISSIONS` da la impresión de que sí está 
 después de resolver el usuario. Si el rol no puede acceder, `error(403)`. El sidebar sigue
 filtrando, pero como presentación, no como control.
 
-### B4 — Fail-open en la resolución de roles y rutas 🟠
+### B4 — Fail-open en la resolución de roles y rutas ✅ RESUELTO
 
 `src/lib/features/auth/permissions.ts:9-12`
 
@@ -146,7 +158,7 @@ Cada ruta nueva nace desprotegida y hay que acordarse de registrarla.
 default por descarte). Ruta no listada → denegada. Con dos roles hoy el cambio es trivial; con
 seis roles dentro de un año, retrofitearlo es doloroso.
 
-### B5 — El callback de Google OAuth no valida el parámetro `state` 🟠
+### B5 — El callback de Google OAuth no valida el parámetro `state` ✅ RESUELTO
 
 `src/routes/(auth)/authorize/+page.server.ts:24-26`
 
@@ -167,7 +179,7 @@ Un callback OAuth no es una página: es un endpoint.
 **Refactor.** Convertir a `src/routes/(auth)/authorize/+server.ts`. Generar `state` con un nonce
 guardado en cookie antes del redirect a Google, y verificarlo aquí. Borrar el `+page.svelte`.
 
-### B6 — El access token vive tanto como el refresh token 🟠
+### B6 — El access token vive tanto como el refresh token ✅ DECIDIDO (sin refresh)
 
 `src/lib/features/auth/cookies.ts:19-26` — un solo `maxAgeSeconds` (7 días) para ambas cookies.
 
@@ -179,7 +191,7 @@ expira, `fetchUser` falla y el handler manda al login (`handler.ts:106-112`). El
 la sesión y lo que estuviera haciendo. Es un comportamiento defendible para un template, pero
 debe ser una decisión escrita, no un olvido.
 
-### B7 — Logout por GET 🟠
+### B7 — Logout por GET ✅ RESUELTO
 
 `src/routes/(auth)/logout/+page.server.ts` — el `load` borra las cookies y redirige.
 
@@ -317,14 +329,14 @@ entregas el repo) y aplícalo.
 
 ## 5. Higiene
 
-| #   | Qué                                          | Detalle                                                                                                                                                                                                                                                                                                                                      |
-| --- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| H1  | **`npm run lint` falla**                     | 26 errores. El mayor grupo: 11 × `svelte/no-navigation-without-resolve` (hay que envolver los `href` internos con `resolve()`). El resto son variables no usadas (`_authData` en `authorize/+page.server.ts:36`, `data` en dos páginas, `NavSecondary` importado y no usado), `{#each}` sin key ×2, `any` ×2. Todos son de arreglo mecánico. |
-| H2  | **Formato inconsistente**                    | Prettier reporta 420 archivos. `lib/stores/*` y `lib/index.ts` están escritos sin punto y coma; el resto con. Un `npm run format` lo cierra, pero conviene hacerlo en un commit aislado para no contaminar el diff del refactor.                                                                                                             |
-| H3  | **Dos lockfiles**                            | `package-lock.json` + `pnpm-lock.yaml` + `pnpm-workspace.yaml`, y `CLAUDE.md` dice npm. Elige uno y borra el otro; hoy no sabes cuál resolución de dependencias es la real.                                                                                                                                                                  |
-| H4  | **`console.error` suelto**                   | `hooks.server.ts:24`, `hooks.client.ts:6`, `authorize/+page.server.ts:40`. Suficiente por ahora, pero céntralo en una función para poder cambiarlo de sitio el día que quieras Sentry, sin tocar tres archivos.                                                                                                                              |
-| H5  | ~~**`architecture.md` describe otro proyecto**~~ | **RESUELTO.** Eliminado y sustituido por `docs/ARCHITECTURE.md`, escrito desde el código real.                                                                                                                                                                                                                                          |
-| H6  | ~~**`AGENTS.md` no describe la arquitectura**~~ | **RESUELTO.** `AGENTS.md` lleva ahora la filosofía, la fase actual y las reglas duras; `CLAUDE.md` apunta a él en vez de duplicarlo.                                                                                                                                                                                                    |
+| #   | Qué                                              | Detalle                                                                                                                                                                                                                                                                                                                                      |
+| --- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1  | **`npm run lint` falla**                         | 26 errores. El mayor grupo: 11 × `svelte/no-navigation-without-resolve` (hay que envolver los `href` internos con `resolve()`). El resto son variables no usadas (`_authData` en `authorize/+page.server.ts:36`, `data` en dos páginas, `NavSecondary` importado y no usado), `{#each}` sin key ×2, `any` ×2. Todos son de arreglo mecánico. |
+| H2  | **Formato inconsistente**                        | Prettier reporta 420 archivos. `lib/stores/*` y `lib/index.ts` están escritos sin punto y coma; el resto con. Un `npm run format` lo cierra, pero conviene hacerlo en un commit aislado para no contaminar el diff del refactor.                                                                                                             |
+| H3  | **Dos lockfiles**                                | `package-lock.json` + `pnpm-lock.yaml` + `pnpm-workspace.yaml`, y `CLAUDE.md` dice npm. Elige uno y borra el otro; hoy no sabes cuál resolución de dependencias es la real.                                                                                                                                                                  |
+| H4  | **`console.error` suelto**                       | `hooks.server.ts:24`, `hooks.client.ts:6`, `authorize/+page.server.ts:40`. Suficiente por ahora, pero céntralo en una función para poder cambiarlo de sitio el día que quieras Sentry, sin tocar tres archivos.                                                                                                                              |
+| H5  | ~~**`architecture.md` describe otro proyecto**~~ | **RESUELTO.** Eliminado y sustituido por `docs/ARCHITECTURE.md`, escrito desde el código real.                                                                                                                                                                                                                                               |
+| H6  | ~~**`AGENTS.md` no describe la arquitectura**~~  | **RESUELTO.** `AGENTS.md` lleva ahora la filosofía, la fase actual y las reglas duras; `CLAUDE.md` apunta a él en vez de duplicarlo.                                                                                                                                                                                                         |
 
 ---
 
@@ -410,7 +422,7 @@ la razón escrita.
 | Generadores de código / scaffolding          | Cuando hayas escrito el mismo slice a mano tres veces y te moleste                                                               |
 | Tipos generados desde OpenAPI                | Cuando un cambio del backend te rompa producción sin avisar                                                                      |
 | Extraer el núcleo a paquetes npm versionados | Cuando tengas 3+ proyectos entregados y un arreglo que propagar                                                                  |
-| CI, Docker, adapter fijo, observabilidad     | Cuando el primer proyecto real vaya a producción. Entonces vuelve a `BACKLOG.md`                                   |
+| CI, Docker, adapter fijo, observabilidad     | Cuando el primer proyecto real vaya a producción. Entonces vuelve a `BACKLOG.md`                                                 |
 | Design tokens multi-marca, i18n, Storybook   | Cuando un cliente lo pida                                                                                                        |
 | Segundo slice de ejemplo (`users`)           | Discutible: podría entrar en la Tanda 4 si quieres que el template enseñe un CRUD completo. Cuesta un día más. Decisión abierta. |
 

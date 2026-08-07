@@ -11,12 +11,11 @@
 
 	let { options, value = $bindable(), disabled = false }: Props = $props();
 
-	if (!options.includes(value)) {
-		options.unshift(value);
-	}
-
+	// The current value is always selectable, even when it is not one of the
+	// offered options. Derived rather than pushed into `options`: that mutated a
+	// prop and captured its initial value, so later changes were ignored.
 	const selectOptions = $derived(
-		options.map((option) => ({
+		(options.includes(value) ? options : [value, ...options]).map((option) => ({
 			label: timeFilterLabel(option),
 			value: option
 		}))

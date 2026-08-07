@@ -51,19 +51,19 @@ cualquier agente que lo lea.
 
 Exactamente lo que hay en `package.json`. Nada más.
 
-| Capa | Herramienta | Nota |
-|---|---|---|
-| Framework | SvelteKit 2 | Routing por archivos, load functions, form actions |
-| UI | Svelte 5 (runes) | `runes: true` forzado en `svelte.config.js` |
-| Lenguaje | TypeScript strict | — |
-| Estilos | TailwindCSS v4 | CSS-first con `@theme`; sin `tailwind.config.ts` |
-| Componentes | shadcn-svelte sobre bits-ui | Vendorizado en `lib/components/ui/`. **No se modifica** |
-| Formularios | Superforms + Zod | Validación compartida servidor/cliente |
-| Cliente HTTP | `@korastd/air` | Envuelto en `lib/core/api` |
-| Iconos | `@lucide/svelte` | Import por icono, nunca el barrel |
-| Toasts | `svelte-sonner` | Un `<Toaster />` en el layout raíz |
-| Tests | Vitest + Playwright | Unit en Node, componentes en navegador, E2E |
-| Calidad | ESLint + Prettier + svelte-check | Los tres bloquean |
+| Capa         | Herramienta                      | Nota                                                    |
+| ------------ | -------------------------------- | ------------------------------------------------------- |
+| Framework    | SvelteKit 2                      | Routing por archivos, load functions, form actions      |
+| UI           | Svelte 5 (runes)                 | `runes: true` forzado en `svelte.config.js`             |
+| Lenguaje     | TypeScript strict                | —                                                       |
+| Estilos      | TailwindCSS v4                   | CSS-first con `@theme`; sin `tailwind.config.ts`        |
+| Componentes  | shadcn-svelte sobre bits-ui      | Vendorizado en `lib/components/ui/`. **No se modifica** |
+| Formularios  | Superforms + Zod                 | Validación compartida servidor/cliente                  |
+| Cliente HTTP | `@korastd/air`                   | Envuelto en `lib/core/api`                              |
+| Iconos       | `@lucide/svelte`                 | Import por icono, nunca el barrel                       |
+| Toasts       | `svelte-sonner`                  | Un `<Toaster />` en el layout raíz                      |
+| Tests        | Vitest + Playwright              | Unit en Node, componentes en navegador, E2E             |
+| Calidad      | ESLint + Prettier + svelte-check | Los tres bloquean                                       |
 
 **Añadir una dependencia requiere justificarla en el PR.** El coste de una dependencia no es su
 tamaño: es que alguien tenga que entenderla dentro de un año.
@@ -117,7 +117,8 @@ src/
 │   │   ├── api.ts                 ← createApiClient (air + baseURL + Authorization)
 │   │   ├── service.ts             ← BaseService
 │   │   ├── errors.ts              ← AppError, ApiError, ValidationError, normalizeError
-│   │   ├── logger.ts              ← log(...) — único punto de salida de logs
+│   │   ├── logger.ts              ← interfaz `Logger` + `logger` — único punto de salida de logs
+│   │   ├── permissions.ts         ← checks de acceso puros; reciben la matriz por argumento
 │   │   └── view-state.svelte.ts   ← ViewState<T> + AsyncViewState
 │   │
 │   ├── config/                     ← plano, sin subcarpetas: 3 archivos no justifican una.
@@ -155,13 +156,12 @@ src/
 │   └── assets/
 │
 ├── routes/
-│   ├── +layout.svelte             ← ModeWatcher, Toaster, skip link
+│   ├── +layout.svelte             ← ModeWatcher, Toaster, skip link, contexto de auth
 │   ├── +layout.server.ts          ← user + accessToken (nunca el refresh)
 │   ├── +error.svelte
-│   ├── (auth)/                    ← login, register, logout, authorize — sin sesión
+│   ├── (auth)/                    ← login, logout, authorize — sin sesión
 │   └── (app)/                     ← todo lo autenticado
-│       ├── +layout.server.ts      ← guard: sin user → /login
-│       ├── +layout.svelte         ← sidebar + header + contexto de usuario
+│       ├── +layout.svelte         ← sidebar + header
 │       └── <ruta>/
 │           ├── +page.svelte       ← thin page
 │           └── +page.server.ts    ← load / actions
@@ -182,6 +182,15 @@ se use o en `core/` si se usa en varios sitios.
 (`features/<domain>/index.ts`) o un conjunto de componentes (`components/common/index.ts`).
 Todo lo demás se importa por ruta directa: los barrels intermedios encadenan imports que arrastran
 módulos innecesarios al bundle y ocultan de dónde viene cada cosa.
+
+**`features/auth` es la excepción y no tiene barrel.** Es el único slice que mezcla módulos
+server-only (`session.server.ts`, `handler.server.ts`) con módulos isomorfos (`services/`,
+`context.ts`). Un barrel sobre esa mezcla es la forma más fácil de arrastrar cookies y
+`$env/dynamic/private` al bundle del navegador sin darse cuenta. Se importa por ruta directa.
+
+**Un módulo de `core/` es un archivo, no una carpeta.** Una carpeta por módulo obliga a un
+`index.ts` por módulo, que es justo el barrel intermedio que la regla anterior prohíbe. La carpeta
+aparece cuando un módulo necesita de verdad dos o más archivos.
 
 **`lib/types/` es residual, no un almacén.** Un tipo vive en `lib/types/` solo si lo consumen dos
 o más slices (o el slice y `app.d.ts`). En la práctica eso significa `User` y poco más. Todo lo
@@ -208,23 +217,23 @@ no antes.
 
 Los dos caminos existen y usan **el mismo servicio**. La diferencia es de dónde sale el token:
 
-| Origen | Token | Vía |
-|---|---|---|
-| `+page.server.ts`, `+layout.server.ts`, actions, `hooks.server.ts` | `locals.accessToken` | `new UsersService(locals.accessToken)` |
-| Componente, orquestador, event handler | contexto de auth | `new UsersService(() => auth.accessToken)` |
+| Origen                                                             | Token                | Vía                                        |
+| ------------------------------------------------------------------ | -------------------- | ------------------------------------------ |
+| `+page.server.ts`, `+layout.server.ts`, actions, `hooks.server.ts` | `locals.accessToken` | `new UsersService(locals.accessToken)`     |
+| Componente, orquestador, event handler                             | contexto de auth     | `new UsersService(() => auth.accessToken)` |
 
 ### Cuándo se usa cada uno
 
 Que ambos sean posibles no significa que sean intercambiables. Por defecto, **servidor**:
 
-| Caso | Dónde | Por qué |
-|---|---|---|
-| Datos del primer render | `load` en el servidor | Llegan con el HTML: sin waterfall, sin flash de loading, indexables, y funcionan con JS deshabilitado |
-| Datos que comparten varias rutas hijas | `+layout.server.ts` | Se propagan por `data` |
-| Mutación desde un formulario | form action + Superforms | Progressive enhancement gratis |
-| Búsqueda incremental, scroll infinito, polling, refresco parcial | Servicio desde el cliente | Un round-trip menos y no re-ejecuta el `load` de toda la página |
-| Mutación optimista con rollback | Servicio desde el cliente | Necesitas el control del ciclo, que una action no te da |
-| Cualquier cosa que requiera un secreto distinto del access token | Servidor, obligatorio | Ese secreto no puede salir |
+| Caso                                                             | Dónde                     | Por qué                                                                                               |
+| ---------------------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Datos del primer render                                          | `load` en el servidor     | Llegan con el HTML: sin waterfall, sin flash de loading, indexables, y funcionan con JS deshabilitado |
+| Datos que comparten varias rutas hijas                           | `+layout.server.ts`       | Se propagan por `data`                                                                                |
+| Mutación desde un formulario                                     | form action + Superforms  | Progressive enhancement gratis                                                                        |
+| Búsqueda incremental, scroll infinito, polling, refresco parcial | Servicio desde el cliente | Un round-trip menos y no re-ejecuta el `load` de toda la página                                       |
+| Mutación optimista con rollback                                  | Servicio desde el cliente | Necesitas el control del ciclo, que una action no te da                                               |
+| Cualquier cosa que requiera un secreto distinto del access token | Servidor, obligatorio     | Ese secreto no puede salir                                                                            |
 
 La regla práctica: **si el dato hace falta para pintar la página, va por `load`. Si es una
 interacción posterior del usuario, puede ir por el cliente.** Empieza siempre por el servidor y
@@ -245,7 +254,7 @@ Tres cosas que hay que aceptar conscientemente, no descubrir después:
 SvelteKit tiene `query` / `form` / `command` / `prerender` en archivos `.remote.ts`, que darían un
 tercer camino con tipado extremo a extremo. **Están marcadas como experimentales en la versión
 instalada** (`kit.experimental.remoteFunctions`, por defecto `false`, documentadas en los tipos
-como *"not yet stable and may be changed or removed at any time"*). Por eso el template no las usa.
+como _"not yet stable and may be changed or removed at any time"_). Por eso el template no las usa.
 Cuando se estabilicen serán una alternativa al camino cliente, no un reemplazo de la capa de
 servicios.
 
@@ -263,17 +272,17 @@ import type { User } from '$lib/types/user';
 import type { CreateUserInput } from '../types';
 
 export class UsersService extends BaseService {
-    list(query?: { page?: number; search?: string }) {
-        return this.api.get<User[]>('/users', { query });
-    }
+	list(query?: { page?: number; search?: string }) {
+		return this.api.get<User[]>('/users', { query });
+	}
 
-    get(id: string) {
-        return this.api.get<User>(`/users/${id}`);
-    }
+	get(id: string) {
+		return this.api.get<User>(`/users/${id}`);
+	}
 
-    create(input: CreateUserInput) {
-        return this.api.post<User>('/users', { body: input });
-    }
+	create(input: CreateUserInput) {
+		return this.api.post<User>('/users', { body: input });
+	}
 }
 ```
 
@@ -290,13 +299,13 @@ en vez de capturar el que había cuando se construyó.
 ```ts
 // lib/core/service.ts
 export class BaseService {
-    protected api: AirClient;
+	protected api: AirClient;
 
-    constructor(token: string | (() => string | null) = '') {
-        this.api = createApiClient({
-            getToken: () => (typeof token === 'function' ? token() : token)
-        });
-    }
+	constructor(token: string | (() => string | null) = '') {
+		this.api = createApiClient({
+			getToken: () => (typeof token === 'function' ? token() : token)
+		});
+	}
 }
 ```
 
@@ -310,8 +319,8 @@ import { UsersService } from '$lib/features/users/services/users';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-    const users = new UsersService(locals.accessToken ?? '');
-    return { users: await users.list({ search: url.searchParams.get('q') ?? undefined }) };
+	const users = new UsersService(locals.accessToken ?? '');
+	return { users: await users.list({ search: url.searchParams.get('q') ?? undefined }) };
 };
 ```
 
@@ -321,17 +330,17 @@ El token sale del contexto de auth (§8), nunca de un singleton de módulo:
 
 ```svelte
 <script lang="ts">
-    import { getAuth } from '$lib/features/auth/context';
-    import { UsersService } from '$lib/features/users/services/users';
-    import { ViewState } from '$lib/core/view-state.svelte';
+	import { getAuth } from '$lib/features/auth/context';
+	import { UsersService } from '$lib/features/users/services/users';
+	import { ViewState } from '$lib/core/view-state.svelte';
 
-    const auth = getAuth();
-    const users = new UsersService(() => auth().accessToken);
-    const search = new ViewState<User[]>();
+	const auth = getAuth();
+	const users = new UsersService(() => auth().accessToken);
+	const search = new ViewState<User[]>();
 
-    async function onSearch(q: string) {
-        await search.run(() => users.list({ search: q }));
-    }
+	async function onSearch(q: string) {
+		await search.run(() => users.list({ search: q }));
+	}
 </script>
 ```
 
@@ -355,10 +364,10 @@ import { error } from '@sveltejs/kit';
 import { normalizeError } from '$lib/core/errors';
 
 try {
-    return { user: await service.get(params.id) };
+	return { user: await service.get(params.id) };
 } catch (err) {
-    const e = normalizeError(err);
-    error(e.is('NOT_FOUND') ? 404 : 500, e.getMessage());
+	const e = normalizeError(err);
+	error(e.is('NOT_FOUND') ? 404 : 500, e.getMessage());
 }
 ```
 
@@ -370,35 +379,39 @@ Es el activo diferencial del template. Tiene que ser correcto.
 
 ### Modelo
 
-- Sesión por **cookies `httpOnly`** (`access_token`, `refresh_token`), gestionadas por
-  `AuthCookiesManager`, configuradas desde env en `features/auth/server.ts`.
-- `hooks.server.ts` monta `createAuthHandler`, que en cada request: decide si la ruta es pública,
+- Sesión por **cookies `httpOnly`** (`access_token`, `refresh_token`), en
+  `features/auth/session.server.ts`: tres funciones (`getSession`, `setSession`, `clearSession`),
+  con los nombres y las opciones en un solo sitio y configuradas desde env. El sufijo `.server`
+  hace que el compilador impida que el navegador lo importe.
+- `hooks.server.ts` monta `handleAuth`, que en cada request: decide si la ruta es pública,
   lee las cookies, resuelve el usuario contra la API (`/auth/me`), **comprueba el permiso de la
   ruta**, y puebla `locals`.
-- El login y el registro son **form actions**. El callback de OAuth es un **`+server.ts`**. El
-  logout es una **form action POST**.
+- El login es una **form action**. El callback de OAuth es un **`+server.ts`**. El logout es una
+  **form action POST**.
+- **No hay registro.** Un alta pública es una decisión de producto, no infraestructura: cuando un
+  proyecto la necesite, se escribe ahí con las reglas de ese backend.
 
 ### Los dos tokens no son simétricos
 
 Esta es la parte que hay que entender bien, porque la capa de servicios isomorfa depende de ella.
 
-| | Access token | Refresh token |
-|---|---|---|
-| Cookie `httpOnly` | sí | sí |
-| Llega al navegador vía `data` | **sí** | **nunca** |
-| Dónde vive en el cliente | memoria (contexto), nunca `localStorage` | no existe en el cliente |
-| Vida | corta (minutos, la fija la API) | larga (días) |
-| Si hay XSS | se puede usar mientras no expire | sigue a salvo |
+|                               | Access token                             | Refresh token           |
+| ----------------------------- | ---------------------------------------- | ----------------------- |
+| Cookie `httpOnly`             | sí                                       | sí                      |
+| Llega al navegador vía `data` | **sí**                                   | **nunca**               |
+| Dónde vive en el cliente      | memoria (contexto), nunca `localStorage` | no existe en el cliente |
+| Vida                          | corta (minutos, la fija la API)          | larga (días)            |
+| Si hay XSS                    | se puede usar mientras no expire         | sigue a salvo           |
 
 `+layout.server.ts` devuelve el usuario y el access token. **No devuelve el refresh token.**
 
 ```ts
 // src/routes/+layout.server.ts
 export const load: LayoutServerLoad = async ({ locals }) => {
-    return {
-        user: locals.user ?? null,
-        accessToken: locals.accessToken ?? null   // el refresh se queda en el servidor
-    };
+	return {
+		user: locals.user ?? null,
+		accessToken: locals.accessToken ?? null // el refresh se queda en el servidor
+	};
 };
 ```
 
@@ -411,8 +424,10 @@ en una sesión permanente para el atacante. Por eso uno sale y el otro no.
 arquitectura pierde su garantía. En ese caso, o acortas la vida del token en la API, o renuncias
 al camino cliente y usas solo `load` y actions.
 
-Hoy `AuthCookiesManager` aplica el mismo `maxAge` a las dos cookies. Deben ser dos valores
-distintos.
+**Las dos cookies comparten `maxAge`, y es deliberado.** Sin flujo de refresh, una cookie de
+acceso más corta no cierra ninguna ventana: el handler exige las dos cookies, así que lo único que
+consigue es echar al usuario antes. Separar las vidas y añadir el refresh es un solo cambio, y va
+junto. Está escrito también en `session.server.ts`, que es donde alguien lo va a leer.
 
 ### El check de autorización va en el servidor
 
@@ -420,10 +435,14 @@ distintos.
 en el hook**, después de resolver el usuario:
 
 ```ts
-if (!canAccessRoute(user.role, pathname)) {
-    error(403, 'You do not have access to this page.');
+if (!canAccessRoute(AUTH_ROUTE_PERMISSIONS, user.role, pathname)) {
+	error(403, 'You do not have access to this page.');
 }
 ```
+
+La matriz se pasa por argumento porque la función vive en `core/permissions.ts`, que es
+infraestructura reutilizable y no conoce los roles ni las rutas de este proyecto (§13). Los datos
+viven en `config/permissions.ts`; `core` solo sabe evaluarlos.
 
 El sidebar sigue filtrando items con `hasAnyPermission`, pero eso es **presentación**. Ocultar un
 enlace no es autorización: cualquiera puede escribir la URL. Si el único control fuera el menú, el
@@ -431,17 +450,20 @@ mapa de permisos daría una falsa sensación de cobertura, que es peor que no te
 
 ### Deny by default, en las dos direcciones
 
-```ts
-// Rol desconocido → el rol sin privilegios. NUNCA por descarte a un rol con permisos.
-function toRole(role: string | null | undefined): UserRole {
-    return isKnownRole(role) ? role : UserRole.GUEST;
-}
+No hay función que normalice el rol: un rol pasa **solo si está listado**, así que un rol
+desconocido del backend cae fuera de todas las listas y se deniega sin código extra. Denegar es el
+comportamiento por defecto de la estructura de datos, no una comprobación que alguien puede olvidar.
 
-// Ruta no declarada en AUTH_ROUTE_PERMISSIONS → denegada.
-export function canAccessRoute(role: string | null | undefined, pathname: string): boolean {
-    const entry = matchLongestPrefix(AUTH_ROUTE_PERMISSIONS, pathname);
-    if (!entry) return false;              // ← nunca `true`
-    return entry.roles.includes(toRole(role));
+```ts
+// Ruta no declarada en la matriz → denegada.
+export function canAccessRoute<R extends string>(
+	routes: RoutePermissions<R>,
+	role: string | null | undefined,
+	pathname: string
+): boolean {
+	const allowed = matchLongestPrefix(routes, pathname);
+	if (!allowed) return false; // ← nunca `true`
+	return !!role && allowed.includes(role);
 }
 ```
 
@@ -455,7 +477,9 @@ Dos consecuencias que hay que entender antes de aceptarlas:
    permisos de `member`— es cómo se abren agujeros.
 
 **El match es por prefijo más largo**, no por el primero que coincida: `/admin/users` debe
-resolver con la regla de `/admin/users` si existe, no con la de `/admin`.
+resolver con la regla de `/admin/users` si existe, no con la de `/admin`. La entrada `'/'` es un
+caso especial y **solo casa consigo misma**: como prefijo se tragaría todas las rutas y anularía
+el deny by default.
 
 ### Redirects
 
@@ -464,14 +488,33 @@ La validación **no** es `startsWith('/')`: re-parsea contra un origen falso y r
 cosa que se escape de él, porque `//evil.com` y `/\evil.com` empiezan por `/` y aun así son URLs
 externas. Este archivo está bien y no se toca sin tests.
 
+### OAuth con Google
+
+Dos mitades, las dos en el servidor:
+
+1. **Salida** — la action `?/google` de la página de login genera un nonce, lo guarda en una cookie
+   `httpOnly` de vida corta junto al `?redirect=` pendiente, y redirige a Google con ese nonce en
+   el parámetro `state`. La action existe para que la cookie se pueda escribir antes del redirect;
+   el botón es un `<form method="POST">`, así que funciona sin JavaScript.
+2. **Vuelta** — `(auth)/authorize/+server.ts` consume la cookie (vale para un solo callback),
+   compara el `state` recibido con el nonce y **rechaza cualquier callback que no coincida**. Sin
+   esa comprobación, un atacante puede inducir a la víctima a completar un login con la cuenta del
+   atacante. Si la validación falla o el intercambio del código falla, se limpia la sesión y se
+   vuelve a `/login?error=oauth`.
+
+Nada de esto depende del backend: el `state` es un contrato entre esta app y Google.
+
 ### Lo que el template NO resuelve
 
 - **No hay refresh de token.** Cuando el access token expira, `/auth/me` falla y el handler manda
   al login. Es una decisión, no un olvido: implementarlo bien exige deduplicar refreshes
   concurrentes, y eso depende de cómo funcione tu API. Documentado aquí para que nadie asuma que
   existe.
-- **La vida del access token la fija la API externa.** Las cookies tienen su propio `maxAge`; si
-  configuras 7 días para ambas, el par de tokens no aporta nada sobre un token único.
+- **La vida del access token la fija la API externa.** Las cookies tienen su propio `maxAge`, hoy
+  compartido por las dos. Mientras no haya refresh, el par de tokens no aporta sobre un token
+  único; separar las vidas sin añadir el refresh solo acorta la sesión.
+- **No hay alta de usuarios ni recuperación de contraseña.** Son flujos de producto que dependen
+  del backend de cada proyecto.
 
 ---
 
@@ -502,23 +545,23 @@ servicios (§6).
 import { createContext } from 'svelte';
 import type { User } from '$lib/types/user';
 
-export interface AuthContext {
-    user: User | null;
-    accessToken: string | null;
+export interface AuthState {
+	user: User | null;
+	accessToken: string | null;
 }
 
-export const [getAuth, setAuth] = createContext<() => AuthContext>();
+export const [getAuth, setAuth] = createContext<() => AuthState>();
 ```
 
 ```svelte
 <!-- routes/+layout.svelte -->
 <script lang="ts">
-    import { setAuth } from '$lib/features/auth/context';
-    let { data, children } = $props();
+	import { setAuth } from '$lib/features/auth/context';
+	let { data, children } = $props();
 
-    // Se pasa una función, no el valor: así la reactividad cruza el límite del contexto
-    // y el token siempre se lee actualizado tras una navegación.
-    setAuth(() => ({ user: data.user, accessToken: data.accessToken }));
+	// Se pasa una función, no el valor: así la reactividad cruza el límite del contexto
+	// y el token siempre se lee actualizado tras una navegación.
+	setAuth(() => ({ user: data.user, accessToken: data.accessToken }));
 </script>
 
 {@render children()}
@@ -527,8 +570,8 @@ export const [getAuth, setAuth] = createContext<() => AuthContext>();
 ```svelte
 <!-- cualquier descendiente -->
 <script lang="ts">
-    import { getAuth } from '$lib/features/auth/context';
-    const auth = getAuth();
+	import { getAuth } from '$lib/features/auth/context';
+	const auth = getAuth();
 </script>
 
 <span>{auth().user?.name}</span>
@@ -583,12 +626,16 @@ una acción del usuario que dispara trabajo async. Es la **única** utilidad par
 export type AsyncViewState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 
 export class ViewState<T> {
-    state = $state<AsyncViewState>('idle');
-    error = $state<string | null>(null);
-    data = $state.raw<T | null>(null);
+	state = $state<AsyncViewState>('idle');
+	error = $state<string | null>(null);
+	data = $state.raw<T | null>(null);
 
-    async run(action: () => Promise<T>, opts?: { isEmpty?: (r: T) => boolean }) { /* ... */ }
-    reset() { /* ... */ }
+	async run(action: () => Promise<T>, opts?: { isEmpty?: (r: T) => boolean }) {
+		/* ... */
+	}
+	reset() {
+		/* ... */
+	}
 }
 ```
 
@@ -601,9 +648,9 @@ desincronizan, y obliga a la vista a volver a comprobar si está vacía cuando e
 
 ```svelte
 <AsyncView {viewState}>
-    {#snippet success(items)}
-        {#each items as item (item.id)}…{/each}
-    {/snippet}
+	{#snippet success(items)}
+		{#each items as item (item.id)}…{/each}
+	{/snippet}
 </AsyncView>
 ```
 
@@ -615,14 +662,14 @@ Con snippets opcionales para `loading`, `empty` y `error`, y defaults razonables
 
 ### Niveles
 
-| Nivel | Qué contiene | Puede importar de |
-|---|---|---|
-| `ui/` | shadcn-svelte vendorizado. **No se modifica ni se envuelve sin motivo.** Se actualiza con el CLI de shadcn. | bits-ui, `$lib/utils` |
-| `base/` | Átomos propios: componentes que shadcn no trae o que necesitan variantes de marca (`Combobox`, `DatePicker`, `FileInput`). | `ui/` |
-| `common/` | Moléculas sin conocimiento de dominio: `PageHeader`, `EmptyState`, `AsyncView`, `CardIcon`. | `ui/`, `base/` |
-| `blocks/` | Organismos sin dominio: composiciones grandes reutilizables. | `ui/`, `base/`, `common/` |
-| `layout/` | El chrome de la app: sidebar, header. Conoce `config/navigation`. | todos los anteriores, `config/` |
-| `features/<d>/components/` | UI del dominio. | todos los anteriores, su propio slice |
+| Nivel                      | Qué contiene                                                                                                               | Puede importar de                     |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `ui/`                      | shadcn-svelte vendorizado. **No se modifica ni se envuelve sin motivo.** Se actualiza con el CLI de shadcn.                | bits-ui, `$lib/utils`                 |
+| `base/`                    | Átomos propios: componentes que shadcn no trae o que necesitan variantes de marca (`Combobox`, `DatePicker`, `FileInput`). | `ui/`                                 |
+| `common/`                  | Moléculas sin conocimiento de dominio: `PageHeader`, `EmptyState`, `AsyncView`, `CardIcon`.                                | `ui/`, `base/`                        |
+| `blocks/`                  | Organismos sin dominio: composiciones grandes reutilizables.                                                               | `ui/`, `base/`, `common/`             |
+| `layout/`                  | El chrome de la app: sidebar, header. Conoce `config/navigation`.                                                          | todos los anteriores, `config/`       |
+| `features/<d>/components/` | UI del dominio.                                                                                                            | todos los anteriores, su propio slice |
 
 **Ninguno de `ui/`, `base/`, `common/`, `blocks/` puede importar de `features/`.** La flecha va en
 un solo sentido. Si un componente compartido necesita saber de un dominio, no es compartido.
@@ -635,18 +682,18 @@ claro. Duplicar dos veces es más barato que la abstracción equivocada.
 
 ```svelte
 <script lang="ts">
-    import type { Snippet } from 'svelte';
-    import { cn } from '$lib/utils';
+	import type { Snippet } from 'svelte';
+	import { cn } from '$lib/utils';
 
-    interface Props {
-        title: string;
-        description?: string;
-        onSelect?: (id: string) => void;
-        actions?: Snippet;
-        class?: string;
-    }
+	interface Props {
+		title: string;
+		description?: string;
+		onSelect?: (id: string) => void;
+		actions?: Snippet;
+		class?: string;
+	}
 
-    let { title, description, onSelect, actions, class: className }: Props = $props();
+	let { title, description, onSelect, actions, class: className }: Props = $props();
 </script>
 ```
 
@@ -666,8 +713,8 @@ claro. Duplicar dos veces es más barato que la abstracción equivocada.
   shadcn y no queremos divergir de él.
 
 La regla no es estética: hace visible de un vistazo qué código es nuestro y qué código no se toca.
-Los componentes actuales en `layout/` y `features/auth/components/` están en kebab-case y hay que
-renombrarlos.
+Los componentes de `layout/` siguen en kebab-case y hay que renombrarlos; los de
+`features/auth/components/` ya están migrados.
 
 ---
 
@@ -678,10 +725,10 @@ renombrarlos.
 ```svelte
 <!-- routes/(app)/users/+page.svelte — así de delgada -->
 <script lang="ts">
-    import UsersView from '$lib/features/users/components/UsersView.svelte';
-    import type { PageProps } from './$types';
+	import UsersView from '$lib/features/users/components/UsersView.svelte';
+	import type { PageProps } from './$types';
 
-    let { data }: PageProps = $props();
+	let { data }: PageProps = $props();
 </script>
 
 <svelte:head><title>Users</title></svelte:head>
@@ -701,12 +748,12 @@ sin JavaScript:
 export const load: PageServerLoad = async () => ({ form: await superValidate(zod(Schema)) });
 
 export const actions = {
-    create: async ({ request, locals }) => {
-        const form = await superValidate(request, zod(Schema));
-        if (!form.valid) return fail(400, { form });
-        // ...
-        return message(form, 'Created.');
-    }
+	create: async ({ request, locals }) => {
+		const form = await superValidate(request, zod(Schema));
+		if (!form.valid) return fail(400, { form });
+		// ...
+		return message(form, 'Created.');
+	}
 } satisfies Actions;
 ```
 
@@ -741,8 +788,21 @@ NETWORK · UNAUTHORIZED · FORBIDDEN · NOT_FOUND · CONFLICT · BAD_REQUEST · 
 ### Logging
 
 Un único punto de salida: `lib/core/logger.ts`. Ni un `console.error` suelto en el resto del
-código. Hoy la implementación es `console`; cuando quieras Sentry o logs estructurados, cambias un
-archivo en vez de buscar por el repo.
+código.
+
+```ts
+export interface Logger {
+	error(scope: string, error: unknown): string;
+}
+```
+
+El resto del código depende de `Logger`, la interfaz, nunca de la implementación. Hoy la única
+implementación es `ConsoleLogger`, expuesta como la instancia `logger`. Para Sentry o logs
+estructurados, se escribe una clase que implemente `Logger` y se reasigna con `setLogger(...)` —
+un archivo, sin tocar los llamantes.
+
+`logger.error(scope, error)` normaliza, registra, y **devuelve el mensaje seguro para el
+usuario** — que es lo que los tres llamantes necesitaban, así que evita normalizar dos veces.
 
 `handleError` de `hooks.server.ts` y `hooks.client.ts` pasa por ahí y devuelve un mensaje seguro
 para `+error.svelte`.
@@ -767,9 +827,9 @@ para `+error.svelte`.
 Una sola forma:
 
 ```ts
-import { X } from '$lib/…';     // ✅ siempre
-import { X } from '../../lib/…' // ❌ nunca
-import { X } from '$core/…';    // ❌ los aliases extra se eliminan
+import { X } from '$lib/…'; // ✅ siempre
+import { X } from '../../lib/…'; // ❌ nunca
+import { X } from '$core/…'; // ❌ los aliases extra se eliminan
 ```
 
 `svelte.config.js` mantiene solo `$lib` (el default de SvelteKit). Los seis aliases adicionales
@@ -785,7 +845,7 @@ Cruzar de slice a slice o de capa a capa siempre por `$lib/`.
 routes/            → features/, components/, config/, core/, utils/, types/
 features/<d>/      → components/{ui,base,common,blocks}, core/, config/, utils/, types/
                      ✗ NO importa de otro feature salvo por su index.ts
-components/layout/ → components/*, config/, features/auth (permisos)
+components/layout/ → components/*, config/, core/ (permisos)   ✗ no importa de features/
 components/blocks/ → components/{ui,base,common}
 components/common/ → components/{ui,base}, core/, utils/
 components/base/   → components/ui, utils/
@@ -808,20 +868,20 @@ algo de `features/users`, lo importa de `$lib/features/users`, nunca de
 
 ## 14. Convenciones de nombres
 
-| Elemento | Convención | Ejemplo |
-|---|---|---|
-| Componentes propios | PascalCase | `UserCard.svelte` |
-| Componentes en `ui/` | kebab-case (vendorizado) | `alert-dialog-content.svelte` |
-| Módulos TS | kebab-case | `view-state.svelte.ts`, `feature-flags.ts` |
-| Módulos con runes | sufijo `.svelte.ts` | `view-state.svelte.ts` |
-| Módulos server-only (excepción) | sufijo `.server.ts` | `billing.server.ts` |
-| Tests | junto al código | `redirect.test.ts` |
-| Clases y tipos | PascalCase | `ViewState`, `ApiError`, `User` |
-| Constantes de config | SCREAMING_SNAKE_CASE | `AUTH_ROUTE_PERMISSIONS` |
-| Props y variables | camelCase | `userId`, `isLoading` |
-| Callbacks en props | `on` + evento | `onSelect`, `onClose` |
-| Booleanos | `is` / `has` / `can` | `isLoading`, `canEdit` |
-| Rutas | kebab-case | `/user-settings` |
+| Elemento                        | Convención               | Ejemplo                                    |
+| ------------------------------- | ------------------------ | ------------------------------------------ |
+| Componentes propios             | PascalCase               | `UserCard.svelte`                          |
+| Componentes en `ui/`            | kebab-case (vendorizado) | `alert-dialog-content.svelte`              |
+| Módulos TS                      | kebab-case               | `view-state.svelte.ts`, `feature-flags.ts` |
+| Módulos con runes               | sufijo `.svelte.ts`      | `view-state.svelte.ts`                     |
+| Módulos server-only (excepción) | sufijo `.server.ts`      | `billing.server.ts`                        |
+| Tests                           | junto al código          | `redirect.test.ts`                         |
+| Clases y tipos                  | PascalCase               | `ViewState`, `ApiError`, `User`            |
+| Constantes de config            | SCREAMING_SNAKE_CASE     | `AUTH_ROUTE_PERMISSIONS`                   |
+| Props y variables               | camelCase                | `userId`, `isLoading`                      |
+| Callbacks en props              | `on` + evento            | `onSelect`, `onClose`                      |
+| Booleanos                       | `is` / `has` / `can`     | `isLoading`, `canEdit`                     |
+| Rutas                           | kebab-case               | `/user-settings`                           |
 
 **Un solo idioma en el código: inglés.** Nombres, comentarios, mensajes de UI, mensajes de commit.
 No porque el inglés sea mejor, sino porque mezclar dos idiomas obliga a decidir en cada línea.
@@ -834,14 +894,14 @@ No se busca cobertura. Se cubre lo que, si se rompe, rompe algo grave o silencio
 
 **Obligatorio:**
 
-| Qué | Por qué |
-|---|---|
-| `features/auth/permissions.ts` | La matriz completa rol × ruta, incluidos rol desconocido y ruta no declarada. Es el control de acceso. |
-| `features/auth/redirect.ts` | Ya existe. Cubre los vectores de open redirect. |
-| `core/errors.ts` | El mapeo status/HTTP → código. Un mapeo mal hecho muestra el mensaje equivocado en producción. |
-| `createAuthHandler` | Público→pasa, sin cookies→login, token inválido→login, sin permiso→403. |
-| E2E: login → dashboard → logout | El flujo que si se rompe, no entra nadie. |
-| E2E: rol sin permiso no accede a su ruta prohibida | Verifica que §7 sigue siendo cierto. |
+| Qué                                                | Por qué                                                                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `core/permissions.ts`                              | La matriz completa rol × ruta, incluidos rol desconocido y ruta no declarada. Es el control de acceso. Hecho. |
+| `features/auth/redirect.ts`                        | Ya existe. Cubre los vectores de open redirect.                                                               |
+| `core/errors.ts`                                   | El mapeo status/HTTP → código. Un mapeo mal hecho muestra el mensaje equivocado en producción.                |
+| `handleAuth`                                       | Público→pasa, sin cookies→login, token inválido→login, sin permiso→403.                                       |
+| E2E: login → dashboard → logout                    | El flujo que si se rompe, no entra nadie.                                                                     |
+| E2E: rol sin permiso no accede a su ruta prohibida | Verifica que §7 sigue siendo cierto.                                                                          |
 
 **No se testea:** componentes de presentación sin lógica, wrappers de `ui/`, ni utils triviales.
 Un test que solo reafirma que el markup no cambió es lastre.
@@ -868,9 +928,13 @@ Se comparte entre requests en SSR. Usa contexto.
 Filtrar el menú no es autorización. El check va en el servidor.
 
 **❌ `$effect` para notificar al padre**
+
 ```ts
-$effect(() => { onchange?.(value); });   // ❌ se dispara al montar y en cada eco
+$effect(() => {
+	onchange?.(value);
+}); // ❌ se dispara al montar y en cada eco
 ```
+
 Llama el callback en el event handler, o usa `bind:`.
 
 **❌ `$effect` reimplementando SvelteKit**
@@ -883,15 +947,18 @@ Un `load` devuelve datos. No muta estado global ni escribe en stores.
 Un `ViewState` con el estado y un `$state` aparte con los items. Se desincronizan.
 
 **❌ Lógica de negocio en la página**
+
 ```svelte
-const canDelete = user.role === 'admin' || user.role === 'lead';  // ❌
-const canDelete = hasPermission(user.role, PermissionKey.Users);  // ✅
+const canDelete = user.role === 'admin' || user.role === 'lead'; // ❌ const canDelete =
+hasPermission(user.role, PermissionKey.Users); // ✅
 ```
 
 **❌ Derivar en el template**
+
 ```svelte
 {#each items.filter(i => i.active).sort(byDate) as item}   <!-- ❌ -->
 ```
+
 Deriva con `$derived` en el script.
 
 **❌ Abstracciones sin consumidor**
