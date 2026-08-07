@@ -1,5 +1,6 @@
 import { normalizeError } from '$lib/core/errors';
-import type { AsyncViewState } from '$lib/types/ui/view-state';
+
+export type AsyncViewState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 
 export class ViewState {
 	state: AsyncViewState = $state('idle');
