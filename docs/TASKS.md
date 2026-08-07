@@ -187,16 +187,32 @@ Referencia: `docs/ARCHITECTURE.md` §8 y §9.
 > `layout/sidebar/app-sidebar.svelte`, sustituye la detección manual de navegación con
 > `previousPathname` por `afterNavigate` de `$app/navigation`.
 
-### T3.2 ⬜ `ViewState<T>` y el patrón que enseña el template
+### T3.2 ✅ `ViewState<T>` reemplazado por `Query<T>`
 
 El más importante de esta tanda: es el ejemplo que se copia en cada página nueva.
 
-> Ejecuta N4 de `docs/AUDIT.md` siguiendo `docs/ARCHITECTURE.md` §8. `ViewState<T>` pasa a
-> sostener el dato (`data` con `$state.raw`), `AsyncView` lo expone al snippet de éxito, y
-> desaparece la unión de tipos escrita a mano de sus props. Reescribe la demo de
-> `routes/(app)/+page.svelte` para que enseñe el patrón correcto: hoy mantiene `items` en un
-> `$state` paralelo y vuelve a comprobar el vacío dentro del snippet de éxito, contradiciendo el
-> propio estado `empty`.
+> Ejecuta N4 de `docs/AUDIT.md`, pero con un rediseño más simple que el descrito originalmente en
+> `docs/ARCHITECTURE.md` §8 (decisión explícita del autor, no una desviación accidental):
+> `view-state.svelte.ts` desaparece y se reemplaza por `core/query.svelte.ts` (`Query<T>` +
+> `createQuery`) — sin la máquina de estados `idle/loading/success/error/empty`, sin getters
+> `is*`. Tres campos planos: `data`, `loading`, `error`. `AsyncView` expone `data` al snippet de
+> éxito y la vista decide qué es "vacío" mirando el propio dato, sin un estado `empty` aparte.
+> `routes/(app)/+page.svelte` ya no mantiene `items` en un `$state` paralelo — una sola fuente de
+> verdad. `docs/ARCHITECTURE.md` §8 y §14 quedan actualizados con el nuevo diseño.
+>
+> Pulido posterior, todo en §8: `error` pasa a ser un `AppError` en vez de un string (la vista usa
+> `getMessage()`, el llamante conserva `code`/`isAuth()`); `run` devuelve `void` para que nadie
+> reintroduzca la variable paralela; `data`/`error` usan `$state.raw`; `loading` pasa a
+> `isLoading`. `AsyncView` recupera el snippet `empty`, que se dispara solo cuando `data` es un
+> array vacío — sin prop `isEmpty` que configurar. Cubierto por `core/query.test.ts`.
+>
+> Descartado a propósito, en dos rondas: (a) ordenar llamadas concurrentes en `run` (contador de
+> corrida) — no hay consumidor que las solape, y el caso que lo motivaría necesita debounce en el
+> call site igual; la limitación queda en el docstring de `Query` y en §8. (b) banderas derivadas
+> al estilo TanStack (`isError`, `isSuccess`) — se implementaron y se quitaron: una bandera
+> booleana no estrecha el tipo, así que `AsyncView` no podía usarlas (dos errores de
+> `svelte-check`) y quedaban como una segunda forma de preguntar lo que `{#if query.error}` ya
+> responde mejor.
 
 ### T3.3 🔄 Limpieza de tipos y consistencia
 

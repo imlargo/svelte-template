@@ -119,7 +119,7 @@ src/
 │   │   ├── errors.ts              ← AppError, ApiError, ValidationError, normalizeError
 │   │   ├── logger.ts              ← interfaz `Logger` + `logger` — único punto de salida de logs
 │   │   ├── permissions.ts         ← checks de acceso puros; reciben la matriz por argumento
-│   │   └── view-state.svelte.ts   ← ViewState<T> + AsyncViewState
+│   │   └── query.svelte.ts        ← Query<T> + createQuery
 │   │
 │   ├── config/                     ← plano, sin subcarpetas: 3 archivos no justifican una.
 │   │   ├── app.ts                 ← configuración leída de env, tipada. Único objeto `config`.
@@ -247,7 +247,7 @@ Tres cosas que hay que aceptar conscientemente, no descubrir después:
 2. **El access token es visible para el JavaScript de la página.** Un XSS puede usarlo mientras
    sea válido. Por eso su vida debe ser corta y por eso el refresh token no acompaña (§7).
 3. **No hay SSR para ese dato.** La primera pintura no lo tiene, así que necesitas un estado de
-   carga real — es justo el caso de uso de `ViewState` (§8).
+   carga real — es justo el caso de uso de `Query` (§8).
 
 ### Sobre remote functions
 
@@ -332,11 +332,11 @@ El token sale del contexto de auth (§8), nunca de un singleton de módulo:
 <script lang="ts">
 	import { getAuth } from '$lib/features/auth/context';
 	import { UsersService } from '$lib/features/users/services/users';
-	import { ViewState } from '$lib/core/view-state.svelte';
+	import { createQuery } from '$lib/core/query.svelte';
 
 	const auth = getAuth();
 	const users = new UsersService(() => auth().accessToken);
-	const search = new ViewState<User[]>();
+	const search = createQuery<User[]>();
 
 	async function onSearch(q: string) {
 		await search.run(() => users.list({ search: q }));
@@ -616,45 +616,97 @@ Alineadas con las best practices oficiales de Svelte:
 - **`{@attach}` en vez de `use:`** para comportamiento sobre elementos.
 - Los efectos no corren en el servidor. Nunca los envuelvas en `if (browser)`.
 
-### `ViewState<T>` — estado de una operación async del cliente
+### `Query<T>` — estado de una operación async del cliente
 
-Los datos del primer render vienen de `load`, así que `ViewState` cubre lo que pasa **después**:
+Los datos del primer render vienen de `load`, así que `Query` cubre lo que pasa **después**:
 una acción del usuario que dispara trabajo async. Es la **única** utilidad para eso.
 
 ```ts
-// lib/core/view-state.svelte.ts
-export type AsyncViewState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
-
-export class ViewState<T> {
-	state = $state<AsyncViewState>('idle');
-	error = $state<string | null>(null);
+// lib/core/query.svelte.ts
+export class Query<T> {
 	data = $state.raw<T | null>(null);
+	error = $state.raw<AppError | null>(null);
+	isLoading = $state(false);
 
-	async run(action: () => Promise<T>, opts?: { isEmpty?: (r: T) => boolean }) {
-		/* ... */
-	}
-	reset() {
+	async run(fetcher: () => Promise<T>): Promise<void> {
 		/* ... */
 	}
 }
+
+export function createQuery<T>(): Query<T> {
+	return new Query<T>();
+}
 ```
 
-El punto clave: **`ViewState` sostiene el dato**. No hay un `$state` paralelo con los items al
-lado de un `ViewState` que solo guarda el estado — eso son dos fuentes de verdad que se
-desincronizan, y obliga a la vista a volver a comprobar si está vacía cuando el propio
-`ViewState` ya tiene un estado `empty`.
+Tres campos y un método. Es una clase con campos `$state`, que es la forma que la doc de Svelte
+recomienda para compartir reactividad entre componentes — no un factory que devuelve getters.
 
-`AsyncView` consume `ViewState` y expone el dato al snippet de éxito:
+Se leen directo, y en un template la comprobación por verdad ya es la forma corta:
 
 ```svelte
-<AsyncView {viewState}>
-	{#snippet success(items)}
+{#if query.isLoading}…{:else if query.error}…{:else if query.data}…{/if}
+```
+
+Cuatro decisiones que conviene no deshacer sin motivo:
+
+1. **`Query` sostiene el dato.** No hay un `$state` paralelo con los items al lado de un `Query`
+   que solo guarda loading/error — eso son dos fuentes de verdad que se desincronizan.
+2. **`run` no devuelve el resultado.** Devolver `T | null` invita a `const items = await q.run(…)`,
+   que reintroduce exactamente la variable paralela del punto 1. El dato se lee de `query.data`.
+3. **`error` es un `AppError`, no un string.** La vista necesita el mensaje (`getMessage()`), pero
+   el llamante a menudo necesita el objeto: `error.code`, `error.isAuth()`, `instanceof ApiError`.
+   Guardar el string ya normalizado tira esa información en el único punto donde se puede
+   recuperar. Normalizar aquí es core→core: `normalizeError` vive en `core/errors.ts`.
+4. **No hay `isError`/`isSuccess` ni `status`.** Se probaron y se quitaron. Una bandera booleana
+   no estrecha el tipo: dentro de `{#if query.isError}` TypeScript sigue viendo
+   `error: AppError | null`, así que `AsyncView` no podía ni pasar el error al snippet ni llamar
+   `getMessage()` — dos errores reales de `svelte-check`. Comprobar el valor (`{#if query.error}`)
+   es igual de corto, sí estrecha, y deja una sola forma de preguntar lo mismo. De TanStack
+   tampoco viene `status`/`fetchStatus`: esa separación existe para distinguir un refetch en
+   segundo plano de una primera carga, y sin caché ni refetch automático no tiene a quién servir.
+
+Y una limitación deliberada: **`run` no ordena llamadas concurrentes.** Si disparas dos, gana la
+que resuelva última, que puede no ser la que empezaste última. No lleva contador interno porque
+hoy ningún consumidor corre llamadas solapadas, y el caso que lo motivaría (buscar por tecla)
+necesita un debounce en el call site de todos modos — y el debounce ya elimina la carrera.
+
+No hay `onError`: tras `await query.run(…)` el llamante ya puede mirar `query.error`. Un callback
+sería una segunda forma de hacer lo mismo.
+
+```svelte
+<script lang="ts">
+	const users = createQuery<User[]>();
+
+	async function search(q: string) {
+		await users.run(() => service.list({ search: q }));
+		if (users.error) toast.error(users.error.getMessage());
+	}
+</script>
+```
+
+Para cargar al montar no hace falta `onMount` ni `$effect`: `run` no lanza, así que se dispara en
+el top-level del `<script>`, que corre una sola vez al crear el componente.
+
+`AsyncView` consume `Query<T>` y expone el dato al snippet de éxito:
+
+```svelte
+<AsyncView query={users}>
+	{#snippet children(items)}
 		{#each items as item (item.id)}…{/each}
+	{/snippet}
+
+	{#snippet empty()}
+		<EmptyState title="No users yet" />
 	{/snippet}
 </AsyncView>
 ```
 
-Con snippets opcionales para `loading`, `empty` y `error`, y defaults razonables si no se pasan.
+Snippets opcionales para `loading`, `empty` y `error` (recibe el `AppError`), con defaults
+razonables si no se pasan.
+
+`empty` se dispara cuando `data` es un array vacío — no hay prop `isEmpty` que configurar. Es el
+95% de los casos (una lista que volvió sin nada) y evita que el snippet de éxito tenga que volver
+a preguntar por el vacío. Si tu noción de "vacío" es otra, va dentro de `children`.
 
 ---
 
@@ -868,20 +920,20 @@ algo de `features/users`, lo importa de `$lib/features/users`, nunca de
 
 ## 14. Convenciones de nombres
 
-| Elemento                        | Convención               | Ejemplo                                    |
-| ------------------------------- | ------------------------ | ------------------------------------------ |
-| Componentes propios             | PascalCase               | `UserCard.svelte`                          |
-| Componentes en `ui/`            | kebab-case (vendorizado) | `alert-dialog-content.svelte`              |
-| Módulos TS                      | kebab-case               | `view-state.svelte.ts`, `feature-flags.ts` |
-| Módulos con runes               | sufijo `.svelte.ts`      | `view-state.svelte.ts`                     |
-| Módulos server-only (excepción) | sufijo `.server.ts`      | `billing.server.ts`                        |
-| Tests                           | junto al código          | `redirect.test.ts`                         |
-| Clases y tipos                  | PascalCase               | `ViewState`, `ApiError`, `User`            |
-| Constantes de config            | SCREAMING_SNAKE_CASE     | `AUTH_ROUTE_PERMISSIONS`                   |
-| Props y variables               | camelCase                | `userId`, `isLoading`                      |
-| Callbacks en props              | `on` + evento            | `onSelect`, `onClose`                      |
-| Booleanos                       | `is` / `has` / `can`     | `isLoading`, `canEdit`                     |
-| Rutas                           | kebab-case               | `/user-settings`                           |
+| Elemento                        | Convención               | Ejemplo                               |
+| ------------------------------- | ------------------------ | ------------------------------------- |
+| Componentes propios             | PascalCase               | `UserCard.svelte`                     |
+| Componentes en `ui/`            | kebab-case (vendorizado) | `alert-dialog-content.svelte`         |
+| Módulos TS                      | kebab-case               | `query.svelte.ts`, `feature-flags.ts` |
+| Módulos con runes               | sufijo `.svelte.ts`      | `query.svelte.ts`                     |
+| Módulos server-only (excepción) | sufijo `.server.ts`      | `billing.server.ts`                   |
+| Tests                           | junto al código          | `redirect.test.ts`                    |
+| Clases y tipos                  | PascalCase               | `Query`, `ApiError`, `User`           |
+| Constantes de config            | SCREAMING_SNAKE_CASE     | `AUTH_ROUTE_PERMISSIONS`              |
+| Props y variables               | camelCase                | `userId`, `isLoading`                 |
+| Callbacks en props              | `on` + evento            | `onSelect`, `onClose`                 |
+| Booleanos                       | `is` / `has` / `can`     | `isLoading`, `canEdit`                |
+| Rutas                           | kebab-case               | `/user-settings`                      |
 
 **Un solo idioma en el código: inglés.** Nombres, comentarios, mensajes de UI, mensajes de commit.
 No porque el inglés sea mejor, sino porque mezclar dos idiomas obliga a decidir en cada línea.
@@ -944,7 +996,7 @@ Detectar navegación con un `previousPathname` en `$state` cuando existe `afterN
 Un `load` devuelve datos. No muta estado global ni escribe en stores.
 
 **❌ Dos fuentes de verdad para el mismo dato**
-Un `ViewState` con el estado y un `$state` aparte con los items. Se desincronizan.
+Un `Query` con loading/error y un `$state` aparte con los items. Se desincronizan.
 
 **❌ Lógica de negocio en la página**
 
@@ -963,9 +1015,6 @@ Deriva con `$derived` en el script.
 
 **❌ Abstracciones sin consumidor**
 Un store genérico, un helper o un tipo que nadie importa. Bórralo.
-
-**❌ Dos utilidades para lo mismo**
-`withLoading` y `ViewState` resolviendo el mismo problema. Elige una, borra la otra.
 
 **❌ Mutar por GET**
 Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de SvelteKit los dispara solo.

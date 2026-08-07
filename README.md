@@ -18,7 +18,7 @@ A production-ready SvelteKit 2 + Svelte 5 starter template with a layered archit
 ```
 src/
 ├── lib/
-│   ├── core/          # Infrastructure: api, service, errors, logger, permissions, view-state
+│   ├── core/          # Infrastructure: api, service, errors, logger, permissions, query
 │   ├── config/        # App config + constants (permissions, navigation)
 │   ├── types/         # Types shared by more than one slice
 │   ├── utils/         # Pure utility functions (date, string, number, form)

@@ -2,24 +2,19 @@
 	import { PageHeader, AsyncView, EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { ViewState } from '$lib/core/view-state.svelte';
+	import { createQuery } from '$lib/core/query.svelte';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import ActivityIcon from '@lucide/svelte/icons/activity';
 	import InboxIcon from '@lucide/svelte/icons/inbox';
 
-	const viewState = new ViewState();
-	let items: string[] = $state([]);
+	const items = createQuery<string[]>();
 
-	async function loadItems() {
-		const result = await viewState.run(
-			async () => {
-				await new Promise((r) => setTimeout(r, 800));
-				return ['Item A', 'Item B', 'Item C'];
-			},
-			{ isEmpty: (r) => r.length === 0 }
-		);
-		if (result) items = result;
+	function loadItems() {
+		items.run(async () => {
+			await new Promise((r) => setTimeout(r, 800));
+			return ['Item A', 'Item B', 'Item C'];
+		});
 	}
 </script>
 
@@ -69,14 +64,16 @@
 	<!-- AsyncView + EmptyState demo -->
 	<section>
 		<h2 class="mb-3 text-sm font-medium text-muted-foreground">AsyncView demo</h2>
-		<AsyncView {viewState}>
-			{#if items.length > 0}
+		<AsyncView query={items}>
+			{#snippet children(data)}
 				<ul class="divide-y rounded-lg border">
-					{#each items as item (item)}
+					{#each data as item (item)}
 						<li class="px-4 py-3 text-sm">{item}</li>
 					{/each}
 				</ul>
-			{:else}
+			{/snippet}
+
+			{#snippet empty()}
 				<EmptyState
 					title="No items yet"
 					description="Click 'Load demo data' to see the AsyncView pattern in action."
@@ -88,7 +85,7 @@
 						<Button variant="outline" size="sm" onclick={loadItems}>Load demo data</Button>
 					{/snippet}
 				</EmptyState>
-			{/if}
+			{/snippet}
 		</AsyncView>
 	</section>
 </div>
