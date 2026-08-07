@@ -4,7 +4,7 @@
  */
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
-import { logError } from '$lib/core/logger';
+import { logger } from '$lib/core/logger';
 import { AuthService } from '$lib/features/auth/services/auth';
 import { decodeRedirect } from '$lib/features/auth/redirect';
 import { clearSession, setSession, takeOAuthState } from '$lib/features/auth/session.server';
@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const state = url.searchParams.get('state');
 
 	if (!code || !state || !stored || stored.nonce !== state) {
-		logError('auth', new Error('Rejected Google callback: missing or mismatched OAuth state'));
+		logger.error('auth', new Error('Rejected Google callback: missing or mismatched OAuth state'));
 		clearSession(cookies);
 		redirect(303, FAILED_SIGN_IN);
 	}
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			refreshToken: tokens.refresh_token
 		});
 	} catch (err) {
-		logError('auth', err);
+		logger.error('auth', err);
 		clearSession(cookies);
 		redirect(303, FAILED_SIGN_IN);
 	}

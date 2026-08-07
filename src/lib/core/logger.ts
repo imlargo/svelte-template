@@ -1,12 +1,26 @@
 /**
- * The single exit point for logs. Swap the console calls here for Sentry or
- * structured logging without touching the rest of the codebase.
+ * The single exit point for logs. To ship Sentry or structured logging, write a
+ * class that implements `Logger` and reassign `logger` — nothing else in the
+ * codebase changes.
  */
 import { normalizeError } from '$lib/core/errors';
 
-/** Logs the error under `scope` and returns the message that is safe to show a user. */
-export function logError(scope: string, error: unknown): string {
-	const normalized = normalizeError(error);
-	console.error(`[${scope}]`, normalized);
-	return normalized.getMessage();
+export interface Logger {
+	/** Logs `error` under `scope` and returns the message that is safe to show a user. */
+	error(scope: string, error: unknown): string;
+}
+
+class ConsoleLogger implements Logger {
+	error(scope: string, error: unknown): string {
+		const normalized = normalizeError(error);
+		console.error(`[${scope}]`, normalized);
+		return normalized.getMessage();
+	}
+}
+
+export let logger: Logger = new ConsoleLogger();
+
+/** Swaps the active implementation — e.g. for a SentryLogger, or a no-op one in tests. */
+export function setLogger(impl: Logger): void {
+	logger = impl;
 }

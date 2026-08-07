@@ -117,7 +117,7 @@ src/
 │   │   ├── api.ts                 ← createApiClient (air + baseURL + Authorization)
 │   │   ├── service.ts             ← BaseService
 │   │   ├── errors.ts              ← AppError, ApiError, ValidationError, normalizeError
-│   │   ├── logger.ts              ← logError(...) — único punto de salida de logs
+│   │   ├── logger.ts              ← interfaz `Logger` + `logger` — único punto de salida de logs
 │   │   ├── permissions.ts         ← checks de acceso puros; reciben la matriz por argumento
 │   │   └── view-state.svelte.ts   ← ViewState<T> + AsyncViewState
 │   │
@@ -788,11 +788,21 @@ NETWORK · UNAUTHORIZED · FORBIDDEN · NOT_FOUND · CONFLICT · BAD_REQUEST · 
 ### Logging
 
 Un único punto de salida: `lib/core/logger.ts`. Ni un `console.error` suelto en el resto del
-código. Hoy la implementación es `console`; cuando quieras Sentry o logs estructurados, cambias un
-archivo en vez de buscar por el repo.
+código.
 
-`logError(scope, error)` normaliza, registra, y **devuelve el mensaje seguro para el usuario** —
-que es lo que los tres llamantes necesitaban, así que evita normalizar dos veces.
+```ts
+export interface Logger {
+	error(scope: string, error: unknown): string;
+}
+```
+
+El resto del código depende de `Logger`, la interfaz, nunca de la implementación. Hoy la única
+implementación es `ConsoleLogger`, expuesta como la instancia `logger`. Para Sentry o logs
+estructurados, se escribe una clase que implemente `Logger` y se reasigna con `setLogger(...)` —
+un archivo, sin tocar los llamantes.
+
+`logger.error(scope, error)` normaliza, registra, y **devuelve el mensaje seguro para el
+usuario** — que es lo que los tres llamantes necesitaban, así que evita normalizar dos veces.
 
 `handleError` de `hooks.server.ts` y `hooks.client.ts` pasa por ahí y devuelve un mensaje seguro
 para `+error.svelte`.

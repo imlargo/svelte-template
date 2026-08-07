@@ -1,6 +1,6 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
-import { logError } from '$lib/core/logger';
+import { logger } from '$lib/core/logger';
 import { handleAuth } from '$lib/features/auth/handler.server';
 
 export const handle: Handle = config.auth.enabled
@@ -10,5 +10,5 @@ export const handle: Handle = config.auth.enabled
 export const handleError: HandleServerError = ({ error, status }) => {
 	// 404s are noise: they say more about crawlers than about the app.
 	if (status === 404) return { message: 'Not found.' };
-	return { message: logError('server', error) };
+	return { message: logger.error('server', error) };
 };

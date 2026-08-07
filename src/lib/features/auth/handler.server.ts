@@ -10,7 +10,7 @@ import { error, redirect, type Handle } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
 import { AUTH_ROUTE_PERMISSIONS } from '$lib/config/permissions';
 import { canAccessRoute } from '$lib/core/permissions';
-import { logError } from '$lib/core/logger';
+import { logger } from '$lib/core/logger';
 import { AuthService } from './services/auth';
 import { encodeRedirect } from './redirect';
 import { clearSession, getSession } from './session.server';
@@ -44,7 +44,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	try {
 		user = await new AuthService(session.accessToken).getMe();
 	} catch (err) {
-		logError('auth', err);
+		logger.error('auth', err);
 		clearSession(event.cookies);
 		redirect(303, loginUrl(pathname, search));
 	}
