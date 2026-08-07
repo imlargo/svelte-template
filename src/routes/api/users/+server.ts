@@ -10,11 +10,17 @@ import { createUser, emailTaken, listUsers } from '$lib/server/users-store';
 import { UserFormSchema } from '$lib/features/users/schemas';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ url }) => {
+// Endpoints get no layout, so each handler guards itself, asking for what it
+// actually does: listing is not creating.
+export const GET: RequestHandler = async ({ url, locals }) => {
+	locals.requirePermission('users:read');
+
 	return json(listUsers(url.searchParams.get('q') ?? undefined));
 };
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	locals.requirePermission('users:write');
+
 	const parsed = UserFormSchema.safeParse(await request.json());
 	if (!parsed.success) {
 		return json(

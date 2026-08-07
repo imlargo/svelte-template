@@ -9,12 +9,18 @@ import type { RequestHandler } from './$types';
 const notFound = (id: string) =>
 	json({ status: 'NOT_FOUND', message: `No user with id ${id}.` }, { status: 404 });
 
-export const GET: RequestHandler = async ({ params }) => {
+// Endpoints get no layout, so each handler guards itself. Three methods, three
+// permissions: this is the granularity a path-keyed table cannot express.
+export const GET: RequestHandler = async ({ params, locals }) => {
+	locals.requirePermission('users:read');
+
 	const user = findUser(params.id);
 	return user ? json(user) : notFound(params.id);
 };
 
-export const PATCH: RequestHandler = async ({ params, request }) => {
+export const PATCH: RequestHandler = async ({ params, request, locals }) => {
+	locals.requirePermission('users:write');
+
 	if (!findUser(params.id)) return notFound(params.id);
 
 	const parsed = UserFormSchema.partial().safeParse(await request.json());
@@ -35,6 +41,8 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 	return json(updateUser(params.id, parsed.data));
 };
 
-export const DELETE: RequestHandler = async ({ params }) => {
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+	locals.requirePermission('users:delete');
+
 	return deleteUser(params.id) ? new Response(null, { status: 204 }) : notFound(params.id);
 };
