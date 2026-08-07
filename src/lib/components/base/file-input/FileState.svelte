@@ -18,7 +18,7 @@
 		return 'other';
 	}
 
-	const fileType = getFileType(file.name);
+	const fileType = $derived(getFileType(file.name));
 </script>
 
 <div class="flex items-center gap-4 rounded-md bg-muted/40 p-3">
