@@ -476,20 +476,58 @@ acceso más corta no cierra ninguna ventana: el handler exige las dos cookies, a
 consigue es echar al usuario antes. Separar las vidas y añadir el refresh es un solo cambio, y va
 junto. Está escrito también en `session.server.ts`, que es donde alguien lo va a leer.
 
-### El check de autorización va en el servidor
+### El check de autorización va en el servidor, y tiene dos ejes
 
-`AUTH_ROUTE_PERMISSIONS` mapea prefijo de ruta → roles permitidos. Ese mapa se evalúa **una vez,
-en el hook**, después de resolver el usuario:
+La autenticación es central: o hay sesión válida o no la hay, y una ruta que se olvida de
+preguntarlo no puede ser una ruta que se abre. La **autorización** está deliberadamente partida en
+dos, porque las dos mitades de una app full-stack no tienen la misma forma.
+
+**Páginas.** Son un árbol que el usuario navega, así que se declaran como un árbol
+(`AUTH_ROUTE_PERMISSIONS`: prefijo de ruta → `PermissionKey`) y se evalúan **una vez, en el hook**,
+antes de que corra ningún `load`. No declarada equivale a denegada, así que una página nueva no
+puede salir abierta por olvido:
 
 ```ts
-if (!canAccessRoute(AUTH_ROUTE_PERMISSIONS, user.role, pathname)) {
-	error(403, 'You do not have access to this page.');
+if (!isDataRequest(pathname)) {
+	const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, pathname);
+	if (!required) error(403, 'You do not have access to this page.');
+	event.locals.requirePermission(required);
 }
 ```
 
-La matriz se pasa por argumento porque la función vive en `core/permissions.ts`, que es
-infraestructura reutilizable y no conoce los roles ni las rutas de este proyecto (§13). Los datos
-viven en `config/permissions.ts`; `core` solo sabe evaluarlos.
+**Endpoints.** No son un árbol. Una misma ruta responde a varios métodos que pueden necesitar
+permisos distintos —leer una colección y borrar de ella no son lo mismo—, y eso una tabla indexada
+por path no sabe decirlo. Cada handler declara el suyo, en su primera línea:
+
+```ts
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+	locals.requirePermission(PermissionKey.Admin);
+	// ...
+};
+```
+
+Meter `/api/**` en la tabla de páginas no es una simplificación, es un bug: el hook juzga el
+endpoint como si fuera una página, no encuentra entrada, y devuelve 403 a todo el mundo
+—incluido el admin— antes de que el handler llegue a correr.
+
+**Lo que sí comparten** es quién tiene cada permiso (`PERMISSION_GROUPS`) y el objeto que lo aplica
+(`locals.requirePermission`, en `features/auth/guard.server.ts`). Lo que no comparten es cómo una
+ruta dice lo que necesita, ni cómo vuelve la negativa: una página recibe redirect o página de
+error; un `fetch` recibe un status que puede leer.
+
+`permissionForRoute` y `hasPermission` viven en `core/permissions.ts`, que es infraestructura
+reutilizable y no conoce los roles ni las rutas de este proyecto (§13): los datos se pasan por
+argumento y viven en `config/permissions.ts`.
+
+### El guard se inyecta, no se importa
+
+`locals.requirePermission` lo instala el hook en cada request, ya ligado al usuario resuelto. Es
+una función, no un booleano, y **lanza** en vez de devolver: un check de autorización cuyo
+resultado se puede olvidar de mirar no es un check. Sin sesión responde 401 y no 403, para que el
+llamante distinga "vuelve a entrar" de "esto no es para ti".
+
+No hay un `can()` al lado porque nada en el servidor lo necesita — el sidebar pregunta con
+`hasAnyPermission` en el cliente, con el usuario del contexto.
 
 El sidebar sigue filtrando items con `hasAnyPermission`, pero eso es **presentación**. Ocultar un
 enlace no es autorización: cualquiera puede escribir la URL. Si el único control fuera el menú, el
@@ -502,23 +540,22 @@ desconocido del backend cae fuera de todas las listas y se deniega sin código e
 comportamiento por defecto de la estructura de datos, no una comprobación que alguien puede olvidar.
 
 ```ts
-// Ruta no declarada en la matriz → denegada.
-export function canAccessRoute<R extends string>(
-	routes: RoutePermissions<R>,
-	role: string | null | undefined,
+// Página no declarada en la matriz → null, que el llamante trata como denegada.
+export function permissionForRoute<K extends string>(
+	routes: RoutePermissions<K>,
 	pathname: string
-): boolean {
-	const allowed = matchLongestPrefix(routes, pathname);
-	if (!allowed) return false; // ← nunca `true`
-	return !!role && allowed.includes(role);
+): K | null {
+	// ...prefijo más largo; '/' solo casa consigo misma
+	return best; // ← null cuando no hay entrada, nunca un permiso por defecto
 }
 ```
 
 Dos consecuencias que hay que entender antes de aceptarlas:
 
-1. **Toda ruta nueva bajo `(app)/` necesita una entrada en `AUTH_ROUTE_PERMISSIONS`.** Si se
+1. **Toda página nueva bajo `(app)/` necesita una entrada en `AUTH_ROUTE_PERMISSIONS`.** Si se
    olvida, la ruta da 403 y te enteras en el primer clic. Es exactamente el fallo que quieres:
-   ruidoso e inmediato, en vez de silencioso y en producción.
+   ruidoso e inmediato, en vez de silencioso y en producción. Los endpoints bajo `/api/` **no**
+   van en esa tabla: se autorizan en su handler.
 2. **Un rol nuevo en el backend no hereda permisos.** Añadir `viewer` en la API no le da acceso a
    nada aquí hasta que lo declares. El sentido contrario —que un rol restrictivo herede los
    permisos de `member`— es cómo se abren agujeros.
@@ -1088,6 +1125,16 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 3. Si va en el menú, añadir el item en `config/navigation.ts` con sus `requiredPermissions`.
 4. `npm run lint && npm run check && npm run test`.
 
+### Añadir un endpoint
+
+1. Crear `routes/api/<recurso>/+server.ts`.
+2. **Primera línea de cada handler: `locals.requirePermission(PermissionKey.X)`.** No hay tabla
+   central que lo cubra, y es a propósito: cada método declara el suyo, así que `GET` y `DELETE`
+   pueden pedir permisos distintos.
+3. No lo añadas a `AUTH_ROUTE_PERMISSIONS`. Esa tabla es de páginas; meterlo ahí no lo protege más
+   y sí lo rompe.
+4. Test del handler si la regla de permiso no es obvia.
+
 ### Añadir un slice
 
 1. `lib/features/<domain>/` con `types.ts`, `schemas.ts` y `services/<entity>.ts`.
@@ -1122,7 +1169,8 @@ Un cambio está listo cuando:
 - [ ] `npm run test` — verde
 - [ ] No añade exports sin consumidor
 - [ ] No añade una segunda forma de hacer algo que ya se hace
-- [ ] Si toca rutas, tienen entrada en `AUTH_ROUTE_PERMISSIONS`
+- [ ] Si añade una página, tiene entrada en `AUTH_ROUTE_PERMISSIONS`
+- [ ] Si añade un endpoint, cada handler llama a `locals.requirePermission`
 - [ ] Si toca permisos o auth, tiene test
 - [ ] Si añade una variable de entorno, está en `.env.example`
 - [ ] Este documento sigue siendo cierto — o se actualizó en el mismo commit
