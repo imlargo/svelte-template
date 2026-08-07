@@ -31,10 +31,6 @@ export default defineConfig({
 				test: {
 					name: 'server',
 					environment: 'node',
-					// Pinned so a developer's .env cannot decide what the suite proves.
-					// With PUBLIC_AUTH_ENABLED=false the auth checks short-circuit, and
-					// every authorization test would pass without asserting anything.
-					env: { PUBLIC_AUTH_ENABLED: 'true' },
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
 				}

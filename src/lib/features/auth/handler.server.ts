@@ -44,12 +44,17 @@ function isPublicRoute(pathname: string): boolean {
 }
 
 /**
- * Data requests get a status; page requests get sent to the login page. A
- * `fetch()` follows a 303 in silence, receives the login HTML with a 200, and
- * fails on parse — so the user sees a JSON syntax error instead of "your
- * session expired".
+ * Endpoints get a status; page requests get sent to the login page. A `fetch()`
+ * follows a 303 in silence, receives the login HTML with a 200, and fails on
+ * parse — so the user sees a JSON syntax error instead of "your session
+ * expired".
+ *
+ * Not to be confused with SvelteKit's `event.isDataRequest`, which is true for
+ * the `__data.json` fetches behind client-side navigation. Those are pages: a
+ * redirect is the right answer, and SvelteKit turns it into one the router
+ * follows.
  */
-function isDataRequest(pathname: string): boolean {
+function isEndpointRequest(pathname: string): boolean {
 	return pathname.startsWith('/api/');
 }
 
@@ -64,9 +69,16 @@ function loginUrl(pathname: string, search: string): string {
 export const handleAuth: Handle = async ({ event, resolve }) => {
 	const { pathname, search } = event.url;
 
-	// Installed up front so the type on `locals` holds everywhere, including on
-	// public routes: with no session, every permission check answers 401.
-	event.locals.requirePermission = createPermissionGuard(null);
+	// Installed once, reading the user lazily, so there is no window in which
+	// `locals` carries a guard bound to the wrong user and nothing to reassign
+	// later. Before the session resolves it answers 401, which is correct.
+	event.locals.requirePermission = createPermissionGuard(() => event.locals.user);
+
+	// No route matched, so there is nothing to protect and nobody to protect it
+	// from. Letting SvelteKit answer its own 404 keeps a mistyped URL from
+	// costing a round trip to /auth/me and from being logged as a missing
+	// permission — it is a 404, not a 403.
+	if (!event.route.id) return resolve(event);
 
 	if (isPublicRoute(pathname)) return resolve(event);
 
@@ -74,7 +86,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	// compiler keeps treating `session` as possibly null after `endSession()`.
 	const endSession: () => never = () => {
 		clearSession(event.cookies);
-		if (isDataRequest(pathname)) error(401, 'Your session has expired. Sign in again.');
+		if (isEndpointRequest(pathname)) error(401, 'Your session has expired. Sign in again.');
 		redirect(303, loginUrl(pathname, search));
 	};
 
@@ -98,11 +110,10 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 
 	event.locals.user = user;
 	event.locals.accessToken = session.accessToken;
-	event.locals.requirePermission = createPermissionGuard(user);
 
 	// Endpoints authorize themselves, per handler and per method. Applying the
 	// page table to them is what made every /api/ call 403 before this existed.
-	if (!isDataRequest(pathname)) {
+	if (!isEndpointRequest(pathname)) {
 		const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, pathname);
 		if (!required) {
 			// Not a user problem: the page exists but nobody declared it. Say so in
