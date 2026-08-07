@@ -1,120 +1,76 @@
 import { describe, expect, it } from 'vitest';
-import {
-	canAccessRoute,
-	hasAnyPermission,
-	hasPermission,
-	type PermissionGroups
-} from './permissions';
-import { AUTH_ROUTE_PERMISSIONS, PERMISSION_GROUPS, PermissionKey } from '$lib/config/permissions';
+import { hasPermission, permissionForRoute } from './permissions';
+import { AUTH_ROUTE_PERMISSIONS, ROLE_PERMISSIONS } from '$lib/config/permissions';
 import { UserRole } from '$lib/types/user';
 
-// This is the access control of the app: the matrix is asserted in full, and
-// the unknown role and the undeclared route are the cases that must fail shut.
+// This is the access control of the app: the role × permission matrix is
+// asserted in full, and the unknown role and the undeclared page are the cases
+// that must fail shut. Enforcement itself is guard.server.test.ts and
+// handler.server.test.ts.
 
 describe('hasPermission', () => {
-	it('grants a permission listed for the role', () => {
-		expect(hasPermission(PERMISSION_GROUPS, UserRole.ADMIN, PermissionKey.Admin)).toBe(true);
-		expect(hasPermission(PERMISSION_GROUPS, UserRole.MEMBER, PermissionKey.Dashboard)).toBe(true);
-	});
-
-	it('denies a permission not listed for the role', () => {
-		expect(hasPermission(PERMISSION_GROUPS, UserRole.MEMBER, PermissionKey.Admin)).toBe(false);
-	});
-
-	it('denies unknown, null and undefined roles', () => {
-		expect(hasPermission(PERMISSION_GROUPS, 'viewer', PermissionKey.Settings)).toBe(false);
-		expect(hasPermission(PERMISSION_GROUPS, null, PermissionKey.Settings)).toBe(false);
-		expect(hasPermission(PERMISSION_GROUPS, undefined, PermissionKey.Settings)).toBe(false);
-	});
-
-	it('grants a permission declared with no roles to anyone', () => {
-		// Dashboard is the app's own unrestricted permission.
-		expect(hasPermission(PERMISSION_GROUPS, UserRole.MEMBER, PermissionKey.Dashboard)).toBe(true);
-		expect(hasPermission(PERMISSION_GROUPS, 'viewer', PermissionKey.Dashboard)).toBe(true);
-		expect(hasPermission(PERMISSION_GROUPS, null, PermissionKey.Dashboard)).toBe(true);
-	});
-
-	it('denies a key that is not declared at all', () => {
-		// The cast stands in for config drift: the key exists for the type but
-		// not in the data, which is the case that must not fall through to true.
-		const groups = { Open: [] } as unknown as PermissionGroups<'Open' | 'Missing', UserRole>;
-
-		expect(hasPermission(groups, UserRole.ADMIN, 'Missing')).toBe(false);
-	});
-});
-
-describe('hasAnyPermission', () => {
-	it('passes when at least one key is held', () => {
-		expect(
-			hasAnyPermission(PERMISSION_GROUPS, UserRole.MEMBER, [
-				PermissionKey.Admin,
-				PermissionKey.Settings
-			])
-		).toBe(true);
-	});
-
-	it('fails when no key is held', () => {
-		expect(hasAnyPermission(PERMISSION_GROUPS, UserRole.MEMBER, [PermissionKey.Admin])).toBe(false);
-	});
-
-	it('passes when nothing is required', () => {
-		expect(hasAnyPermission(PERMISSION_GROUPS, UserRole.MEMBER, [])).toBe(true);
-		expect(hasAnyPermission(PERMISSION_GROUPS, null, [])).toBe(true);
-	});
-});
-
-describe('canAccessRoute', () => {
-	const matrix: Array<[string, UserRole, boolean]> = [
-		['/', UserRole.ADMIN, true],
-		['/', UserRole.MEMBER, true],
-		['/settings', UserRole.ADMIN, true],
-		['/settings', UserRole.MEMBER, true],
-		['/admin', UserRole.ADMIN, true],
-		['/admin', UserRole.MEMBER, false]
+	const matrix: Array<[UserRole, string, boolean]> = [
+		[UserRole.ADMIN, 'dashboard:read', true],
+		[UserRole.ADMIN, 'settings:read', true],
+		[UserRole.ADMIN, 'users:read', true],
+		[UserRole.ADMIN, 'users:write', true],
+		[UserRole.ADMIN, 'users:delete', true],
+		[UserRole.MEMBER, 'dashboard:read', true],
+		[UserRole.MEMBER, 'settings:read', true],
+		[UserRole.MEMBER, 'users:read', false],
+		[UserRole.MEMBER, 'users:write', false],
+		[UserRole.MEMBER, 'users:delete', false]
 	];
 
-	it.each(matrix)('%s is %s for %s', (pathname, role, expected) => {
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, role, pathname)).toBe(expected);
+	it.each(matrix)('%s %s the permission %s', (role, permission, expected) => {
+		expect(hasPermission(ROLE_PERMISSIONS, role, permission)).toBe(expected);
 	});
 
-	it('applies a declared route to everything nested under it', () => {
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, UserRole.ADMIN, '/admin/users')).toBe(true);
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, UserRole.MEMBER, '/admin/users')).toBe(false);
+	it('grants nothing to a role the frontend has never heard of', () => {
+		// A role added to the backend arrives with no grants, so a restrictive new
+		// role cannot widen access here by falling back to a known one.
+		expect(hasPermission(ROLE_PERMISSIONS, 'viewer', 'dashboard:read')).toBe(false);
+		expect(hasPermission(ROLE_PERMISSIONS, 'viewer', 'users:delete')).toBe(false);
 	});
 
-	it('denies a route that is not declared', () => {
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, UserRole.ADMIN, '/reports')).toBe(false);
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, UserRole.MEMBER, '/reports')).toBe(false);
+	it('grants nothing without a role', () => {
+		expect(hasPermission(ROLE_PERMISSIONS, null, 'dashboard:read')).toBe(false);
+		expect(hasPermission(ROLE_PERMISSIONS, undefined, 'dashboard:read')).toBe(false);
+	});
+});
+
+describe('permissionForRoute', () => {
+	it('resolves each declared page to its permission', () => {
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/')).toBe('dashboard:read');
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/settings')).toBe('settings:read');
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin')).toBe('users:read');
+	});
+
+	it('applies a declared page to everything nested under it', () => {
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin/users')).toBe('users:read');
+	});
+
+	it('returns null for a page that is not declared', () => {
+		// Null is the deny case: callers must not read it as "unrestricted".
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/reports')).toBeNull();
 	});
 
 	it('does not let the root entry act as a prefix for every path', () => {
-		// '/' allows members; '/admin' must not inherit that.
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, UserRole.MEMBER, '/admin')).toBe(false);
-	});
-
-	it('lets any role into a route declared with no roles', () => {
-		const routes = { '/docs': [] as UserRole[] };
-
-		expect(canAccessRoute(routes, UserRole.MEMBER, '/docs')).toBe(true);
-		expect(canAccessRoute(routes, 'viewer', '/docs/nested')).toBe(true);
-		expect(canAccessRoute(routes, null, '/docs')).toBe(true);
-		// Still denied: the entry is missing, not empty.
-		expect(canAccessRoute(routes, UserRole.ADMIN, '/other')).toBe(false);
-	});
-
-	it('denies unknown and missing roles on a role-restricted route', () => {
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, 'viewer', '/settings')).toBe(false);
-		expect(canAccessRoute(AUTH_ROUTE_PERMISSIONS, null, '/settings')).toBe(false);
+		// Every role holds 'dashboard:read'; '/admin' must not inherit it.
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin')).not.toBe('dashboard:read');
 	});
 
 	it('resolves with the longest matching prefix, not the first one', () => {
-		const routes = {
-			'/admin': [UserRole.ADMIN],
-			'/admin/public': [UserRole.ADMIN, UserRole.MEMBER]
-		};
+		const routes = { '/admin': 'users:read', '/admin/danger': 'users:delete' } as const;
 
-		expect(canAccessRoute(routes, UserRole.MEMBER, '/admin/public')).toBe(true);
-		expect(canAccessRoute(routes, UserRole.MEMBER, '/admin/public/nested')).toBe(true);
-		expect(canAccessRoute(routes, UserRole.MEMBER, '/admin/secret')).toBe(false);
+		expect(permissionForRoute(routes, '/admin/danger')).toBe('users:delete');
+		expect(permissionForRoute(routes, '/admin/danger/nested')).toBe('users:delete');
+		expect(permissionForRoute(routes, '/admin/other')).toBe('users:read');
+	});
+
+	it('does not match a sibling that merely shares a prefix string', () => {
+		const routes = { '/admin': 'users:read' } as const;
+
+		expect(permissionForRoute(routes, '/admin-panel')).toBeNull();
 	});
 });

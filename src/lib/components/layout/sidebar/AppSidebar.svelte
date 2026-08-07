@@ -10,8 +10,8 @@
 		NAVIGATION_GROUP_LABELS,
 		NavigationGroup
 	} from '$lib/config/navigation';
-	import { PERMISSION_GROUPS, ROLE_LABELS } from '$lib/config/permissions';
-	import { hasAnyPermission } from '$lib/core/permissions';
+	import { ROLE_PERMISSIONS, ROLE_LABELS } from '$lib/config/permissions';
+	import { hasPermission } from '$lib/core/permissions';
 	import NavMain from './NavMain.svelte';
 	import NavUser from './NavUser.svelte';
 
@@ -27,7 +27,7 @@
 	// Presentation only — hiding a link is not access control. The hook enforces it.
 	let visibleItems = $derived(
 		NAVIGATION_ITEMS.filter((item) =>
-			hasAnyPermission(PERMISSION_GROUPS, user?.role, item.requiredPermissions)
+			hasPermission(ROLE_PERMISSIONS, user?.role, item.requiredPermission)
 		)
 	);
 
