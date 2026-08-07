@@ -1,9 +1,9 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 	import { setAuth } from '$lib/features/auth/context';
+	import { config } from '$lib/config/app';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -13,7 +13,12 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={config.branding.favicon} />
+	<!-- Fallback title/description: a page with its own <svelte:head> title overrides this. -->
+	<title>{config.branding.seo.title}</title>
+	<meta name="description" content={config.branding.seo.description} />
+	<meta property="og:title" content={config.branding.seo.title} />
+	<meta property="og:description" content={config.branding.seo.description} />
 </svelte:head>
 
 <ModeWatcher />

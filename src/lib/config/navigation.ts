@@ -1,5 +1,4 @@
 import HomeIcon from '@lucide/svelte/icons/house';
-import SettingsIcon from '@lucide/svelte/icons/settings';
 import ShieldIcon from '@lucide/svelte/icons/shield';
 import type { LucideIcon } from '@lucide/svelte';
 import type { Permission } from '$lib/config/permissions';
@@ -12,8 +11,6 @@ export enum NavigationGroup {
 export interface NavigationItem {
 	title: string;
 	icon: LucideIcon;
-	// Not typed as $app/types' Pathname: /settings and /admin are placeholders
-	// for routes this starter doesn't ship yet. Add the routes, then tighten this.
 	to: string;
 	group: NavigationGroup;
 	/**
@@ -34,13 +31,6 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
 		to: '/',
 		group: NavigationGroup.Main,
 		requiredPermission: 'dashboard:read'
-	},
-	{
-		title: 'Settings',
-		icon: SettingsIcon,
-		to: '/settings',
-		group: NavigationGroup.Main,
-		requiredPermission: 'settings:read'
 	},
 	{
 		title: 'Admin',

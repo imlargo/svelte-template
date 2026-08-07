@@ -1,11 +1,15 @@
 <script lang="ts">
 	import LoginForm from '$lib/features/auth/components/LoginForm.svelte';
-	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import { resolve } from '$app/paths';
+	import { config } from '$lib/config/app';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
+
+<svelte:head>
+	<title>{config.branding.seo.title} — Log in</title>
+</svelte:head>
 
 <div class="grid min-h-svh lg:grid-cols-2">
 	<div class="flex flex-col gap-4 p-6 md:p-10">
@@ -14,11 +18,9 @@
 				<div
 					class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground"
 				>
-					<!-- Replace with your app logo -->
-					<LayoutDashboardIcon class="size-4" />
+					<img src={config.branding.logo} alt="" class="size-4" />
 				</div>
-				<!-- Replace with your app name -->
-				App
+				{config.branding.name}
 			</a>
 		</div>
 		<div class="flex flex-1 items-center justify-center">

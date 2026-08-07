@@ -11,16 +11,16 @@ export type TimeFilter =
 	| 'all_time';
 
 const TIME_FILTER_LABELS: Record<TimeFilter, string> = {
-	today: 'Hoy',
-	yesterday: 'Ayer',
-	last_7_days: 'Últimos 7 días',
-	last_30_days: 'Últimos 30 días',
-	last_90_days: 'Últimos 90 días',
-	this_month: 'Este mes',
-	last_month: 'Mes anterior',
-	this_year: 'Este año',
-	last_year: 'Año anterior',
-	all_time: 'Todo el tiempo'
+	today: 'Today',
+	yesterday: 'Yesterday',
+	last_7_days: 'Last 7 days',
+	last_30_days: 'Last 30 days',
+	last_90_days: 'Last 90 days',
+	this_month: 'This month',
+	last_month: 'Last month',
+	this_year: 'This year',
+	last_year: 'Last year',
+	all_time: 'All time'
 };
 
 export function timeFilterLabel(filter: TimeFilter): string {
@@ -33,11 +33,11 @@ export function isValidDate(value: string): boolean {
 	return !isNaN(d.getTime());
 }
 
-export function formatDate(date: string | Date, locale = 'es'): string {
+export function formatDate(date: string | Date, locale = 'en'): string {
 	return new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(date));
 }
 
-export function relativeTime(date: string | Date, locale = 'es'): string {
+export function relativeTime(date: string | Date, locale = 'en'): string {
 	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 	const diff = (new Date(date).getTime() - Date.now()) / 1000;
 	const abs = Math.abs(diff);

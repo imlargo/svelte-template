@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { hasPermission, permissionForRoute } from './permissions';
-import { AUTH_ROUTE_PERMISSIONS, ROLE_PERMISSIONS } from '$lib/config/permissions';
+import { AUTH_ROUTE_PERMISSIONS, ROLE_PERMISSIONS, type Permission } from '$lib/config/permissions';
+import { NAVIGATION_ITEMS } from '$lib/config/navigation';
 import { UserRole } from '$lib/types/user';
 
 // This is the access control of the app: the role × permission matrix is
@@ -9,14 +10,12 @@ import { UserRole } from '$lib/types/user';
 // handler.server.test.ts.
 
 describe('hasPermission', () => {
-	const matrix: Array<[UserRole, string, boolean]> = [
+	const matrix: Array<[UserRole, Permission, boolean]> = [
 		[UserRole.ADMIN, 'dashboard:read', true],
-		[UserRole.ADMIN, 'settings:read', true],
 		[UserRole.ADMIN, 'users:read', true],
 		[UserRole.ADMIN, 'users:write', true],
 		[UserRole.ADMIN, 'users:delete', true],
 		[UserRole.MEMBER, 'dashboard:read', true],
-		[UserRole.MEMBER, 'settings:read', true],
 		[UserRole.MEMBER, 'users:read', false],
 		[UserRole.MEMBER, 'users:write', false],
 		[UserRole.MEMBER, 'users:delete', false]
@@ -42,7 +41,6 @@ describe('hasPermission', () => {
 describe('permissionForRoute', () => {
 	it('resolves each declared page to its permission', () => {
 		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/')).toBe('dashboard:read');
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/settings')).toBe('settings:read');
 		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin')).toBe('users:read');
 	});
 
@@ -72,5 +70,26 @@ describe('permissionForRoute', () => {
 		const routes = { '/admin': 'users:read' } as const;
 
 		expect(permissionForRoute(routes, '/admin-panel')).toBeNull();
+	});
+});
+
+describe('the sidebar never offers a link the hook would refuse', () => {
+	// Nav visibility and route access are declared separately on purpose — you
+	// may want a screen reachable but unlisted. The reverse is always a bug: a
+	// menu entry that 403s on click. This is the only direction worth pinning.
+	it.each(Object.values(UserRole))('holds for %s', (role) => {
+		for (const item of NAVIGATION_ITEMS) {
+			if (!hasPermission(ROLE_PERMISSIONS, role, item.requiredPermission)) continue;
+
+			const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, item.to);
+			expect(
+				required,
+				`${item.to} is in the menu but not in AUTH_ROUTE_PERMISSIONS`
+			).not.toBeNull();
+			expect(
+				hasPermission(ROLE_PERMISSIONS, role, required!),
+				`${role} sees "${item.title}" but would be refused at ${item.to}`
+			).toBe(true);
+		}
 	});
 });

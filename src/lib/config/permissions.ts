@@ -9,12 +9,7 @@ import { UserRole } from '$lib/types/user';
  * Add one when something in the app needs it, not before. Every entry here has
  * a caller; a permission nobody asks for protects nothing.
  */
-export type Permission =
-	| 'dashboard:read'
-	| 'settings:read'
-	| 'users:read'
-	| 'users:write'
-	| 'users:delete';
+export type Permission = 'dashboard:read' | 'users:read' | 'users:write' | 'users:delete';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
 	[UserRole.ADMIN]: 'Admin',
@@ -33,14 +28,8 @@ export const ROLE_LABELS: Record<UserRole, string> = {
  * an empty grant list and can do nothing until you decide otherwise.
  */
 export const ROLE_PERMISSIONS = {
-	[UserRole.ADMIN]: [
-		'dashboard:read',
-		'settings:read',
-		'users:read',
-		'users:write',
-		'users:delete'
-	],
-	[UserRole.MEMBER]: ['dashboard:read', 'settings:read']
+	[UserRole.ADMIN]: ['dashboard:read', 'users:read', 'users:write', 'users:delete'],
+	[UserRole.MEMBER]: ['dashboard:read']
 } as const satisfies Record<UserRole, readonly Permission[]>;
 
 // Reachable without a session. Matched by prefix, so '/login' also covers
@@ -55,14 +44,14 @@ export const AUTH_PUBLIC_ROUTE_PREFIXES = ['/login', '/logout', '/authorize'] as
  * page fails loudly on the first click instead of shipping open.
  *
  * This is the page axis and only the page axis. Endpoints under `/api/` are
- * deliberately absent: a path cannot express that GET needs `users:read` and
- * DELETE needs `users:delete`, so each handler asks for its own. Keeping them
- * out of this table is what stops one of the two models from quietly deciding
- * things about the other.
+ * deliberately absent — not because a table could not hold them (the value
+ * could be keyed by method), but because page access and API access are things
+ * you want to move independently: showing someone a screen and letting them
+ * call the endpoint behind it are separate decisions. Endpoints ask for their
+ * own permission, per method, in the handler.
  */
 export const AUTH_ROUTE_PERMISSIONS = {
 	'/': 'dashboard:read',
-	'/settings': 'settings:read',
 	// The admin area is the users screen, so it asks for the same permission its
 	// endpoints do. That reuse is the point of naming capabilities, not places.
 	'/admin': 'users:read'

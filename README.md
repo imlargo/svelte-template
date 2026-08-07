@@ -38,8 +38,8 @@ refactor plan. Start at [`docs/README.md`](./docs/README.md).
 
 ```sh
 cp .env.example .env
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 The dev server starts on http://localhost:3000.
@@ -90,10 +90,10 @@ PUBLIC_GOOGLE_CLIENT_ID=your-client-id
 ## Scripts
 
 ```sh
-npm run dev          # Start dev server (port 3000)
-npm run build        # Production build
-npm run check        # svelte-check type checking
-npm run lint         # Prettier + ESLint
-npm run format       # Auto-format
-npm run test         # Run all tests (Vitest + Playwright)
+pnpm run dev          # Start dev server (port 3000)
+pnpm run build        # Production build
+pnpm run check        # svelte-check type checking
+pnpm run lint         # Prettier + ESLint
+pnpm run format       # Auto-format
+pnpm run test         # Run all tests (Vitest + Playwright)
 ```

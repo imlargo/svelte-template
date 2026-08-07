@@ -142,7 +142,7 @@ src/
 │   │
 │   ├── config/                     ← plano, sin subcarpetas: 3 archivos no justifican una.
 │   │   ├── app.ts                 ← configuración leída de env, tipada. Único objeto `config`.
-│   │   ├── permissions.ts         ← roles, PermissionKey, matriz ruta→roles
+│   │   ├── permissions.ts         ← roles, permisos `resource:action`, tabla ruta→permiso
 │   │   └── navigation.ts          ← items del menú
 │   │
 │   ├── types/                     ← SOLO tipos usados por más de un slice
@@ -483,7 +483,7 @@ preguntarlo no puede ser una ruta que se abre. La **autorización** está delibe
 dos, porque las dos mitades de una app full-stack no tienen la misma forma.
 
 **Páginas.** Son un árbol que el usuario navega, así que se declaran como un árbol
-(`AUTH_ROUTE_PERMISSIONS`: prefijo de ruta → `PermissionKey`) y se evalúan **una vez, en el hook**,
+(`AUTH_ROUTE_PERMISSIONS`: prefijo de ruta → `Permission`) y se evalúan **una vez, en el hook**,
 antes de que corra ningún `load`. No declarada equivale a denegada, así que una página nueva no
 puede salir abierta por olvido:
 
@@ -501,7 +501,7 @@ por path no sabe decirlo. Cada handler declara el suyo, en su primera línea:
 
 ```ts
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-	locals.requirePermission(PermissionKey.Admin);
+	locals.requirePermission('users:delete');
 	// ...
 };
 ```
@@ -510,7 +510,7 @@ Meter `/api/**` en la tabla de páginas no es una simplificación, es un bug: el
 endpoint como si fuera una página, no encuentra entrada, y devuelve 403 a todo el mundo
 —incluido el admin— antes de que el handler llegue a correr.
 
-**Lo que sí comparten** es quién tiene cada permiso (`PERMISSION_GROUPS`) y el objeto que lo aplica
+**Lo que sí comparten** es quién tiene cada permiso (`ROLE_PERMISSIONS`) y el objeto que lo aplica
 (`locals.requirePermission`, en `features/auth/guard.server.ts`). Lo que no comparten es cómo una
 ruta dice lo que necesita, ni cómo vuelve la negativa: una página recibe redirect o página de
 error; un `fetch` recibe un status que puede leer.
@@ -527,9 +527,9 @@ resultado se puede olvidar de mirar no es un check. Sin sesión responde 401 y n
 llamante distinga "vuelve a entrar" de "esto no es para ti".
 
 No hay un `can()` al lado porque nada en el servidor lo necesita — el sidebar pregunta con
-`hasAnyPermission` en el cliente, con el usuario del contexto.
+`hasPermission` en el cliente, con el usuario del contexto.
 
-El sidebar sigue filtrando items con `hasAnyPermission`, pero eso es **presentación**. Ocultar un
+El sidebar sigue filtrando items con `hasPermission`, pero eso es **presentación**. Ocultar un
 enlace no es autorización: cualquiera puede escribir la URL. Si el único control fuera el menú, el
 mapa de permisos daría una falsa sensación de cobertura, que es peor que no tener nada.
 
@@ -1097,7 +1097,7 @@ Un `Query` con loading/error y un `$state` aparte con los items. Se desincroniza
 
 ```svelte
 const canDelete = user.role === 'admin' || user.role === 'lead'; // ❌ const canDelete =
-hasPermission(user.role, PermissionKey.Users); // ✅
+hasPermission(ROLE_PERMISSIONS, user.role, 'users:read'); // ✅
 ```
 
 **❌ Derivar en el template**
@@ -1123,17 +1123,36 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 1. Crear `routes/(app)/<ruta>/+page.svelte` (thin) y `+page.server.ts` (`load`).
 2. **Añadir la entrada en `AUTH_ROUTE_PERMISSIONS`.** Sin esto la ruta da 403 — es deliberado.
 3. Si va en el menú, añadir el item en `config/navigation.ts` con sus `requiredPermissions`.
-4. `npm run lint && npm run check && npm run test`.
+4. `pnpm run lint && pnpm run check && pnpm run test`.
 
 ### Añadir un endpoint
 
 1. Crear `routes/api/<recurso>/+server.ts`.
-2. **Primera línea de cada handler: `locals.requirePermission(PermissionKey.X)`.** No hay tabla
+2. **Primera línea de cada handler: `locals.requirePermission('resource:action')`.** No hay tabla
    central que lo cubra, y es a propósito: cada método declara el suyo, así que `GET` y `DELETE`
    pueden pedir permisos distintos.
 3. No lo añadas a `AUTH_ROUTE_PERMISSIONS`. Esa tabla es de páginas; meterlo ahí no lo protege más
    y sí lo rompe.
-4. Test del handler si la regla de permiso no es obvia.
+4. Test del handler si la regla de permiso no es obvia. El olvido del paso 2 lo detecta
+   `src/routes/api/endpoints.guard.test.ts`, que recorre cada método exportado.
+
+### Añadir una form action
+
+Una action vive en una ruta de página, así que **lo único que el hook le ha exigido es el permiso
+de esa página** — normalmente uno de lectura. Una action que escribe o borra necesita su propia
+llamada, igual que un endpoint:
+
+```ts
+export const actions = {
+	remove: async ({ locals, request }) => {
+		locals.requirePermission('users:delete');
+		// ...
+	}
+};
+```
+
+Es la misma trampa que tienen los endpoints, con la diferencia de que aquí la página sí pasó por
+la tabla y da la falsa sensación de estar cubierta.
 
 ### Añadir un slice
 
@@ -1147,7 +1166,7 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 
 1. Añadirlo a `UserRole` en `lib/types/user.ts`.
 2. Añadirlo a `ROLE_LABELS`.
-3. Declararlo en cada `PERMISSION_GROUPS` donde deba entrar. **Si no lo declaras, no tiene acceso
+3. Declararlo en cada `ROLE_PERMISSIONS` donde deba entrar. **Si no lo declaras, no tiene acceso
    a nada** — eso es lo correcto.
 4. Actualizar el test de la matriz de permisos.
 
@@ -1167,10 +1186,10 @@ Logout, borrados o cualquier cambio de estado en un `load`. El prefetch de Svelt
 
 Un cambio está listo cuando:
 
-- [ ] `npm run lint` — sin errores
-- [ ] `npm run check` — cero errores **y cero warnings** (los warnings de `svelte-check` como
+- [ ] `pnpm run lint` — sin errores
+- [ ] `pnpm run check` — cero errores **y cero warnings** (los warnings de `svelte-check` como
       `state_referenced_locally` son bugs de reactividad, no ruido)
-- [ ] `npm run test` — verde
+- [ ] `pnpm run test` — verde
 - [ ] No añade exports sin consumidor
 - [ ] No añade una segunda forma de hacer algo que ya se hace
 - [ ] Si añade una página, tiene entrada en `AUTH_ROUTE_PERMISSIONS`

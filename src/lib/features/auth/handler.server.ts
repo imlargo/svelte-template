@@ -10,15 +10,19 @@
  * - **Pages** are a tree the user navigates. They are declared as a tree
  *   (`AUTH_ROUTE_PERMISSIONS`) and enforced here, once, before any load runs.
  *   Undeclared means denied, so a new page cannot ship open by omission.
- * - **Endpoints** are not. One path answers to several methods that may need
- *   different permissions, which a path-keyed table cannot express — so each
- *   handler calls `locals.requirePermission` itself, and this hook does not
- *   second-guess it.
+ * - **Endpoints** are not. Each handler calls `locals.requirePermission` itself
+ *   and this hook does not second-guess it, so who may open a screen and who
+ *   may call the endpoint behind it stay separate decisions — and one path can
+ *   still ask for `users:read` on GET and `users:delete` on DELETE.
  *
  * What they share is the answer to "who holds this permission"
- * (`PERMISSION_GROUPS`) and the object that enforces it (`guard.server.ts`).
+ * (`ROLE_PERMISSIONS`) and the object that enforces it (`guard.server.ts`).
  * What they do not share is how a route says what it needs, or how a denial
  * comes back: a page gets a redirect or an error page, a fetch gets a status.
+ *
+ * Form actions ride on a page route, so the page's permission is all they get.
+ * A destructive action needs its own `locals.requirePermission` call, exactly
+ * like an endpoint.
  *
  * The token itself is never inspected here. The backend that issued it is the
  * authority on whether it is still valid, and asking it (`/auth/me`) is both
@@ -29,7 +33,7 @@
 import { error, redirect, type Handle } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
 import { AUTH_ROUTE_PERMISSIONS } from '$lib/config/permissions';
-import { permissionForRoute } from '$lib/core/permissions';
+import { isPrefixOf, permissionForRoute } from '$lib/core/permissions';
 import { normalizeError } from '$lib/core/errors';
 import { logger } from '$lib/core/logger';
 import { AuthService } from './services/auth';
@@ -38,9 +42,7 @@ import { encodeRedirect } from './redirect';
 import { clearSession, getSession } from './session.server';
 
 function isPublicRoute(pathname: string): boolean {
-	return config.auth.publicRoutes.some(
-		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
-	);
+	return config.auth.publicRoutes.some((prefix) => isPrefixOf(prefix, pathname));
 }
 
 /**

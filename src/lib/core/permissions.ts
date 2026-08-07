@@ -29,15 +29,24 @@ export function hasPermission<R extends string, P extends string>(
 }
 
 /**
+ * Whether `pathname` is `route` or sits under it, matching whole segments only:
+ * '/admin' covers '/admin/users' but not '/admin-panel'.
+ *
+ * The root entry needs no special case — it compares against '//', so '/'
+ * matches itself and nothing else. That matters: as a plain string prefix it
+ * would swallow every path and undo the deny-by-default.
+ */
+export function isPrefixOf(route: string, pathname: string): boolean {
+	return pathname === route || pathname.startsWith(`${route}/`);
+}
+
+/**
  * The permission a page route needs, or null when the route is not declared —
  * which callers must treat as denied. Longest prefix wins, so '/admin/users'
- * uses its own rule when it has one instead of the shallower '/admin'. The
- * root entry matches '/' only: as a prefix it would swallow every path and
- * undo the deny-by-default.
+ * uses its own rule when it has one instead of the shallower '/admin'.
  *
- * Page routes only. Endpoints are not a tree of pages a user navigates — the
- * same path answers to several methods that may need different permissions —
- * so they declare theirs per handler instead.
+ * Page routes only. Endpoints declare theirs per handler: the same path answers
+ * to several methods, and this table has one entry per path.
  */
 export function permissionForRoute<P extends string>(
 	routes: RoutePermissions<P>,
@@ -47,16 +56,11 @@ export function permissionForRoute<P extends string>(
 	let bestLength = -1;
 
 	for (const [route, permission] of Object.entries(routes) as [string, P][]) {
-		const matches = route === '/' ? pathname === '/' : isPrefixOf(route, pathname);
-		if (matches && route.length > bestLength) {
+		if (isPrefixOf(route, pathname) && route.length > bestLength) {
 			best = permission;
 			bestLength = route.length;
 		}
 	}
 
 	return best;
-}
-
-function isPrefixOf(route: string, pathname: string): boolean {
-	return pathname === route || pathname.startsWith(`${route}/`);
 }

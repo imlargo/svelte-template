@@ -43,7 +43,7 @@ describe('createPermissionGuard', () => {
 	it('denies a role the frontend has never heard of', () => {
 		// A restrictive role added to the backend must not widen access here.
 		expect(statusFor(userWith('viewer'), 'users:delete')).toBe(403);
-		expect(statusFor(userWith('viewer'), 'settings:read')).toBe(403);
+		expect(statusFor(userWith('viewer'), 'dashboard:read')).toBe(403);
 	});
 
 	it('answers 401, not 403, without a session', () => {

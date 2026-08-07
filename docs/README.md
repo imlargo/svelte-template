@@ -77,9 +77,9 @@ sección, no entra. Este es el mecanismo que impide que el template derive hacia
 **Antes de dar una tarea por terminada**, ejecuta y verifica de verdad:
 
 ```sh
-npm run lint     # sin errores
-npm run check    # cero errores Y cero warnings
-npm run test     # verde
+pnpm run lint     # sin errores
+pnpm run check    # cero errores Y cero warnings
+pnpm run test     # verde
 ```
 
 Los warnings de `svelte-check` como `state_referenced_locally` son bugs de reactividad, no ruido.
