@@ -39,7 +39,7 @@
 		<div class="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center">
 			<AlertCircleIcon class="size-8 text-destructive" />
 			<p class="text-sm font-medium text-destructive">Something went wrong</p>
-			<p class="text-sm text-muted-foreground">{query.error.getMessage()}</p>
+			<p class="text-sm text-muted-foreground">{query.error.message}</p>
 		</div>
 	{/if}
 {:else if isEmpty}

@@ -37,7 +37,7 @@
 
 	async function load() {
 		await list.run(() => users.list(search));
-		if (list.error) toast.error(list.error.getMessage());
+		if (list.error) toast.error(list.error.message);
 	}
 
 	// Debounced so typing doesn't fire a request per keystroke — which is also
@@ -68,7 +68,7 @@
 			if (target) await users.update(target.id, data);
 			else await users.create(data);
 		} catch (err) {
-			toast.error(normalizeError(err).getMessage());
+			toast.error(normalizeError(err).message);
 			return false;
 		}
 
@@ -87,7 +87,7 @@
 			deleting = null;
 			await load();
 		} catch (err) {
-			toast.error(normalizeError(err).getMessage());
+			toast.error(normalizeError(err).message);
 		} finally {
 			isDeleting = false;
 		}

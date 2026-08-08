@@ -102,8 +102,8 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 		// Only a rejected token ends the session. A backend that is down or
 		// erroring must not sign everyone out: that turns an outage into a
 		// stampede of logins and throws away whatever the user was doing.
-		const failure = normalizeError(err);
-		if (!failure.is('UNAUTHORIZED') && !failure.is('FORBIDDEN')) {
+		const { code } = normalizeError(err);
+		if (code !== 'UNAUTHORIZED' && code !== 'FORBIDDEN') {
 			logger.error('auth', err);
 			error(503, 'Cannot verify your session right now. Please try again in a moment.');
 		}

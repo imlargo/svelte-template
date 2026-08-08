@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { isHttpError, isRedirect, type Handle } from '@sveltejs/kit';
 import { handleAuth } from './handler.server';
-import { ApiError } from '$lib/core/errors';
+import { AppError } from '$lib/core/errors';
 import { UserRole, type User } from '$lib/types/user';
 
 // The hook is the only thing standing between an anonymous request and the app,
@@ -131,7 +131,7 @@ describe('handleAuth', () => {
 	});
 
 	it('ends the session when the backend rejects the token', async () => {
-		getMe.mockRejectedValue(new ApiError(401, 'UNAUTHORIZED', 'Token expired.'));
+		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
 
 		const { outcome, clearedCookies } = await callAuth('/', SESSION);
 
@@ -142,7 +142,7 @@ describe('handleAuth', () => {
 	it('fails the request but keeps the session when the backend is unreachable', async () => {
 		// An outage must not sign everyone out: that turns downtime into a
 		// stampede of logins and throws away whatever the user was doing.
-		getMe.mockRejectedValue(new ApiError(0, 'NETWORK_ERROR', 'Connection refused.'));
+		getMe.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
 
 		const { outcome, clearedCookies } = await callAuth('/', SESSION);
 
@@ -151,7 +151,7 @@ describe('handleAuth', () => {
 	});
 
 	it('keeps the session when the backend answers 500', async () => {
-		getMe.mockRejectedValue(new ApiError(500, 'INTERNAL_SERVER_ERROR', 'Boom.'));
+		getMe.mockRejectedValue(new AppError('SERVER_ERROR', 'Boom.'));
 
 		const { outcome, clearedCookies } = await callAuth('/', SESSION);
 

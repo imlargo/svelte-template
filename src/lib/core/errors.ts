@@ -1,6 +1,15 @@
+/**
+ * One error type, one entry point.
+ *
+ * Everything the app throws or catches becomes an `AppError` through
+ * `normalizeError`. `error.message` is always safe to render: either the
+ * backend's own message or the default for its `code`. Anything that is only
+ * useful in a log — the failed request, the backend payload, the original
+ * stack — hangs off `context` and `cause`, never off the message.
+ */
 import { isAirError, type AirError } from '@korastd/air';
 
-// Error codes — union type, extend as needed for your API
+/** Extend as your API grows. Every code needs a default message below. */
 export type ErrorCode =
 	| 'NETWORK'
 	| 'UNAUTHORIZED'
@@ -11,6 +20,7 @@ export type ErrorCode =
 	| 'SERVER_ERROR'
 	| 'UNKNOWN';
 
+/** Doubles as the registry of valid codes — see `codeFromStatus`. */
 const MESSAGES: Record<ErrorCode, string> = {
 	NETWORK: 'Connection error. Check your internet connection.',
 	UNAUTHORIZED: 'You need to log in to perform this action.',
@@ -22,45 +32,99 @@ const MESSAGES: Record<ErrorCode, string> = {
 	UNKNOWN: 'An unexpected error occurred.'
 };
 
-// ─── Base ───────────────────────────────────────────────────────────────────
+/**
+ * Diagnostic detail about a failed API call. Log-only, never rendered.
+ * Method and URL but deliberately no headers: those carry the `Authorization`
+ * token and this object ends up in logs.
+ */
+type ErrorContext = {
+	method: string;
+	url: string;
+	/** 0 when the request never reached the server. */
+	httpStatus: number;
+	payload?: Record<string, unknown>;
+};
 
 export class AppError extends Error {
 	readonly code: ErrorCode;
+	readonly context?: ErrorContext;
 
-	constructor(message: string, code: ErrorCode = 'UNKNOWN') {
-		super(message);
+	constructor(
+		code: ErrorCode,
+		message?: string,
+		options: { cause?: unknown; context?: ErrorContext } = {}
+	) {
+		super(message?.trim() || MESSAGES[code], { cause: options.cause });
 		this.name = 'AppError';
 		this.code = code;
-	}
-
-	getMessage(): string {
-		return this.message.trim() || MESSAGES[this.code];
-	}
-
-	is(code: ErrorCode): boolean {
-		return this.code === code;
+		this.context = options.context;
 	}
 }
 
-// ─── API errors ──────────────────────────────────────────────────────────────
-// Extend this map to match your backend's error status strings.
+/** Converts anything thrown into an `AppError`. The only entry point. */
+export function normalizeError(err: unknown): AppError {
+	if (err instanceof AppError) return err;
+	if (isAirError(err)) return fromAirError(err);
+	if (err instanceof Error) return new AppError('UNKNOWN', err.message, { cause: err });
+	return new AppError('UNKNOWN', String(err));
+}
 
-const STATUS_TO_CODE: Record<string, ErrorCode> = {
+// ─── air → AppError ──────────────────────────────────────────────────────────
+// air throws `AirError` for network failures and non-2xx responses alike.
+
+function fromAirError(err: AirError): AppError {
+	const body = readErrorBody(err.data);
+	const httpStatus = err.status ?? 0;
+
+	// The body's own status wins: a backend may answer 400 for a conflict.
+	const code = (body.status && codeFromStatus(body.status)) || codeFromHttpStatus(httpStatus);
+
+	return new AppError(code, body.message, {
+		cause: err,
+		context: {
+			method: err.request.method,
+			url: err.request.url,
+			httpStatus,
+			payload: body.payload
+		}
+	});
+}
+
+/** Reads the `{ status, message, payload }` convention out of an unknown body. */
+function readErrorBody(data: unknown): {
+	status?: string;
+	message?: string;
+	payload?: Record<string, unknown>;
+} {
+	if (!isRecord(data)) return {};
+
+	return {
+		status: typeof data.status === 'string' ? data.status : undefined,
+		message: typeof data.message === 'string' ? data.message : undefined,
+		payload: isRecord(data.payload) ? data.payload : undefined
+	};
+}
+
+/**
+ * Backend status string → code. Codes pass through by name; map anything else
+ * your API uses here.
+ */
+const STATUS_ALIASES: Record<string, ErrorCode> = {
 	NETWORK_ERROR: 'NETWORK',
-	UNAUTHORIZED: 'UNAUTHORIZED',
-	FORBIDDEN: 'FORBIDDEN',
-	NOT_FOUND: 'NOT_FOUND',
-	CONFLICT: 'CONFLICT',
-	BAD_REQUEST: 'BAD_REQUEST',
 	BIND_JSON: 'BAD_REQUEST',
 	UNPROCESSABLE_ENTITY: 'BAD_REQUEST',
 	INTERNAL_SERVER_ERROR: 'SERVER_ERROR'
 };
 
-// Fallback for responses whose body doesn't carry a recognized `status` string —
-// derive an ErrorCode straight from the HTTP status instead.
-function codeForHttpStatus(httpCode: number): ErrorCode {
-	switch (httpCode) {
+function codeFromStatus(status: string): ErrorCode | undefined {
+	// `hasOwn`, not `in`: 'constructor' and friends are on every object.
+	if (Object.hasOwn(MESSAGES, status)) return status as ErrorCode;
+	return STATUS_ALIASES[status];
+}
+
+/** Fallback when the body carries no status we recognize. */
+function codeFromHttpStatus(status: number): ErrorCode {
+	switch (status) {
 		case 0:
 			return 'NETWORK';
 		case 400:
@@ -75,65 +139,10 @@ function codeForHttpStatus(httpCode: number): ErrorCode {
 		case 409:
 			return 'CONFLICT';
 		default:
-			return httpCode >= 500 ? 'SERVER_ERROR' : 'UNKNOWN';
+			return status >= 500 ? 'SERVER_ERROR' : 'UNKNOWN';
 	}
 }
 
-export class ApiError extends AppError {
-	readonly httpCode: number;
-	readonly status: string;
-	readonly payload?: Record<string, unknown>;
-	/**
-	 * Which call failed. Deliberately method and URL only — air also exposes the
-	 * resolved request headers, but those carry the Authorization token, and this
-	 * object ends up in logs.
-	 */
-	readonly request?: { method: string; url: string };
-
-	constructor(
-		httpCode: number,
-		status: string,
-		message: string,
-		payload?: Record<string, unknown>,
-		request?: { method: string; url: string }
-	) {
-		super(message, STATUS_TO_CODE[status] ?? codeForHttpStatus(httpCode));
-		this.name = 'ApiError';
-		this.httpCode = httpCode;
-		this.status = status;
-		this.payload = payload;
-		this.request = request;
-	}
-
-	// Builds an ApiError from air's AirError, thrown for network failures and
-	// non-2xx responses alike. Expects a JSON error body shaped like
-	// `{ status, message, code, payload }`; falls back to the HTTP status when
-	// the body doesn't follow that convention.
-	static fromAirError(err: AirError): ApiError {
-		const data =
-			err.data && typeof err.data === 'object' ? (err.data as Record<string, unknown>) : {};
-
-		const status =
-			typeof data.status === 'string' ? data.status : err.response ? 'HTTP_ERROR' : 'NETWORK_ERROR';
-		const message = typeof data.message === 'string' ? data.message : err.message;
-		const payload =
-			data.payload && typeof data.payload === 'object'
-				? (data.payload as Record<string, unknown>)
-				: undefined;
-
-		return new ApiError(err.status ?? 0, status, message, payload, {
-			method: err.request.method,
-			url: err.request.url
-		});
-	}
-}
-
-// ─── Parser ──────────────────────────────────────────────────────────────────
-// Converts any thrown value into an AppError with a known shape.
-
-export function normalizeError(err: unknown): AppError {
-	if (err instanceof AppError) return err;
-	if (isAirError(err)) return ApiError.fromAirError(err);
-	if (err instanceof Error) return new AppError(err.message);
-	return new AppError(String(err));
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
 }

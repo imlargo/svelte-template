@@ -22,7 +22,7 @@
 			return ['Item A', 'Item B', 'Item C'];
 		});
 
-		if (items.error) toast.error(items.error.getMessage());
+		if (items.error) toast.error(items.error.message);
 	}
 </script>
 

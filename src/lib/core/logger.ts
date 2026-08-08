@@ -14,7 +14,7 @@ class ConsoleLogger implements Logger {
 	error(scope: string, error: unknown): string {
 		const normalized = normalizeError(error);
 		console.error(`[${scope}]`, normalized);
-		return normalized.getMessage();
+		return normalized.message;
 	}
 }
 

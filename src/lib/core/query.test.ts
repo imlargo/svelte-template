@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createQuery } from './query.svelte';
-import { ApiError } from './errors';
+import { AppError } from './errors';
 
 describe('Query', () => {
 	it('starts empty and idle', () => {
@@ -25,12 +25,12 @@ describe('Query', () => {
 		const query = createQuery<string[]>();
 
 		await query.run(async () => {
-			throw new ApiError(404, 'NOT_FOUND', 'No existe');
+			throw new AppError('NOT_FOUND', 'No existe');
 		});
 
-		expect(query.error).toBeInstanceOf(ApiError);
+		expect(query.error).toBeInstanceOf(AppError);
 		expect(query.error?.code).toBe('NOT_FOUND');
-		expect(query.error?.getMessage()).toBe('No existe');
+		expect(query.error?.message).toBe('No existe');
 		expect(query.isLoading).toBe(false);
 	});
 
