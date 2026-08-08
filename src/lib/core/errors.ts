@@ -42,6 +42,12 @@ type ErrorContext = {
 	url: string;
 	/** 0 when the request never reached the server. */
 	httpStatus: number;
+	/**
+	 * The backend's own status string, kept verbatim even when it maps to no
+	 * code. A body that says `INSUFFICIENT_FUNDS` becomes an `UNKNOWN` error,
+	 * and this is the only place that still names what actually happened.
+	 */
+	status?: string;
 	payload?: Record<string, unknown>;
 };
 
@@ -85,6 +91,7 @@ function fromAirError(err: AirError): AppError {
 			method: err.request.method,
 			url: err.request.url,
 			httpStatus,
+			status: body.status,
 			payload: body.payload
 		}
 	});

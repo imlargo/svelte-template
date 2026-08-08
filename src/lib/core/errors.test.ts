@@ -107,9 +107,19 @@ describe('normalizeError (air responses)', () => {
 			method: 'GET',
 			url: 'https://api.test/users/1',
 			httpStatus: 400,
+			status: 'BAD_REQUEST',
 			payload: { email: 'required' }
 		});
 		expect(JSON.stringify(err.context)).not.toContain('secret');
+	});
+
+	it('keeps a status it cannot map, which is where it matters most', () => {
+		const err = normalizeError(airError({ status: 'INSUFFICIENT_FUNDS' }, 402));
+
+		// The code says nothing useful, so the raw status is all that names what
+		// actually happened.
+		expect(err.code).toBe('UNKNOWN');
+		expect(err.context?.status).toBe('INSUFFICIENT_FUNDS');
 	});
 
 	it('drops body fields that do not follow the convention', () => {
