@@ -24,7 +24,7 @@ src/
 │   ├── utils/         # Pure utility functions (date, string, number, form)
 │   ├── hooks/         # Stateful runes classes (Disclosure, Filters, Pagination, IsMobile)
 │   ├── features/      # Vertical slices (auth, users, ...)
-│   └── components/    # UI: ui/ (shadcn), base/, common/, layout/
+│   └── components/    # UI: ui/ (shadcn), kit/, blocks/, layout/
 └── routes/
     ├── (auth)/        # Unauthenticated: login, logout, authorize (OAuth callback)
     └── (app)/         # Protected pages with sidebar layout
