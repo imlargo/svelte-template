@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { toast } from 'svelte-sonner';
-	import PageHeader from '$lib/components/common/PageHeader.svelte';
-	import AsyncView from '$lib/components/common/AsyncView.svelte';
-	import EmptyState from '$lib/components/common/EmptyState.svelte';
+	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
+	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
+	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
