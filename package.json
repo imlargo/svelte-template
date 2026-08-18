@@ -68,7 +68,7 @@
 		"vitest-browser-svelte": "^2.1.0"
 	},
 	"dependencies": {
-		"@korastd/air": "^0.2.0",
+		"@korastd/air": "^0.4.0",
 		"zod": "^4.4.3"
 	},
 	"lint-staged": {
