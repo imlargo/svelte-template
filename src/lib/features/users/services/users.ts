@@ -25,6 +25,6 @@ export class UsersService extends BaseService {
 	}
 
 	remove(id: string) {
-		return this.api.delete<void>(`/api/users/${id}`, { parse: 'response' });
+		return this.api.delete<void>(`/api/users/${id}`);
 	}
 }
