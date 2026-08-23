@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@korastd/air':
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^1.0.0
+        version: 1.0.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -292,9 +292,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@korastd/air@0.4.0':
-    resolution: {integrity: sha512-R1R1DKjQ3/dmYLF2oE9UuYgTO7uFOUGduSrEHp8Q7QrJNxjvWCBPj7EHJHd97smSyOJvMJCv0qpRNOgi5XpOkg==}
-    engines: {node: '>=18'}
+  '@korastd/air@1.0.0':
+    resolution: {integrity: sha512-aW/PHb9TDtMbeC+BaaxP5g1QuHtYc6o8KdAVdsullNSOmaXTs9tMhJ1Xrl+Xc0prUA+j9k3y71jPS4dYHOG6mw==}
+    engines: {node: '>=20'}
 
   '@layerstack/svelte-actions@1.0.1-next.18':
     resolution: {integrity: sha512-gxPzCnJ1c9LTfWtRqLUzefCx+k59ZpxDUQ2XB+LokveZQPe7IDSOwHaBOEMlaGoGrtwc3Ft8dSZq+2WT2o9u/g==}
@@ -2162,7 +2162,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@korastd/air@0.4.0': {}
+  '@korastd/air@1.0.0': {}
 
   '@layerstack/svelte-actions@1.0.1-next.18':
     dependencies:
