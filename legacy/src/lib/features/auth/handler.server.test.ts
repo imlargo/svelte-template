@@ -35,9 +35,7 @@ function userWith(role: UserRole): User {
 }
 
 type Outcome =
-	| { kind: 'resolved' }
-	| { kind: 'redirect'; location: string }
-	| { kind: 'error'; status: number };
+	{ kind: 'resolved' } | { kind: 'redirect'; location: string } | { kind: 'error'; status: number };
 
 async function callAuth(
 	pathname: string,
