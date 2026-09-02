@@ -1,8 +1,3 @@
-# pnpm rejects packages published within minimumReleaseAge, which is a sensible
-# supply-chain default: a freshly published version is the usual shape of a
-# compromised-account attack. Our own package is exempt because we publish it.
-#
-# Not version-pinned on purpose — pinning meant every release of air failed the
-# check until someone remembered to edit this file.
-minimumReleaseAgeExclude:
-  - '@korastd/air'
+allowBuilds:
+  workerd: true
+  esbuild: true
