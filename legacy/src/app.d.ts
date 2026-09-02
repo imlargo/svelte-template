@@ -5,6 +5,13 @@ import type { RequirePermission } from '$lib/features/auth/guard.server';
 // for information about these interfaces
 declare global {
 	namespace App {
+		interface Platform {
+			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf?: IncomingRequestCfProperties;
+		}
+
 		// interface Error {}
 		interface Locals {
 			/** Set by the auth hook. Absent on public routes and when auth is disabled. */
@@ -21,7 +28,6 @@ declare global {
 		}
 		// interface PageData {}
 		// interface PageState {}
-		// interface Platform {}
 	}
 }
 
