@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@korastd/air':
-        specifier: ^1.0.0
-        version: 1.0.0
+      '@imlargo/air':
+        specifier: ^2.1.0
+        version: 2.1.0
       zod:
         specifier: ^4.5.4
         version: 4.5.4
@@ -623,6 +623,10 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@imlargo/air@2.1.0':
+    resolution: {integrity: sha512-3ILJzn51K7fZnoP5rzyqdLI46bB17mF10QLCoqhSl2yB/zpfQaSaa0wvqlZUY5KEt1GTSSYxtltQqxVfZTJjUQ==}
+    engines: {node: '>=20'}
+
   '@internationalized/date@3.12.3':
     resolution: {integrity: sha512-fuLX+3ZKLsxI73y8b01EG/WjHb6gE6weCqlfawPO27kBWGMh9G1yH6Csv1uU7/cac9H2GHmOMt6CjmuQ1aia4Q==}
 
@@ -644,10 +648,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
-
-  '@korastd/air@1.0.0':
-    resolution: {integrity: sha512-aW/PHb9TDtMbeC+BaaxP5g1QuHtYc6o8KdAVdsullNSOmaXTs9tMhJ1Xrl+Xc0prUA+j9k3y71jPS4dYHOG6mw==}
-    engines: {node: '>=20'}
 
   '@layerstack/svelte-actions@1.0.1-next.18':
     resolution: {integrity: sha512-gxPzCnJ1c9LTfWtRqLUzefCx+k59ZpxDUQ2XB+LokveZQPe7IDSOwHaBOEMlaGoGrtwc3Ft8dSZq+2WT2o9u/g==}
@@ -2852,6 +2852,8 @@ snapshots:
   '@img/sharp-win32-x64@0.35.2':
     optional: true
 
+  '@imlargo/air@2.1.0': {}
+
   '@internationalized/date@3.12.3':
     dependencies:
       '@swc/helpers': 0.5.23
@@ -2879,8 +2881,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
-
-  '@korastd/air@1.0.0': {}
 
   '@layerstack/svelte-actions@1.0.1-next.18':
     dependencies:

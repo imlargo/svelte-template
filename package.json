@@ -64,7 +64,7 @@
 		"wrangler": "^4.97.0"
 	},
 	"dependencies": {
-		"@korastd/air": "^1.0.0",
+		"@imlargo/air": "^2.1.0",
 		"zod": "^4.5.4"
 	},
 	"lint-staged": {

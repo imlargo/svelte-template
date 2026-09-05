@@ -20,7 +20,8 @@
  * const service = new UserService(() => auth().accessToken);
  */
 import { createApiClient } from '$lib/core/api';
-import type { AirClient } from '@korastd/air';
+import { AppError } from '$lib/core/errors';
+import type { AirClient } from '@imlargo/air';
 
 export class BaseService {
 	protected api: AirClient;
@@ -31,5 +32,18 @@ export class BaseService {
 			baseUrl,
 			getToken: () => (typeof token === 'function' ? token() : token)
 		});
+	}
+
+	/**
+	 * Narrows air's `T | null` for an endpoint that must answer with a body.
+	 * air resolves a 204 or an empty body to `null`; where the caller asked for a
+	 * resource, that is a broken response, not data — so it fails here instead of
+	 * leaking a `null` into every consumer. A call that legitimately answers with
+	 * no body (a `DELETE`) skips this.
+	 */
+	protected async expectBody<T>(request: Promise<T | null>): Promise<T> {
+		const data = await request;
+		if (data === null) throw new AppError('SERVER_ERROR', 'The server returned an empty response.');
+		return data;
 	}
 }
