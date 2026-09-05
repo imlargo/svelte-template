@@ -5,8 +5,8 @@
  *   import { createApiClient } from '$lib/core/api';
  *   const client = createApiClient({ getToken: () => auth().accessToken });
  */
-import { create } from '@korastd/air';
-import type { AirClient } from '@korastd/air';
+import { create } from '@imlargo/air';
+import type { AirClient } from '@imlargo/air';
 import { config } from '$lib/config/app';
 
 export type ApiClientOptions = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AirError } from '@korastd/air';
+import { AirError } from '@imlargo/air';
 import { AppError, normalizeError } from './errors';
 
 /** An AirError as air builds it: `status` comes from the response, not the init. */

@@ -11,14 +11,14 @@ export class AuthService extends BaseService {
 	}
 
 	login(data: SignInRequest) {
-		return this.api.post<SignInResponse>('/auth/login', { body: data });
+		return this.expectBody(this.api.post<SignInResponse>('/auth/login', { body: data }));
 	}
 
 	loginWithGoogle(code: string) {
-		return this.api.post<SignInResponse>('/auth/google/login', { body: { code } });
+		return this.expectBody(this.api.post<SignInResponse>('/auth/google/login', { body: { code } }));
 	}
 
 	getMe() {
-		return this.api.get<User>('/auth/me');
+		return this.expectBody(this.api.get<User>('/auth/me'));
 	}
 }

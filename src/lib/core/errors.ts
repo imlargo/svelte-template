@@ -7,7 +7,7 @@
  * useful in a log — the failed request, the backend payload, the original
  * stack — hangs off `context` and `cause`, never off the message.
  */
-import { isAirError, type AirError } from '@korastd/air';
+import { isAirError, type AirError } from '@imlargo/air';
 
 /** Extend as your API grows. Every code needs a default message below. */
 export type ErrorCode =
