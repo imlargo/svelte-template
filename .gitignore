@@ -21,6 +21,8 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+# Playwright
+test-results
 
 # Husky
 .husky/_
