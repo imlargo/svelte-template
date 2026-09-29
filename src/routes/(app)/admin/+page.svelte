@@ -4,11 +4,11 @@
 	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
 	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
 	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
+	import SearchInput from '$lib/components/coral/kit/search-input/search-input.svelte';
+	import ConfirmDialog from '$lib/components/coral/kit/confirm-dialog/confirm-dialog.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import { createQuery } from '$lib/core/query.svelte';
 	import { normalizeError } from '$lib/core/errors';
 	import { getAuth } from '$lib/features/auth/context';
@@ -19,32 +19,30 @@
 	import type { UserFormData } from '$lib/features/users/schemas';
 	import { formatDate } from '$lib/utils/date';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import UsersIcon from '@lucide/svelte/icons/users';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
-	import UsersIcon from '@lucide/svelte/icons/users';
 
 	const auth = getAuth();
 	const users = new UsersService(() => auth().accessToken);
 	const list = createQuery<User[]>();
 
 	let search = $state('');
-	let searchTimer: ReturnType<typeof setTimeout>;
 
 	let editing = $state<User | null>(null);
 	let formOpen = $state(false);
 	let deleting = $state<User | null>(null);
-	let isDeleting = $state(false);
 
 	async function load() {
 		await list.run(() => users.list(search));
 		if (list.error) toast.error(list.error.message);
 	}
 
-	// Debounced so typing doesn't fire a request per keystroke — which is also
-	// what keeps overlapping runs (and their ordering) out of the picture.
-	function onSearch() {
-		clearTimeout(searchTimer);
-		searchTimer = setTimeout(load, 300);
+	// SearchInput debounces, which is also what keeps overlapping runs (and
+	// their ordering) out of the picture.
+	function onSearch(term: string) {
+		search = term;
+		load();
 	}
 
 	// Effects don't run on the server, but this is a plain call: guard it so the
@@ -80,17 +78,9 @@
 	async function confirmDelete() {
 		if (!deleting) return;
 
-		isDeleting = true;
-		try {
-			await users.remove(deleting.id);
-			toast.success(`${deleting.email} was removed.`);
-			deleting = null;
-			await load();
-		} catch (err) {
-			toast.error(normalizeError(err).message);
-		} finally {
-			isDeleting = false;
-		}
+		await users.remove(deleting.id);
+		toast.success(`${deleting.email} was removed.`);
+		await load();
 	}
 </script>
 
@@ -106,12 +96,11 @@
 		{/snippet}
 	</PageHeader>
 
-	<Input
-		type="search"
+	<SearchInput
 		placeholder="Search by name or email…"
-		class="max-w-sm"
-		bind:value={search}
-		oninput={onSearch}
+		groupClass="max-w-sm"
+		onsearch={onSearch}
+		loading={list.isLoading}
 	/>
 
 	<AsyncView query={list}>
@@ -185,17 +174,13 @@
 	<UserFormDialog bind:open={formOpen} user={editing} onsubmit={save} />
 {/if}
 
-<AlertDialog.Root open={deleting !== null} onOpenChange={(o) => !o && (deleting = null)}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Delete this user?</AlertDialog.Title>
-			<AlertDialog.Description>
-				{deleting?.email} will lose access immediately. This cannot be undone.
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-			<AlertDialog.Action disabled={isDeleting} onclick={confirmDelete}>Delete</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<ConfirmDialog
+	open={deleting !== null}
+	onOpenChange={(o) => !o && (deleting = null)}
+	title="Delete this user?"
+	description="{deleting?.email} will lose access immediately. This cannot be undone."
+	confirmLabel="Delete"
+	variant="destructive"
+	onconfirm={confirmDelete}
+	onerror={(err) => toast.error(normalizeError(err).message)}
+/>
