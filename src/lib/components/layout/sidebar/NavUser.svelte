@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
+	import Avatar from '$lib/components/coral/kit/avatar/avatar.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { getInitials } from '$lib/utils/string';
 	import { toggleMode, mode } from 'mode-watcher';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
@@ -30,12 +29,7 @@
 						size="lg"
 						class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 					>
-						<Avatar.Root class="size-8 rounded-lg">
-							{#if user.avatar}
-								<Avatar.Image src={user.avatar} alt={user.name} />
-							{/if}
-							<Avatar.Fallback class="rounded-lg">{getInitials(user.name)}</Avatar.Fallback>
-						</Avatar.Root>
+						<Avatar src={user.avatar ?? undefined} name={user.name} />
 						<div class="grid flex-1 text-start text-sm leading-tight">
 							<span class="truncate font-medium">{user.name}</span>
 							<span class="truncate text-xs text-muted-foreground">{user.roleLabel}</span>
@@ -52,12 +46,7 @@
 			>
 				<DropdownMenu.Label class="p-0 font-normal">
 					<div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-						<Avatar.Root class="size-8 rounded-lg">
-							{#if user.avatar}
-								<Avatar.Image src={user.avatar} alt={user.name} />
-							{/if}
-							<Avatar.Fallback class="rounded-lg">{getInitials(user.name)}</Avatar.Fallback>
-						</Avatar.Root>
+						<Avatar src={user.avatar ?? undefined} name={user.name} />
 						<div class="grid flex-1 text-start text-sm leading-tight">
 							<span class="truncate font-medium">{user.name}</span>
 							<span class="truncate text-xs text-muted-foreground">{user.email}</span>
