@@ -269,8 +269,9 @@ Three layers:
   so it needs no backend. It covers booting, navigation, streaming, a create flow and the 404 page.
 
 `.env.test` pins the variables the suite depends on, so a developer's `.env` cannot change what
-the tests prove. CI (`.github/workflows/ci.yml`) runs lint, check, test and test:e2e on every pull
-request, with no secrets.
+the tests prove. CI (`.github/workflows/ci.yml`) runs four parallel jobs on every pull request -
+**Lint**, **Typecheck** (`pnpm run check`), **Test** and **E2E** - each its own status check, with
+no secrets. Their shared setup lives in `.github/actions/setup`.
 
 ## Deploying
 

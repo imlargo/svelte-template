@@ -1,6 +1,7 @@
-# The same three checks AGENTS.md asks for before calling anything done, plus
-# the e2e smoke suite. No secrets and no backend: the unit tests mock the
-# services, and the e2e suite runs the built worker with auth off.
+# The checks AGENTS.md asks for before calling anything done, one job each, so
+# a pull request shows which one failed and a lint error does not hide a failing
+# test. No secrets and no backend: the unit tests mock the services, and the
+# e2e suite runs the built worker with auth off.
 name: CI
 
 on:
@@ -17,31 +18,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # Chromium for both the component tests (Vitest browser mode) and e2e.
-      - run: pnpm exec playwright install --with-deps chromium
-
+      - uses: ./.github/actions/setup
       - run: pnpm run lint
-      - run: pnpm run check
-      - run: pnpm run test
-      - run: pnpm run test:e2e
 
+  typecheck:
+    # svelte-check: TypeScript over .ts files and .svelte components alike.
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm run check
+
+  test:
+    # Server tests in Node, component tests in Chromium.
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          browsers: 'true'
+      - run: pnpm run test
+
+  e2e:
+    # Builds the worker and runs the smoke suite against it.
+    name: E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          browsers: 'true'
+      - run: pnpm run test:e2e
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
