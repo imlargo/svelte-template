@@ -29,8 +29,13 @@
  * the check and the way we learn the user's current role. Verifying a JWT
  * locally would need its signing key and would still trust a role snapshot
  * frozen at issue time.
+ *
+ * With `PUBLIC_AUTH_REFRESH_ENABLED`, a rejected access token gets one renewal
+ * before the session is given up on: the refresh token buys a new pair, the
+ * cookies are rotated, and `/auth/me` is asked again. Only if the backend
+ * rejects the refresh token too is the session over.
  */
-import { error, redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Cookies, type Handle } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
 import { AUTH_ROUTE_PERMISSIONS } from '$lib/config/permissions';
 import { isPrefixOf, permissionForRoute } from '$lib/core/permissions';
@@ -39,7 +44,9 @@ import { logger } from '$lib/core/logger';
 import { AuthService } from './services/auth';
 import { createPermissionGuard } from './guard.server';
 import { encodeRedirect } from './redirect';
-import { clearSession, getSession } from './session.server';
+import { renewSession } from './renew.server';
+import { clearSession, getSession, type Session } from './session.server';
+import type { User } from '$lib/types/user';
 
 function isPublicRoute(pathname: string): boolean {
 	return config.auth.publicRoutes.some((prefix) => isPrefixOf(prefix, pathname));
@@ -68,6 +75,25 @@ function loginUrl(pathname: string, search: string): string {
 	return `${config.auth.loginPath}?redirect=${target}`;
 }
 
+/**
+ * Asks the backend who the session belongs to, renewing it once on the way if
+ * the access token was rejected and refresh is on. Returns the session that
+ * was actually used, which is the renewed one when a renewal happened.
+ */
+async function resolveSession(
+	cookies: Cookies,
+	session: Session
+): Promise<{ user: User; session: Session }> {
+	try {
+		return { user: await new AuthService({ token: session.accessToken }).getMe(), session };
+	} catch (err) {
+		if (!config.auth.refresh.enabled || normalizeError(err).code !== 'UNAUTHORIZED') throw err;
+	}
+
+	const renewed = await renewSession(cookies, session.refreshToken);
+	return { user: await new AuthService({ token: renewed.accessToken }).getMe(), session: renewed };
+}
+
 export const handleAuth: Handle = async ({ event, resolve }) => {
 	const { pathname, search } = event.url;
 
@@ -85,19 +111,20 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	if (isPublicRoute(pathname)) return resolve(event);
 
 	// Annotated `() => never` so the narrowing survives the call: without it the
-	// compiler keeps treating `session` as possibly null after `endSession()`.
+	// compiler keeps treating `stored` as possibly null after `endSession()`.
 	const endSession: () => never = () => {
 		clearSession(event.cookies);
 		if (isEndpointRequest(pathname)) error(401, 'Your session has expired. Sign in again.');
 		redirect(303, loginUrl(pathname, search));
 	};
 
-	const session = getSession(event.cookies);
-	if (!session) endSession();
+	const stored = getSession(event.cookies);
+	if (!stored) endSession();
 
-	let user;
+	let user: User;
+	let session: Session;
 	try {
-		user = await new AuthService(session.accessToken).getMe();
+		({ user, session } = await resolveSession(event.cookies, stored));
 	} catch (err) {
 		// Only a rejected token ends the session. A backend that is down or
 		// erroring must not sign everyone out: that turns an outage into a
@@ -120,7 +147,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 		if (!required) {
 			// Not a user problem: the page exists but nobody declared it. Say so in
 			// the log, and give the visitor the same 403 as any other refusal.
-			logger.error('auth', new Error(`Undeclared page route: ${pathname}`));
+			logger.warn('auth', 'Undeclared page route', { pathname });
 			error(403, 'You do not have access to this page.');
 		}
 		event.locals.requirePermission(required);

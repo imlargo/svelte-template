@@ -1,3 +1,4 @@
+import type { Fetcher } from '@cloudflare/workers-types';
 import type { User } from '$lib/types/user';
 import type { RequirePermission } from '$lib/features/auth/guard.server';
 
@@ -5,14 +6,21 @@ import type { RequirePermission } from '$lib/features/auth/guard.server';
 // for information about these interfaces
 declare global {
 	namespace App {
+		// `ctx`, `caches` and `cf` are typed by @sveltejs/adapter-cloudflare.
+		// `env` holds the bindings declared in wrangler.jsonc: add one there, type
+		// it here with its type from @cloudflare/workers-types.
+		// See https://svelte.dev/docs/kit/adapter-cloudflare#Runtime-APIs
 		interface Platform {
-			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf?: IncomingRequestCfProperties;
+			env: {
+				ASSETS: Fetcher;
+			};
 		}
 
-		// interface Error {}
+		interface Error {
+			message: string;
+			/** Set by `handleError` for unexpected errors, and logged alongside them. */
+			errorId?: string;
+		}
 		interface Locals {
 			/** Set by the auth hook. Absent on public routes and when auth is disabled. */
 			user?: User | null;

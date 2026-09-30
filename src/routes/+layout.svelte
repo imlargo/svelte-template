@@ -3,13 +3,14 @@
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
 	import { setAuth } from '$lib/features/auth/context';
+	import { ClientSession } from '$lib/features/auth/client-session.svelte';
 	import { config } from '$lib/config/app';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
 
-	// A getter, not a value: this way the token stays current across navigations.
-	setAuth(() => ({ user: data.user, accessToken: data.accessToken }));
+	// A getter, not a value: this way the session follows `data` across navigations.
+	setAuth(new ClientSession(() => data));
 </script>
 
 <svelte:head>

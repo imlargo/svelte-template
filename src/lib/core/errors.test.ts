@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { inspect } from 'node:util';
 import { AirError } from '@imlargo/air';
 import { AppError, normalizeError } from './errors';
 
@@ -36,17 +37,22 @@ describe('normalizeError', () => {
 		expect(normalizeError(err)).toBe(err);
 	});
 
-	it('wraps a plain Error, keeping the original as cause for the stack', () => {
-		const cause = new Error('boom');
+	it('wraps a plain Error without rendering its message, keeping it as cause', () => {
+		// A bug's message ("Cannot read properties of undefined") is for the log,
+		// not for the screen.
+		const cause = new TypeError('Cannot read properties of undefined');
 		const err = normalizeError(cause);
 
 		expect(err.code).toBe('UNKNOWN');
-		expect(err.message).toBe('boom');
+		expect(err.message).toBe('An unexpected error occurred.');
 		expect(err.cause).toBe(cause);
 	});
 
-	it('wraps a thrown non-Error', () => {
-		expect(normalizeError('nope').message).toBe('nope');
+	it('wraps a thrown non-Error the same way', () => {
+		const err = normalizeError('nope');
+
+		expect(err.message).toBe('An unexpected error occurred.');
+		expect(err.cause).toBe('nope');
 	});
 });
 
@@ -111,6 +117,31 @@ describe('normalizeError (air responses)', () => {
 			payload: { email: 'required' }
 		});
 		expect(JSON.stringify(err.context)).not.toContain('secret');
+	});
+
+	it('never lets the token reach a log, through context or cause', () => {
+		// The logger prints the whole AppError, cause chain included, the way
+		// console.error and Workers Logs do.
+		const printed = inspect(normalizeError(airError({ status: 'UNAUTHORIZED' }, 401)), {
+			depth: Infinity
+		});
+
+		expect(printed).toContain('https://api.test/users/1');
+		expect(printed).not.toContain('secret');
+	});
+
+	it('keeps the network failure underneath as cause', () => {
+		const failure = new TypeError('fetch failed');
+		const err = normalizeError(
+			new AirError(
+				'Request failed',
+				{ url: 'https://api.test/users/1', method: 'GET', headers: new Headers(), options: {} },
+				{ cause: failure }
+			)
+		);
+
+		expect(err.code).toBe('NETWORK');
+		expect(err.cause).toBe(failure);
 	});
 
 	it('keeps a status it cannot map, which is where it matters most', () => {

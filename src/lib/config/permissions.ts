@@ -35,7 +35,10 @@ export const ROLE_PERMISSIONS = {
 // Reachable without a session. Matched by prefix, so '/login' also covers
 // '/login/callback'. Everything else requires one — that part stays central,
 // because a route that forgets to authenticate must not be a route that opens.
-export const AUTH_PUBLIC_ROUTE_PREFIXES = ['/login', '/logout', '/authorize'] as const;
+// '/refresh' is here because it authenticates itself: it only answers when the
+// refresh cookie buys a new session, and the hook must not reject the expired
+// access token it exists to replace.
+export const AUTH_PUBLIC_ROUTE_PREFIXES = ['/login', '/logout', '/authorize', '/refresh'] as const;
 
 /**
  * Which permission each **page** needs. Pages are a tree the user navigates, so

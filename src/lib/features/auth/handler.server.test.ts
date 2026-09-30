@@ -1,6 +1,7 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import { isHttpError, isRedirect, type Handle } from '@sveltejs/kit';
 import { handleAuth } from './handler.server';
+import { config } from '$lib/config/app';
 import { AppError } from '$lib/core/errors';
 import { UserRole, type User } from '$lib/types/user';
 
@@ -8,17 +9,23 @@ import { UserRole, type User } from '$lib/types/user';
 // so what it does on a missing, rejected or unverifiable session is asserted
 // here rather than discovered in production.
 
-const { getMe } = vi.hoisted(() => ({ getMe: vi.fn() }));
+const { getMe, refresh } = vi.hoisted(() => ({ getMe: vi.fn(), refresh: vi.fn() }));
 
+// `getMe` is called with whatever token the service was built with, so the
+// renewal cases can assert that the second call used the renewed one.
 vi.mock('./services/auth', () => ({
 	AuthService: class {
-		getMe = getMe;
+		constructor(private auth: { token?: string } = {}) {}
+		getMe = () => getMe(this.auth.token);
+		refresh = refresh;
 	}
 }));
 
 // Silenced on purpose: the outage case logs, and its own behaviour is covered
 // by core/logger.test.ts.
-vi.mock('$lib/core/logger', () => ({ logger: { error: vi.fn(() => 'logged') } }));
+vi.mock('$lib/core/logger', () => ({
+	logger: { error: vi.fn(() => 'logged'), warn: vi.fn(), info: vi.fn() }
+}));
 
 const SESSION = { access_token: 'access-abc', refresh_token: 'refresh-xyz' };
 
@@ -43,6 +50,7 @@ async function callAuth(
 	routeId: string | null = pathname
 ) {
 	const clearedCookies: string[] = [];
+	const setCookies: Record<string, string> = {};
 	const event = {
 		url: new URL(`http://localhost${pathname}`),
 		// Non-null unless the caller is testing an unmatched path: SvelteKit
@@ -53,6 +61,9 @@ async function callAuth(
 			get: (name: string) => cookies[name],
 			delete: (name: string) => {
 				clearedCookies.push(name);
+			},
+			set: (name: string, value: string) => {
+				setCookies[name] = value;
 			}
 		}
 	};
@@ -68,11 +79,12 @@ async function callAuth(
 		else throw err;
 	}
 
-	return { outcome, clearedCookies, locals: event.locals };
+	return { outcome, clearedCookies, setCookies, locals: event.locals };
 }
 
 beforeEach(() => {
 	getMe.mockReset();
+	refresh.mockReset();
 });
 
 describe('handleAuth', () => {
@@ -218,5 +230,77 @@ describe('handleAuth on endpoints', () => {
 		expect(outcome).toEqual({ kind: 'resolved' });
 		// ...and the handler's own call is what refuses a member.
 		expect(() => locals.requirePermission('users:delete')).toThrow();
+	});
+});
+
+describe('handleAuth with refresh enabled', () => {
+	const RENEWED = { access_token: 'access-new', refresh_token: 'refresh-new', expires_at: 0 };
+
+	beforeEach(() => {
+		config.auth.refresh.enabled = true;
+	});
+	afterEach(() => {
+		config.auth.refresh.enabled = false;
+	});
+
+	it('renews an expired access token and carries on with the new one', async () => {
+		getMe.mockImplementation(async (token: string) => {
+			if (token === SESSION.access_token) throw new AppError('UNAUTHORIZED', 'Token expired.');
+			return userWith(UserRole.ADMIN);
+		});
+		refresh.mockResolvedValue(RENEWED);
+
+		const { outcome, locals, setCookies, clearedCookies } = await callAuth('/', SESSION);
+
+		expect(outcome).toEqual({ kind: 'resolved' });
+		expect(refresh).toHaveBeenCalledWith(SESSION.refresh_token);
+		expect(getMe).toHaveBeenLastCalledWith(RENEWED.access_token);
+		expect(locals.accessToken).toBe(RENEWED.access_token);
+		expect(setCookies).toMatchObject({
+			access_token: RENEWED.access_token,
+			refresh_token: RENEWED.refresh_token
+		});
+		expect(clearedCookies).toEqual([]);
+	});
+
+	it('ends the session when the refresh token is rejected too', async () => {
+		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
+		refresh.mockRejectedValue(new AppError('UNAUTHORIZED', 'Refresh token revoked.'));
+
+		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+
+		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
+		expect(clearedCookies).toContain('refresh_token');
+	});
+
+	it('keeps the session when the renewal fails because the backend is down', async () => {
+		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
+		refresh.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
+
+		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+
+		expect(outcome).toEqual({ kind: 'error', status: 503 });
+		expect(clearedCookies).toEqual([]);
+	});
+
+	it('does not renew for anything but an expired token', async () => {
+		// A 403 from /auth/me is a verdict on the user, not on the token's age.
+		getMe.mockRejectedValue(new AppError('FORBIDDEN', 'Account disabled.'));
+
+		const { outcome } = await callAuth('/', SESSION);
+
+		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
+		expect(refresh).not.toHaveBeenCalled();
+	});
+});
+
+describe('handleAuth with refresh disabled', () => {
+	it('never spends the refresh token', async () => {
+		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
+
+		const { outcome } = await callAuth('/', SESSION);
+
+		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
+		expect(refresh).not.toHaveBeenCalled();
 	});
 });

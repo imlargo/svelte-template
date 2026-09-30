@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
 	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
@@ -9,6 +9,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import { createQuery } from '$lib/core/query.svelte';
 	import { normalizeError } from '$lib/core/errors';
 	import { getAuth } from '$lib/features/auth/context';
@@ -23,8 +24,11 @@
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
-	const auth = getAuth();
-	const users = new UsersService(() => auth().accessToken);
+	// Loaded by the page, not by `load`: the list is searched and edited in
+	// place, and a refetch should update the table rather than stream a fresh
+	// skeleton over it. The credentials follow a renewed token and turn a 401
+	// into a sign-in, so nothing here handles either.
+	const users = new UsersService(getAuth().api);
 	const list = createQuery<User[]>();
 
 	let search = $state('');
@@ -45,9 +49,9 @@
 		load();
 	}
 
-	// Effects don't run on the server, but this is a plain call: guard it so the
-	// relative /api/users URL is only ever requested from the browser.
-	if (browser) load();
+	// On mount, so the relative /api/users URL is only ever requested from the
+	// browser; the server renders the skeleton.
+	onMount(load);
 
 	function openCreate() {
 		editing = null;
@@ -76,10 +80,11 @@
 	}
 
 	async function confirmDelete() {
-		if (!deleting) return;
+		const target = deleting;
+		if (!target) return;
 
-		await users.remove(deleting.id);
-		toast.success(`${deleting.email} was removed.`);
+		await users.remove(target.id);
+		toast.success(`${target.email} was removed.`);
 		await load();
 	}
 </script>
@@ -103,7 +108,23 @@
 		loading={list.isLoading}
 	/>
 
-	<AsyncView query={list}>
+	<AsyncView source={list}>
+		{#snippet loading()}
+			<div
+				class="flex flex-col gap-3 rounded-lg border p-4"
+				aria-busy="true"
+				aria-label="Loading users"
+			>
+				{#each { length: 5 }, i (i)}
+					<div class="flex items-center gap-4">
+						<Skeleton class="h-4 w-32" />
+						<Skeleton class="h-4 flex-1" />
+						<Skeleton class="h-5 w-16 rounded-full" />
+					</div>
+				{/each}
+			</div>
+		{/snippet}
+
 		{#snippet children(rows)}
 			<div class="rounded-lg border">
 				<Table.Root>

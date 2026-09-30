@@ -3,7 +3,8 @@
 	import ErrorState from '$lib/components/blocks/ErrorState.svelte';
 </script>
 
-<!-- Outside the app shell: auth pages, and anything the (app) boundary cannot catch. -->
-<div class="flex min-h-svh items-center justify-center p-6">
+<!-- Rendered inside the (app) layout, so an error in one page keeps the sidebar
+     and the way out of it. -->
+<div class="flex flex-1 items-center justify-center py-12">
 	<ErrorState status={page.status} message={page.error?.message} errorId={page.error?.errorId} />
 </div>

@@ -8,6 +8,11 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
+	// Workers Logs: keeps console output (the `logger`) searchable in the
+	// Cloudflare dashboard instead of only in a live `wrangler tail`.
+	"observability": {
+		"enabled": true
+	},
 	"workers_dev": true,
 	"preview_urls": true
 }

@@ -1,5 +1,6 @@
 import type { User } from '$lib/types/user';
 import type { UserFormData } from '$lib/features/users/schemas';
+import type { ApiAuth } from '$lib/core/api';
 import { BaseService } from '$lib/core/service';
 
 export class UsersService extends BaseService {
@@ -8,8 +9,8 @@ export class UsersService extends BaseService {
 	 * relative. Drop the second argument to target `config.api.baseUrl` once a
 	 * real backend serves /users.
 	 */
-	constructor(token: string | (() => string | null) = '') {
-		super(token, '');
+	constructor(auth: ApiAuth = {}) {
+		super(auth, '');
 	}
 
 	list(search?: string) {
