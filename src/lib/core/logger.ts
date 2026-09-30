@@ -6,7 +6,7 @@
 import { normalizeError } from '$lib/core/errors';
 
 /** Searchable detail attached to a log line — an `errorId`, a pathname. Never a token. */
-export type LogContext = Record<string, unknown>;
+type LogContext = Record<string, unknown>;
 
 export interface Logger {
 	/** Something worth knowing happened, and nothing is wrong. */

@@ -15,7 +15,7 @@
 import type { Fetch } from '@imlargo/air';
 import { refresh } from '@imlargo/air/refresh';
 
-export interface AuthTransportOptions {
+interface AuthTransportOptions {
 	onUnauthorized: () => Promise<unknown>;
 	/**
 	 * Renews the access token and resolves to the new one, or to null when the

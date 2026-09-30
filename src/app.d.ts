@@ -1,3 +1,4 @@
+import type { Fetcher } from '@cloudflare/workers-types';
 import type { User } from '$lib/types/user';
 import type { RequirePermission } from '$lib/features/auth/guard.server';
 
@@ -5,11 +6,14 @@ import type { RequirePermission } from '$lib/features/auth/guard.server';
 // for information about these interfaces
 declare global {
 	namespace App {
-		// `ctx`, `caches` and `cf` come from @sveltejs/adapter-cloudflare's own
-		// ambient types. Only `env` is ours: its bindings are generated from
-		// wrangler.jsonc by `pnpm run gen`.
+		// `ctx`, `caches` and `cf` are typed by @sveltejs/adapter-cloudflare.
+		// `env` holds the bindings declared in wrangler.jsonc: add one there, type
+		// it here with its type from @cloudflare/workers-types.
+		// See https://svelte.dev/docs/kit/adapter-cloudflare#Runtime-APIs
 		interface Platform {
-			env: Env;
+			env: {
+				ASSETS: Fetcher;
+			};
 		}
 
 		interface Error {

@@ -10,7 +10,7 @@ import type { AirClient, Fetch } from '@imlargo/air';
 import { config } from '$lib/config/app';
 
 /** A fixed token, or a getter read on every request so a renewed one is picked up. */
-export type TokenSource = string | null | undefined | (() => string | null | undefined);
+type TokenSource = string | null | undefined | (() => string | null | undefined);
 
 /**
  * Who a request is made as, and through what. Services take this instead of a

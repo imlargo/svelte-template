@@ -3,7 +3,7 @@ import type { ApiAuth } from '$lib/core/api';
 import { BaseService } from '$lib/core/service';
 
 /** Must match the `(auth)/refresh` route and its entry in AUTH_PUBLIC_ROUTE_PREFIXES. */
-export const SESSION_REFRESH_PATH = '/refresh';
+const SESSION_REFRESH_PATH = '/refresh';
 
 /**
  * This app's own session routes, not the backend's. The browser cannot renew

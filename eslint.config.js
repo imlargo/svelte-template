@@ -11,8 +11,7 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 	{
-		// shadcn primitives are vendored, and the worker types are generated.
-		ignores: ['src/lib/components/ui/**', 'worker-configuration.d.ts']
+		ignores: ['src/lib/components/ui/**']
 	},
 	js.configs.recommended,
 	ts.configs.recommended,

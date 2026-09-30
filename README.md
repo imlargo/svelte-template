@@ -273,7 +273,7 @@ request, with no secrets.
 Built for Cloudflare Workers via `@sveltejs/adapter-cloudflare`:
 
 ```sh
-pnpm run build     # wrangler types --check, then vite build
+pnpm run build     # vite build
 wrangler deploy
 ```
 
@@ -281,12 +281,13 @@ wrangler deploy
 `package.json`, before the first deploy. Workers Logs (`observability`) is on, so the `logger`'s
 output is searchable in the Cloudflare dashboard.
 
-`pnpm run gen` regenerates `worker-configuration.d.ts` from `wrangler.jsonc` after any binding
-change; `build` and `check` fail if it is stale. It is generated with `--include-runtime=false`:
-the full Workers runtime types declare globals (the HTMLRewriter `Element`, among others) that
-clash with the DOM types every component uses. `ctx`, `caches` and `cf` on `App.Platform` are
-typed by the adapter instead. Wrangler is pinned to an exact version, because the generated file
-changes between versions.
+Bindings are typed the way the
+[adapter docs](https://svelte.dev/docs/kit/adapter-cloudflare#Runtime-APIs) describe: declare each
+one in `wrangler.jsonc`, then add it to `App.Platform['env']` in `src/app.d.ts` with its type from
+`@cloudflare/workers-types` (`KVNamespace`, `R2Bucket`, ...). `ctx`, `caches` and `cf` are typed by
+the adapter. `wrangler types` is not used: its output changes depending on whether a build exists
+([sveltejs/cli#1096](https://github.com/sveltejs/cli/issues/1096)), which breaks `check` on a
+fresh clone.
 
 ## Customization checklist
 
@@ -311,12 +312,11 @@ demo pages on purpose: it is there so a project does not start by building a com
 
 ```sh
 pnpm run dev          # Dev server, http://localhost:5173
-pnpm run build        # wrangler types --check, then production build
+pnpm run build        # Production build
 pnpm run preview      # Serve the built worker locally, port 4173
-pnpm run check        # wrangler types --check, svelte-kit sync, svelte-check
+pnpm run check        # svelte-kit sync, svelte-check
 pnpm run lint         # Prettier + ESLint
 pnpm run format       # Prettier --write
 pnpm run test         # Vitest (browser + server projects), once
 pnpm run test:e2e     # Playwright smoke suite against the built worker
-pnpm run gen          # Regenerate worker-configuration.d.ts from wrangler.jsonc
 ```
