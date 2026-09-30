@@ -28,6 +28,11 @@ export class AuthService extends BaseService {
 	 * backend has to meet: `POST /auth/refresh` with `{ refresh_token }` answers
 	 * a fresh token pair, and a refresh token it no longer accepts answers 401.
 	 * A backend that does not rotate refresh tokens can send the same one back.
+	 *
+	 * A backend that rotates them must accept the token it just replaced for a
+	 * few seconds. Two renewals can race with the same token — two tabs, or a
+	 * navigation and an API call at once — and treating the second as reuse
+	 * would revoke a session nobody stole.
 	 */
 	refresh(refreshToken: string) {
 		return this.expectBody(

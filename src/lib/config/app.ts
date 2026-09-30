@@ -50,7 +50,12 @@ export interface AppConfig {
 // nothing": it falls through to the default instead of failing validation.
 const unset = (value: unknown) => (value === '' ? undefined : value);
 
-const flag = (fallback: boolean) => z.preprocess(unset, z.stringbool().default(fallback));
+// Exactly `true` or `false`: `yes`, `1` or a typo is an error, not a guess.
+const flag = (fallback: boolean) =>
+	z.preprocess(
+		unset,
+		z.stringbool({ truthy: ['true'], falsy: ['false'], case: 'sensitive' }).default(fallback)
+	);
 
 /**
  * Validated once, when this module loads. A missing or malformed variable

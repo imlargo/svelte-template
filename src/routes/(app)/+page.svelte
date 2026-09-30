@@ -17,7 +17,8 @@
 
 	let { data }: PageProps = $props();
 
-	const numbers = new Intl.NumberFormat();
+	// Explicit, like `formatDate`: the runtime's default locale is not the page's.
+	const numbers = new Intl.NumberFormat('en');
 
 	const items = createQuery<string[]>();
 

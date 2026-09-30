@@ -145,6 +145,10 @@ An expired access token is then renewed instead of ending the session, in two pl
 Only a rejected refresh token ends the session. A backend that is down answers 503 and keeps it,
 the same rule the hook already applied to `/auth/me`.
 
+A backend that rotates refresh tokens must accept the one it just replaced for a few seconds. Two
+renewals can race with the same token - two tabs, or a navigation and an API call at once - and
+treating the second as token reuse would sign out a user whose session was never compromised.
+
 With refresh off, or when the renewal fails, a client-side 401 re-runs the page's loads
 (`invalidateAll`). The request goes back through the hook, which is the one that decides: if the
 session really is gone, it redirects to `/login?redirect=` the current page. No component handles

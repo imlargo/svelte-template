@@ -8,6 +8,10 @@ on:
     branches: [main]
   pull_request:
 
+# Read-only: the workflow checks code, it never writes to the repository.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

@@ -2,6 +2,7 @@ import { invalidateAll } from '$app/navigation';
 import type { Fetch } from '@imlargo/air';
 import type { ApiAuth } from '$lib/core/api';
 import { config } from '$lib/config/app';
+import { logger } from '$lib/core/logger';
 import type { User } from '$lib/types/user';
 import type { AuthState } from './context';
 import { SessionService } from './services/session';
@@ -36,8 +37,9 @@ export class ClientSession implements AuthState {
 			fetch: createAuthTransport({
 				// A 401 is not the browser's to judge: re-running the loads sends a
 				// request through the auth hook, which redirects to sign in — back
-				// to this page afterwards — if the session really is gone.
-				onUnauthorized: () => invalidateAll(),
+				// to this page afterwards — if the session really is gone. Nobody
+				// awaits this, so a failure is logged rather than left unhandled.
+				onUnauthorized: () => invalidateAll().catch((err) => logger.error('auth', err)),
 				renew: config.auth.refresh.enabled ? (fetch) => this.#renew(fetch) : undefined
 			})
 		};
