@@ -13,8 +13,13 @@ const handleWithoutAuth: Handle = ({ event, resolve }) => {
 
 export const handle: Handle = config.auth.enabled ? handleAuth : handleWithoutAuth;
 
+// Only unexpected errors reach this — an `error(403, ...)` never does. The
+// visitor gets a message that is safe to show and an id to quote; the log gets
+// the same id next to everything the message leaves out.
 export const handleError: HandleServerError = ({ error, status }) => {
 	// 404s are noise: they say more about crawlers than about the app.
 	if (status === 404) return { message: 'Not found.' };
-	return { message: logger.error('server', error) };
+
+	const errorId = crypto.randomUUID();
+	return { message: logger.error('server', error, { errorId }), errorId };
 };

@@ -22,15 +22,18 @@
 
 ## What's already solved
 
-| Concern          | Building it yourself                                    | This template                                                         |
-| ---------------- | ------------------------------------------------------- | --------------------------------------------------------------------- |
-| Auth transport   | wire cookies, refresh, redirects by hand                | cookie-based session, handled in `hooks.server.ts`                    |
-| Login methods    | one code path per provider, hard to toggle              | password and Google, each an env flag - [Auth methods](#auth-methods) |
-| Route protection | a check you remember to add per page                    | declared once per page in a table; a missing entry is denied          |
-| API access       | `fetch` calls scattered across components               | one `BaseService` per feature, API access nowhere else                |
-| Permission model | ad-hoc role checks, duplicated between UI and endpoints | one `Permission` union, one grant list, read by both                  |
-| Sidebar + nav    | a layout built per project                              | driven by `$lib/config/navigation.ts`, filtered by permission         |
-| Deploy target    | adapter and worker config assembled by hand             | `adapter-cloudflare` + `wrangler.jsonc`, ready to `wrangler deploy`   |
+| Concern          | Building it yourself                                    | This template                                                          |
+| ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Auth transport   | wire cookies, refresh, redirects by hand                | cookie-based session, handled in `hooks.server.ts`                     |
+| Login methods    | one code path per provider, hard to toggle              | password and Google, each an env flag - [Auth methods](#auth-methods)  |
+| Route protection | a check you remember to add per page                    | declared once per page in a table; a missing entry is denied           |
+| API access       | `fetch` calls scattered across components               | one `BaseService` per feature, API access nowhere else                 |
+| Permission model | ad-hoc role checks, duplicated between UI and endpoints | one `Permission` union, one grant list, read by both                   |
+| Sidebar + nav    | a layout built per project                              | driven by `$lib/config/navigation.ts`, filtered by permission          |
+| Session expiry   | a 401 surfaces as a toast, or as a JSON parse error     | renewed with the refresh token if the backend supports it, else login  |
+| Slow data        | the navigation freezes until the slowest `load` returns | streamed from `load` behind a skeleton - [Data loading](#data-loading) |
+| Errors           | raw exception messages on screen                        | a safe message and an id that matches the log - [Errors](#errors)      |
+| Deploy target    | adapter and worker config assembled by hand             | `adapter-cloudflare` + `wrangler.jsonc`, ready to `wrangler deploy`    |
 
 ## Getting started
 
@@ -40,41 +43,49 @@ pnpm install
 pnpm run dev
 ```
 
-The dev server starts on <http://localhost:5173>. Without a real backend, set `PUBLIC_API_URL` to
-one that at least answers `/health`, or turn auth off (`PUBLIC_AUTH_ENABLED=false`) to browse the
-app shell without a session.
+The dev server starts on <http://localhost:5173>. Without a real backend, turn auth off
+(`PUBLIC_AUTH_ENABLED=false`) to browse the app shell without a session. `PUBLIC_API_URL` must
+still be a URL: the environment is validated when the app starts, and a missing or malformed
+variable fails there, by name, instead of surfacing later as requests to a relative path.
 
 ## Environment variables
 
-| Variable                       | Description                        | Default                        |
-| ------------------------------ | ---------------------------------- | ------------------------------ |
-| `PUBLIC_API_URL`               | Backend API base URL               | -                              |
-| `PUBLIC_AUTH_BASE_URL`         | Auth service base URL, if separate | falls back to `PUBLIC_API_URL` |
-| `PUBLIC_AUTH_ENABLED`          | Enable the auth hook               | `true`                         |
-| `PUBLIC_AUTH_PASSWORD_ENABLED` | Show the password login form       | `true`                         |
-| `PUBLIC_AUTH_GOOGLE_ENABLED`   | Show the Google OAuth button       | `false`                        |
-| `PUBLIC_GOOGLE_CLIENT_ID`      | Google OAuth client ID             | -                              |
-| `AUTH_COOKIE_DOMAIN`           | Cookie domain                      | -                              |
-| `AUTH_COOKIE_SECURE`           | Secure cookie flag                 | `false` (dev)                  |
-| `AUTH_COOKIE_MAX_AGE`          | Cookie lifetime, in seconds        | `604800` (7 days)              |
-| `AUTH_COOKIE_SAMESITE`         | `SameSite` policy                  | `lax`                          |
+| Variable                       | Description                                   | Default                          |
+| ------------------------------ | --------------------------------------------- | -------------------------------- |
+| `PUBLIC_API_URL`               | Backend API base URL                          | - (required)                     |
+| `PUBLIC_AUTH_BASE_URL`         | Auth service base URL, if separate            | falls back to `PUBLIC_API_URL`   |
+| `PUBLIC_AUTH_ENABLED`          | Enable the auth hook                          | `true`                           |
+| `PUBLIC_AUTH_PASSWORD_ENABLED` | Show the password login form                  | `true`                           |
+| `PUBLIC_AUTH_GOOGLE_ENABLED`   | Show the Google OAuth button                  | `false`                          |
+| `PUBLIC_GOOGLE_CLIENT_ID`      | Google OAuth client ID                        | - (required with Google on)      |
+| `PUBLIC_AUTH_REFRESH_ENABLED`  | Renew expired sessions with the refresh token | `false`                          |
+| `AUTH_COOKIE_DOMAIN`           | Cookie domain                                 | -                                |
+| `AUTH_COOKIE_SECURE`           | Secure cookie flag                            | `true` (`.env.example`: `false`) |
+| `AUTH_COOKIE_MAX_AGE`          | Cookie lifetime, in seconds                   | `604800` (7 days)                |
+| `AUTH_COOKIE_SAMESITE`         | `SameSite` policy                             | `lax`                            |
+
+The `PUBLIC_*` variables are checked against a schema in `$lib/config/app.ts`: flags accept
+`true`/`false` (a typo is an error, not a silent `true`), and an empty value means "use the
+default". `AUTH_COOKIE_SECURE` is on unless set to exactly `false`, which only a local `.env`
+should do.
 
 ## Architecture
 
 ```
 src/
 ├── hooks.server.ts    # Picks the auth handle (or a no-op) from config.auth.enabled
+├── error.html         # Fallback page for errors thrown before any page renders
 ├── lib/
 │   ├── core/          # api, service, errors, logger, permissions, query - infrastructure only
 │   ├── config/        # app.ts (branding/env), navigation.ts, permissions.ts
 │   ├── types/         # Types shared by more than one feature
-│   ├── utils/         # Pure functions - date, string, number, form
+│   ├── utils/         # Pure functions - date, string
 │   ├── hooks/         # Stateful runes classes: Disclosure, Filters, Pagination, IsMobile
 │   ├── features/      # Vertical slices (auth, users, ...) - components, services, types together
 │   ├── server/         # Server-only code, never imported from a `.svelte` file
-│   └── components/    # ui/ (shadcn, untouched), kit/, blocks/, layout/
+│   └── components/    # ui/ (shadcn, untouched), coral/ (vendored kit), blocks/, layout/
 └── routes/
-    ├── (auth)/        # Unauthenticated: login, logout, authorize (OAuth callback)
+    ├── (auth)/        # Unauthenticated: login, logout, authorize (OAuth callback), refresh
     ├── (app)/         # Protected pages, rendered inside the sidebar layout
     └── api/           # Server endpoints - each enforces its own permission (see Permissions)
 ```
@@ -106,9 +117,38 @@ PUBLIC_GOOGLE_CLIENT_ID=your-client-id
 ```
 
 The session itself is a cookie, issued in `src/lib/features/auth/session.server.ts` and read on
-every request by `hooks.server.ts`. Turning `PUBLIC_AUTH_ENABLED` off swaps in a no-op handle
+every request by `hooks.server.ts`. Signing in is a form action on `/login`: the browser posts to
+this app, and only the server talks to the backend's auth endpoints. Turning `PUBLIC_AUTH_ENABLED` off swaps in a no-op handle
 instead of skipping the check inline, so `locals.requirePermission` is always defined - a route
 guard is never the thing that crashes because auth happened to be off on this machine.
+
+### Session refresh
+
+Off by default, because it needs the backend to support it. With
+`PUBLIC_AUTH_REFRESH_ENABLED=true`, the backend must implement:
+
+```
+POST /auth/refresh   { "refresh_token": "..." }
+→ 200 { "access_token": "...", "refresh_token": "...", "expires_at": 0 }
+→ 401 when the refresh token is no longer valid
+```
+
+An expired access token is then renewed instead of ending the session, in two places:
+
+- **Before a page loads**: when `/auth/me` answers 401, the hook spends the refresh token, rotates
+  both cookies and asks again (`features/auth/renew.server.ts`).
+- **Between navigations**: a client-side API call that answers 401 goes through air's `refresh`
+  wrapper, which calls this app's `POST /refresh` (the refresh token is httpOnly, so only the
+  server can spend it) and re-sends the request with the new token. Concurrent 401s share one
+  renewal.
+
+Only a rejected refresh token ends the session. A backend that is down answers 503 and keeps it,
+the same rule the hook already applied to `/auth/me`.
+
+With refresh off, or when the renewal fails, a client-side 401 re-runs the page's loads
+(`invalidateAll`). The request goes back through the hook, which is the one that decides: if the
+session really is gone, it redirects to `/login?redirect=` the current page. No component handles
+401s; services built from `getAuth().api` get all of this for free.
 
 ## Permissions
 
@@ -150,28 +190,83 @@ export class UserService extends BaseService {
 	}
 }
 
-// Server: a fresh token from locals/cookies
-const service = new UserService(accessToken);
+// Server: the token from locals, and the per-request fetch
+const service = new UserService({ token: locals.accessToken, fetch });
 
-// Client: a getter, so a refreshed token is picked up on the next call
-const auth = getAuth();
-const service = new UserService(() => auth().accessToken);
+// Client: the session's credentials - a renewed token is picked up, and a 401 is handled
+const service = new UserService(getAuth().api);
 ```
 
 `expectBody` narrows air's `T | null` for an endpoint that must answer with a body - a `204` there
 is a broken response, not data, so it fails at the service boundary instead of leaking `null` into
 every consumer that forgot to check.
 
+## Data loading
+
+A slow API call must never freeze a navigation. Two patterns, both rendered with `AsyncView`
+(`$lib/components/blocks/AsyncView.svelte`) and a skeleton for the pending state:
+
+| Pattern                  | When                                                | Reference                         |
+| ------------------------ | --------------------------------------------------- | --------------------------------- |
+| **Streamed from `load`** | Data the page shows on arrival: dashboards, details | `routes/(app)/+page.server.ts`    |
+| **Run by the page**      | Data the user searches, filters or edits in place   | `routes/(app)/admin/+page.svelte` |
+
+```ts
+// +page.server.ts - not awaited: the page renders now and the promise streams in
+export const load = ({ locals, fetch }) => ({
+	stats: new StatsService({ token: locals.accessToken, fetch }).get()
+});
+```
+
+```svelte
+<!-- +page.svelte -->
+<AsyncView source={data.stats}>
+	{#snippet loading()}<StatsSkeleton />{/snippet}
+	{#snippet children(stats)}<StatsCards {stats} />{/snippet}
+</AsyncView>
+```
+
+`await` in `load` only what the page cannot render without; everything else goes out as a promise.
+For the second pattern, pass a `Query` instead: a refetch keeps the current data on screen until
+the new result lands, so searching or saving updates the list instead of blanking it. Remote
+functions are deliberately not used.
+
+## Errors
+
+Every error becomes an `AppError` (`$lib/core/errors.ts`) whose `message` is always safe to
+render: the backend's own message, or the default for its code - never the text of an exception.
+Unexpected errors also get an `errorId` in `handleError` (server and client), logged next to the
+full error and shown on the error page, so a screenshot from a user leads to the log line.
+
+Errors are rendered at three levels:
+
+- `routes/(app)/+error.svelte` - inside the app shell, so a failing page keeps the sidebar.
+- `routes/+error.svelte` - everything outside it.
+- `src/error.html` - errors thrown in `handle`, before any page can render (the hook's 403 for a
+  page the role cannot open, its 503 when the backend is down). SvelteKit serves this file as-is,
+  so it carries its own inline styles, mirroring the theme tokens.
+
 ## Testing
 
 ```sh
-pnpm run test        # vitest, run once - browser tests (Playwright) and server tests both
-pnpm run test:unit    # vitest, watch mode
+pnpm run test        # vitest, run once - component tests (Chromium) and server tests both
+pnpm run test:unit   # vitest, watch mode
+pnpm run test:e2e    # Playwright, against the built worker
 ```
 
-Two Vitest projects, split by what they need: `*.svelte.{test,spec}.ts` run in a real Chromium tab
-(`@vitest/browser-playwright`), everything else runs in Node. `src/lib/server/**` is excluded from
-the browser project on purpose - server-only code has no business compiling for a browser test.
+Three layers:
+
+- **Server tests** (`*.test.ts`, Node): services, the auth hook, the permission matrix, endpoints.
+- **Component tests** (`*.svelte.test.ts`, a real Chromium tab via `@vitest/browser-playwright`):
+  `features/auth/components/LoginForm.svelte.test.ts` is the reference. `test/setup-browser.ts`
+  gives components the `.env.test` values through `$env/dynamic/public`, as a real page would.
+  `src/lib/server/**` is excluded from this project on purpose.
+- **E2E smoke** (`e2e/*.e2e.ts`): builds the worker and runs it under `wrangler dev` with auth off,
+  so it needs no backend. It covers booting, navigation, streaming, a create flow and the 404 page.
+
+`.env.test` pins the variables the suite depends on, so a developer's `.env` cannot change what
+the tests prove. CI (`.github/workflows/ci.yml`) runs lint, check, test and test:e2e on every pull
+request, with no secrets.
 
 ## Deploying
 
@@ -183,8 +278,15 @@ wrangler deploy
 ```
 
 `wrangler.jsonc`'s `name` is still the placeholder `"app"` - rename it, and `name` in
-`package.json`, before the first deploy. `pnpm run gen` regenerates `worker-configuration.d.ts`
-from `wrangler.jsonc` after any binding change.
+`package.json`, before the first deploy. Workers Logs (`observability`) is on, so the `logger`'s
+output is searchable in the Cloudflare dashboard.
+
+`pnpm run gen` regenerates `worker-configuration.d.ts` from `wrangler.jsonc` after any binding
+change; `build` and `check` fail if it is stale. It is generated with `--include-runtime=false`:
+the full Workers runtime types declare globals (the HTMLRewriter `Element`, among others) that
+clash with the DOM types every component uses. `ctx`, `caches` and `cf` on `App.Platform` are
+typed by the adapter instead. Wrangler is pinned to an exact version, because the generated file
+changes between versions.
 
 ## Customization checklist
 
@@ -197,6 +299,14 @@ from `wrangler.jsonc` after any binding change.
 - [ ] Add feature slices under `src/lib/features/`, following `features/users/` as the reference
       shape - `services/`, `schemas.ts`, `types.ts`, `components/`
 
+## Coral
+
+`src/lib/components/coral/` is a vendored component kit - comboboxes, a data table, a date picker,
+a command palette, file input and more - built on top of the shadcn primitives. Treat it like
+`ui/`: each file carries the version it was copied at, and it is updated by copying a newer
+version in, not by editing it here. Compose around it the same way. Most of it is unused by the
+demo pages on purpose: it is there so a project does not start by building a combobox.
+
 ## Scripts
 
 ```sh
@@ -207,5 +317,6 @@ pnpm run check        # wrangler types --check, svelte-kit sync, svelte-check
 pnpm run lint         # Prettier + ESLint
 pnpm run format       # Prettier --write
 pnpm run test         # Vitest (browser + server projects), once
+pnpm run test:e2e     # Playwright smoke suite against the built worker
 pnpm run gen          # Regenerate worker-configuration.d.ts from wrangler.jsonc
 ```

@@ -18,8 +18,6 @@
 
 	let { form: formData, signInError = null, class: className }: Props = $props();
 
-	const id = $props.id();
-
 	const form = superForm(
 		untrack(() => formData),
 		{
@@ -91,7 +89,6 @@
 						<Form.Label>Email</Form.Label>
 						<Input
 							{...props}
-							id="email-{id}"
 							type="email"
 							placeholder="you@example.com"
 							autocomplete="email"
@@ -108,7 +105,6 @@
 						<Form.Label>Password</Form.Label>
 						<Input
 							{...props}
-							id="password-{id}"
 							type="password"
 							autocomplete="current-password"
 							bind:value={$fields.password}

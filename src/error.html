@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+	SvelteKit's fallback for errors that happen before any page can render: the
+	auth hook's 403 for a page the role cannot open, its 503 when the backend is
+	down. There is no Svelte and no Tailwind here — this file is served as-is —
+	so the styles are inline and mirror the tokens in src/routes/layout.css.
+	A client-side navigation never lands here: it renders +error.svelte.
+-->
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>%sveltekit.status% · %sveltekit.error.message%</title>
+		<style>
+			:root {
+				--background: oklch(1 0 0);
+				--foreground: oklch(0.145 0 0);
+				--muted-foreground: oklch(0.556 0 0);
+				--border: oklch(0.922 0 0);
+				color-scheme: light dark;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--background: oklch(0.145 0 0);
+					--foreground: oklch(0.985 0 0);
+					--muted-foreground: oklch(0.708 0 0);
+					--border: oklch(1 0 0 / 10%);
+				}
+			}
+
+			body {
+				margin: 0;
+				min-height: 100svh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 1.5rem;
+				box-sizing: border-box;
+				background: var(--background);
+				color: var(--foreground);
+				font-family:
+					'Geist Variable',
+					system-ui,
+					-apple-system,
+					sans-serif;
+				text-align: center;
+			}
+
+			main {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 1rem;
+				max-width: 24rem;
+			}
+
+			.status {
+				margin: 0;
+				font-size: 3.75rem;
+				font-weight: 700;
+				color: var(--muted-foreground);
+			}
+
+			.message {
+				margin: 0;
+				color: var(--muted-foreground);
+			}
+
+			a {
+				padding: 0.5rem 1rem;
+				border: 1px solid var(--border);
+				border-radius: 0.5rem;
+				color: inherit;
+				font-size: 0.875rem;
+				font-weight: 500;
+				text-decoration: none;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<p class="status">%sveltekit.status%</p>
+			<p class="message">%sveltekit.error.message%</p>
+			<a href="/">Go home</a>
+		</main>
+	</body>
+</html>

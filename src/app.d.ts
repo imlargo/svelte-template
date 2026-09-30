@@ -5,14 +5,18 @@ import type { RequirePermission } from '$lib/features/auth/guard.server';
 // for information about these interfaces
 declare global {
 	namespace App {
+		// `ctx`, `caches` and `cf` come from @sveltejs/adapter-cloudflare's own
+		// ambient types. Only `env` is ours: its bindings are generated from
+		// wrangler.jsonc by `pnpm run gen`.
 		interface Platform {
 			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf?: IncomingRequestCfProperties;
 		}
 
-		// interface Error {}
+		interface Error {
+			message: string;
+			/** Set by `handleError` for unexpected errors, and logged alongside them. */
+			errorId?: string;
+		}
 		interface Locals {
 			/** Set by the auth hook. Absent on public routes and when auth is disabled. */
 			user?: User | null;

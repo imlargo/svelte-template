@@ -16,3 +16,11 @@ export interface SignInResponse {
 	user: User;
 	tokens: AuthTokensResponse;
 }
+
+/**
+ * What this app's own `/refresh` route answers. Only the access token reaches
+ * the browser: the refresh token is rotated into its httpOnly cookie.
+ */
+export interface RefreshedSession {
+	accessToken: string;
+}

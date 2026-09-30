@@ -1,9 +1,10 @@
 /**
  * BaseService — wires a service to an air client with token resolution.
  *
- * Decoupled from auth: the token is supplied via the constructor. Services that
- * need auth receive it from the caller (server load functions, actions, or the
- * auth context on the client) rather than reading a global store.
+ * Decoupled from auth: the credential and the transport are supplied via the
+ * constructor (`ApiAuth`). Services that need auth receive it from the caller
+ * (server load functions, actions, or the auth context on the client) rather
+ * than reading a global store.
  *
  * Subclasses call `this.api.get/post/put/patch/delete(...)` directly — see
  * https://github.com/imlargo/air for the request options (`body`, `query`, ...).
@@ -12,26 +13,23 @@
  * overrides it to target another API. Omit it to use `config.api.baseUrl`.
  *
  * @example
- * // Server-side (receives token from cookies/locals)
- * const service = new UserService(accessToken);
+ * // Server-side: the token from locals and the per-request fetch
+ * const service = new UserService({ token: locals.accessToken, fetch });
  *
- * // Client-side (wraps with a token getter, so it stays current)
- * const auth = getAuth();
- * const service = new UserService(() => auth().accessToken);
+ * // Client-side: the session's credentials, which follow a renewed token and
+ * // send the user back to sign in on a 401
+ * const service = new UserService(getAuth().api);
  */
-import { createApiClient } from '$lib/core/api';
+import { createApiClient, type ApiAuth } from '$lib/core/api';
 import { AppError } from '$lib/core/errors';
 import type { AirClient } from '@imlargo/air';
 
 export class BaseService {
 	protected api: AirClient;
 
-	constructor(token: string | (() => string | null) = '', baseUrl?: string) {
-		// Each service gets its own client so the getToken closure resolves correctly.
-		this.api = createApiClient({
-			baseUrl,
-			getToken: () => (typeof token === 'function' ? token() : token)
-		});
+	constructor(auth: ApiAuth = {}, baseUrl?: string) {
+		// Each service gets its own client so the token getter resolves correctly.
+		this.api = createApiClient({ ...auth, baseUrl });
 	}
 
 	/**

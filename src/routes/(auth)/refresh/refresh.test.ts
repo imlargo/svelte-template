@@ -1,0 +1,96 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { isHttpError } from '@sveltejs/kit';
+import { POST } from './+server';
+import { config } from '$lib/config/app';
+import { AppError } from '$lib/core/errors';
+
+// The browser's only way to renew a session. What it does with a dead refresh
+// token and with an outage mirrors the hook, and is asserted the same way.
+
+const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+vi.mock('$lib/features/auth/services/auth', () => ({
+	AuthService: class {
+		refresh = refresh;
+	}
+}));
+
+vi.mock('$lib/core/logger', () => ({
+	logger: { error: vi.fn(() => 'logged'), warn: vi.fn(), info: vi.fn() }
+}));
+
+const SESSION = { access_token: 'access-old', refresh_token: 'refresh-old' };
+const RENEWED = { access_token: 'access-new', refresh_token: 'refresh-new', expires_at: 0 };
+
+async function callRefresh(cookies: Record<string, string> = SESSION) {
+	const cleared: string[] = [];
+	const set: Record<string, string> = {};
+	const event = {
+		cookies: {
+			get: (name: string) => cookies[name],
+			set: (name: string, value: string) => {
+				set[name] = value;
+			},
+			delete: (name: string) => {
+				cleared.push(name);
+			}
+		}
+	};
+
+	try {
+		const response = await POST(event as unknown as Parameters<typeof POST>[0]);
+		return { status: response.status, body: await response.json(), cleared, set };
+	} catch (err) {
+		if (isHttpError(err)) return { status: err.status, body: err.body, cleared, set };
+		throw err;
+	}
+}
+
+beforeEach(() => {
+	refresh.mockReset();
+	config.auth.refresh.enabled = true;
+});
+afterEach(() => {
+	config.auth.refresh.enabled = false;
+});
+
+describe('POST /refresh', () => {
+	it('does not exist unless refresh is enabled', async () => {
+		config.auth.refresh.enabled = false;
+
+		expect((await callRefresh()).status).toBe(404);
+		expect(refresh).not.toHaveBeenCalled();
+	});
+
+	it('answers 401 without a session to renew', async () => {
+		expect((await callRefresh({})).status).toBe(401);
+	});
+
+	it('rotates the cookies and gives the browser only the access token', async () => {
+		refresh.mockResolvedValue(RENEWED);
+
+		const { status, body, set } = await callRefresh();
+
+		expect(status).toBe(200);
+		expect(body).toEqual({ accessToken: RENEWED.access_token });
+		expect(set).toMatchObject({ refresh_token: RENEWED.refresh_token });
+	});
+
+	it('ends the session when the backend rejects the refresh token', async () => {
+		refresh.mockRejectedValue(new AppError('UNAUTHORIZED', 'Revoked.'));
+
+		const { status, cleared } = await callRefresh();
+
+		expect(status).toBe(401);
+		expect(cleared).toContain('refresh_token');
+	});
+
+	it('keeps the session through an outage', async () => {
+		refresh.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
+
+		const { status, cleared } = await callRefresh();
+
+		expect(status).toBe(503);
+		expect(cleared).toEqual([]);
+	});
+});

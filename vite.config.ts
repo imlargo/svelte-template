@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-cloudflare';
@@ -37,7 +38,10 @@ export default defineConfig({
 						instances: [{ browser: 'chromium', headless: true }]
 					},
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-					exclude: ['src/lib/server/**']
+					exclude: ['src/lib/server/**'],
+					// See test/setup-browser.ts: components read $env/dynamic/public.
+					env: loadEnv('test', process.cwd(), 'PUBLIC_'),
+					setupFiles: ['./test/setup-browser.ts']
 				}
 			},
 

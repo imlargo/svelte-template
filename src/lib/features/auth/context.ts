@@ -4,18 +4,21 @@
  * process, so that would leak one user's data into another user's page.
  */
 import { createContext } from 'svelte';
+import type { ApiAuth } from '$lib/core/api';
 import type { User } from '$lib/types/user';
 
 export interface AuthState {
-	user: User | null;
-	accessToken: string | null;
+	readonly user: User | null;
+	readonly accessToken: string | null;
+	/**
+	 * What a client-side service needs to call the API as this user. The token
+	 * is read per request, so a renewed one is picked up, and a 401 sends the
+	 * user back to sign in:
+	 *
+	 *   const users = new UsersService(getAuth().api);
+	 */
+	readonly api: ApiAuth;
 }
 
-/**
- * Holds a getter rather than a value, so reactivity crosses the context
- * boundary and services read the current token after every navigation:
- *
- *   const auth = getAuth();
- *   const users = new UsersService(() => auth().accessToken);
- */
-export const [getAuth, setAuth] = createContext<() => AuthState>();
+/** Implemented by `ClientSession`, set once in the root layout. */
+export const [getAuth, setAuth] = createContext<AuthState>();

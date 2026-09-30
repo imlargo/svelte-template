@@ -82,6 +82,26 @@ inventar uno nuevo.
   estado global, esa no es una guarda: es la señal de que el estado está en el sitio equivocado.
 - Los hooks de estado no llaman a la API directamente: delegan en services.
 
+## Carga de datos
+
+- **Una navegación nunca espera datos lentos.** En `load`, haz `await` solo de lo que la página no
+  puede renderizar sin él; lo demás se devuelve como promesa (streaming) y se pinta con
+  `AsyncView` + skeleton. Referencia: `routes/(app)/+page.server.ts`.
+- Los datos que el usuario busca, filtra o edita en el mismo sitio los carga la propia página con
+  `Query` + `AsyncView` (en `onMount`, no con `if (browser)`). Referencia: `routes/(app)/admin/`.
+- No se usan remote functions.
+- En el cliente, un service se crea con `getAuth().api`, nunca con un token suelto: así hereda la
+  renovación de sesión y el manejo de 401. En el servidor, con `{ token: locals.accessToken, fetch }`.
+- Ningún componente maneja 401: la sesión expirada se renueva o redirige a login en
+  `features/auth/transport.ts` y en el hook.
+
+## Errores
+
+- Todo error se convierte con `normalizeError`, y su `message` siempre se puede mostrar. Nunca
+  muestres `err.message` de un error sin normalizar.
+- Si un error es esperado, lánzalo como `AppError` con el código que corresponda. Un `Error`
+  genérico se trata como un bug: se muestra el mensaje por defecto y el detalle va solo al log.
+
 ## Permisos
 
 Deny by default: rol desconocido → sin permisos, ruta no declarada → denegada. Un olvido debe
@@ -112,9 +132,10 @@ en `$lib/config/permissions.ts` — no hay un valor "sin restricción" que pueda
 ## Antes de dar algo por terminado
 
 ```sh
-pnpm run lint     # sin errores
-pnpm run check    # cero errores Y cero warnings
-pnpm run test     # verde
+pnpm run lint       # sin errores
+pnpm run check      # cero errores Y cero warnings
+pnpm run test       # verde (servidor + componentes)
+pnpm run test:e2e   # verde, si tocaste rutas, layout o flujos
 ```
 
 Ejecútalos de verdad y lee la salida — no asumas que compiló. Los warnings de `svelte-check` como

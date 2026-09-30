@@ -4,12 +4,20 @@
 	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+	import { AppError } from '$lib/core/errors';
 	import { createQuery } from '$lib/core/query.svelte';
 	import { toast } from 'svelte-sonner';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import ActivityIcon from '@lucide/svelte/icons/activity';
 	import InboxIcon from '@lucide/svelte/icons/inbox';
+	import type { LucideIcon } from '@lucide/svelte';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	const numbers = new Intl.NumberFormat();
 
 	const items = createQuery<string[]>();
 
@@ -18,7 +26,7 @@
 	async function load(fail = false) {
 		await items.run(async () => {
 			await new Promise((r) => setTimeout(r, 800));
-			if (fail) throw new Error('The demo endpoint is unreachable.');
+			if (fail) throw new AppError('NETWORK', 'The demo endpoint is unreachable.');
 			return ['Item A', 'Item B', 'Item C'];
 		});
 
@@ -34,49 +42,40 @@
 		{/snippet}
 	</PageHeader>
 
-	<!-- Stat cards -->
-	<section class="grid gap-4 sm:grid-cols-3">
-		<Card.Root>
-			<Card.Header class="flex flex-row items-center justify-between pb-2">
-				<Card.Title class="text-sm font-medium">Total users</Card.Title>
-				<UsersIcon class="size-4 text-muted-foreground" />
-			</Card.Header>
-			<Card.Content>
-				<div class="text-2xl font-bold">1,024</div>
-				<p class="text-xs text-muted-foreground">All registered accounts</p>
-			</Card.Content>
-		</Card.Root>
+	<!-- Streamed from `load`: the page is already here while these resolve. -->
+	<AsyncView source={data.stats}>
+		{#snippet loading()}
+			<section class="grid gap-4 sm:grid-cols-3" aria-busy="true" aria-label="Loading stats">
+				{#each { length: 3 }, i (i)}
+					<Card.Root>
+						<Card.Header class="pb-2">
+							<Skeleton class="h-4 w-24" />
+						</Card.Header>
+						<Card.Content class="flex flex-col gap-2">
+							<Skeleton class="h-7 w-16" />
+							<Skeleton class="h-3 w-32" />
+						</Card.Content>
+					</Card.Root>
+				{/each}
+			</section>
+		{/snippet}
 
-		<Card.Root>
-			<Card.Header class="flex flex-row items-center justify-between pb-2">
-				<Card.Title class="text-sm font-medium">Active sessions</Card.Title>
-				<ActivityIcon class="size-4 text-muted-foreground" />
-			</Card.Header>
-			<Card.Content>
-				<div class="text-2xl font-bold">47</div>
-				<p class="text-xs text-muted-foreground">Currently online</p>
-			</Card.Content>
-		</Card.Root>
+		{#snippet children(stats)}
+			<section class="grid gap-4 sm:grid-cols-3">
+				{@render stat('Total users', stats.totalUsers, 'All registered accounts', UsersIcon)}
+				{@render stat('Active sessions', stats.activeSessions, 'Currently online', ActivityIcon)}
+				{@render stat('Events today', stats.eventsToday, 'Across all sources', LayoutDashboardIcon)}
+			</section>
+		{/snippet}
+	</AsyncView>
 
-		<Card.Root>
-			<Card.Header class="flex flex-row items-center justify-between pb-2">
-				<Card.Title class="text-sm font-medium">Events today</Card.Title>
-				<LayoutDashboardIcon class="size-4 text-muted-foreground" />
-			</Card.Header>
-			<Card.Content>
-				<div class="text-2xl font-bold">312</div>
-				<p class="text-xs text-muted-foreground">Across all sources</p>
-			</Card.Content>
-		</Card.Root>
-	</section>
-
-	<!-- AsyncView + EmptyState demo -->
+	<!-- Run by the page itself: for loads the user triggers, not the navigation. -->
 	<section>
-		<h2 class="mb-3 text-sm font-medium text-muted-foreground">AsyncView demo</h2>
-		<AsyncView query={items}>
-			{#snippet children(data)}
+		<h2 class="mb-3 text-sm font-medium text-muted-foreground">Client-side Query demo</h2>
+		<AsyncView source={items}>
+			{#snippet children(list)}
 				<ul class="divide-y rounded-lg border">
-					{#each data as item (item)}
+					{#each list as item (item)}
 						<li class="px-4 py-3 text-sm">{item}</li>
 					{/each}
 				</ul>
@@ -98,3 +97,16 @@
 		</AsyncView>
 	</section>
 </div>
+
+{#snippet stat(title: string, value: number, hint: string, Icon: LucideIcon)}
+	<Card.Root>
+		<Card.Header class="flex flex-row items-center justify-between pb-2">
+			<Card.Title class="text-sm font-medium">{title}</Card.Title>
+			<Icon class="size-4 text-muted-foreground" />
+		</Card.Header>
+		<Card.Content>
+			<div class="text-2xl font-bold">{numbers.format(value)}</div>
+			<p class="text-xs text-muted-foreground">{hint}</p>
+		</Card.Content>
+	</Card.Root>
+{/snippet}

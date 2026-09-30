@@ -1,10 +1,10 @@
 /**
  * The session cookies, and the only place that knows their names and options.
  *
- * Both tokens are httpOnly and share a lifetime: the template has no refresh
- * flow, so a shorter access cookie would only sign users out sooner, not buy
- * security. If your API issues short-lived access tokens, add the refresh
- * flow and split the two lifetimes together.
+ * Both tokens are httpOnly and share a lifetime. The cookie lifetime is not the
+ * token lifetime: the backend decides when an access token expires, and the
+ * hook finds out on the next `/auth/me`. With PUBLIC_AUTH_REFRESH_ENABLED it
+ * then renews the pair (`renew.server.ts`); without it, the user signs in again.
  */
 import { env } from '$env/dynamic/private';
 import type { Cookies } from '@sveltejs/kit';

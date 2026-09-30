@@ -67,12 +67,18 @@ export class AppError extends Error {
 	}
 }
 
-/** Converts anything thrown into an `AppError`. The only entry point. */
+/**
+ * Converts anything thrown into an `AppError`. The only entry point.
+ *
+ * Anything that is neither an `AppError` nor an API failure is a bug, not a
+ * message: a `TypeError` says "Cannot read properties of undefined" to whoever
+ * reads the screen. It becomes `UNKNOWN` with the default message, and the
+ * original stays on `cause` for the log.
+ */
 export function normalizeError(err: unknown): AppError {
 	if (err instanceof AppError) return err;
 	if (isAirError(err)) return fromAirError(err);
-	if (err instanceof Error) return new AppError('UNKNOWN', err.message, { cause: err });
-	return new AppError('UNKNOWN', String(err));
+	return new AppError('UNKNOWN', undefined, { cause: err });
 }
 
 // ─── air → AppError ──────────────────────────────────────────────────────────
@@ -86,7 +92,11 @@ function fromAirError(err: AirError): AppError {
 	const code = (body.status && codeFromStatus(body.status)) || codeFromHttpStatus(httpStatus);
 
 	return new AppError(code, body.message, {
-		cause: err,
+		// Not the AirError itself: it carries `request.headers` as sent, the
+		// `Authorization` token included, and whatever holds this error logs it.
+		// Everything worth keeping from it is in `context`; `err.cause` is the
+		// network failure underneath, when there was one.
+		cause: err.cause,
 		context: {
 			method: err.request.method,
 			url: err.request.url,
