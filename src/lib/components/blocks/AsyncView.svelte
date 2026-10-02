@@ -72,12 +72,15 @@
 	{:catch err}
 		{@render failed(normalizeError(err))}
 	{/await}
+{:else if source.data !== null}
+	<!-- Once there is data it stays on screen: a refetch, or a failed one,
+	     updates the list instead of blanking it. Report those failures with a
+	     toast. -->
+	{@render settled(source.data)}
 {:else if source.error}
 	{@render failed(source.error)}
-{:else if source.data !== null}
-	<!-- A refetch keeps what is on screen until the new result lands: search and
-	     mutations update the list instead of blanking it to a spinner. -->
-	{@render settled(source.data)}
-{:else if source.isLoading}
+{:else}
+	<!-- Not run yet counts as pending: the server renders the skeleton, and
+	     the page starts the query on mount. -->
 	{@render pending()}
 {/if}

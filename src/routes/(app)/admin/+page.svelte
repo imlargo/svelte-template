@@ -25,9 +25,7 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
 	// Loaded by the page, not by `load`: the list is searched and edited in
-	// place, and a refetch should update the table rather than stream a fresh
-	// skeleton over it. The credentials follow a renewed token and turn a 401
-	// into a sign-in, so nothing here handles either.
+	// place, and a refetch should update the table rather than replace it.
 	const users = new UsersService(getAuth().api);
 	const list = createQuery<User[]>();
 
@@ -39,18 +37,18 @@
 
 	async function load() {
 		await list.run(() => users.list(search));
-		if (list.error) toast.error(list.error.message);
+		// A first load that fails is AsyncView's error panel; a later one keeps
+		// the table on screen, so it is reported here instead.
+		if (list.error && list.data !== null) toast.error(list.error.message);
 	}
 
-	// SearchInput debounces, which is also what keeps overlapping runs (and
-	// their ordering) out of the picture.
 	function onSearch(term: string) {
 		search = term;
 		load();
 	}
 
-	// On mount, so the relative /api/users URL is only ever requested from the
-	// browser; the server renders the skeleton.
+	// The relative /api/users URL is only requested from the browser; the
+	// server renders the skeleton.
 	onMount(load);
 
 	function openCreate() {
