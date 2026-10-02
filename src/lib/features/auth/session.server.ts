@@ -68,12 +68,14 @@ export function clearSession(cookies: Cookies): void {
 	deleteCookie(cookies, REFRESH_TOKEN_COOKIE);
 }
 
-export interface OAuthState {
+const OAuthStateSchema = z.object({
 	/** Echoed by the provider and compared on the way back. Defeats login CSRF. */
-	nonce: string;
+	nonce: z.string(),
 	/** Encoded `?redirect=` value the user was heading to, if any. */
-	redirectTo: string | null;
-}
+	redirectTo: z.string().nullable()
+});
+
+export type OAuthState = z.infer<typeof OAuthStateSchema>;
 
 export function setOAuthState(cookies: Cookies, state: OAuthState): void {
 	cookies.set(OAUTH_STATE_COOKIE, JSON.stringify(state), cookieOptions(OAUTH_STATE_MAX_AGE));
@@ -86,9 +88,8 @@ export function takeOAuthState(cookies: Cookies): OAuthState | null {
 	if (!raw) return null;
 
 	try {
-		const parsed = JSON.parse(raw);
-		if (typeof parsed?.nonce !== 'string') return null;
-		return { nonce: parsed.nonce, redirectTo: parsed.redirectTo ?? null };
+		const parsed = OAuthStateSchema.safeParse(JSON.parse(raw));
+		return parsed.success ? parsed.data : null;
 	} catch {
 		return null;
 	}
