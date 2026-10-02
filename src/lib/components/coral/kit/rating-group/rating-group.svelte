@@ -4,7 +4,7 @@
 	 * @version 1.0.0
 	 */
 	import StarIcon from '@lucide/svelte/icons/star';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { numberFormat } from '../../lib/intl.js';
 	import { focusRingWithin } from '../../lib/focus.js';
 	import { fillOf, snap, stepsFor } from './rating.js';

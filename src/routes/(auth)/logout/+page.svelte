@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import DocumentTitle from '#lib/components/blocks/DocumentTitle.svelte';
 </script>
 
 <DocumentTitle title="Sign out" />

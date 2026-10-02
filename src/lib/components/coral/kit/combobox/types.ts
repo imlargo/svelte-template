@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Popover } from '$lib/components/ui/popover/index.js';
+import type { Popover } from '#lib/components/ui/popover/index.js';
 import type { Option, Options } from '../../lib/options.js';
 import type { TriggerAttributes } from '../../lib/trigger.js';
 

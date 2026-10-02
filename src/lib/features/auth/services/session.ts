@@ -1,7 +1,7 @@
-import type { RefreshedSession } from '$lib/features/auth/types';
-import type { ApiAuth } from '$lib/core/api';
-import { AUTH_ROUTES } from '$lib/config/routes';
-import { BaseService } from '$lib/core/service';
+import type { RefreshedSession } from '#lib/features/auth/types.js';
+import type { ApiAuth } from '#lib/core/api.js';
+import { AUTH_ROUTES } from '#lib/config/routes.js';
+import { BaseService } from '#lib/core/service.js';
 
 /**
  * This app's own session routes, not the backend's: the refresh token lives in

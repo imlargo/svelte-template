@@ -1,11 +1,11 @@
 # svelte-template
 
-> A SvelteKit 2 + Svelte 5 starter for client projects that consume an external API. Auth,
+> A SvelteKit 3 + Svelte 5 starter for client projects that consume an external API. Auth,
 > permissions and the service layer are solved once, so a new engagement starts on day one instead
 > of week two.
 
 [![Svelte](https://img.shields.io/badge/svelte-5-FF3E00)](https://svelte.dev)
-[![SvelteKit](https://img.shields.io/badge/sveltekit-2-FF3E00)](https://svelte.dev/docs/kit)
+[![SvelteKit](https://img.shields.io/badge/sveltekit-3-FF3E00)](https://svelte.dev/docs/kit)
 [![TypeScript](https://img.shields.io/badge/typescript-strict-3178C6)](https://www.typescriptlang.org)
 [![Cloudflare Workers](https://img.shields.io/badge/deploy-cloudflare%20workers-F38020)](https://workers.cloudflare.com)
 
@@ -29,9 +29,10 @@
 | Route protection | a check you remember to add per page                    | declared once per page in a table; a missing entry is denied           |
 | API access       | `fetch` calls scattered across components               | one `BaseService` per feature, API access nowhere else                 |
 | Permission model | ad-hoc role checks, duplicated between UI and endpoints | one `Permission` union, one grant list, read by both                   |
-| Sidebar + nav    | a layout built per project                              | driven by `$lib/config/navigation.ts`, filtered by permission          |
+| Sidebar + nav    | a layout built per project                              | driven by `#lib/config/navigation.ts`, filtered by permission          |
 | Session expiry   | a 401 surfaces as a toast, or as a JSON parse error     | renewed with the refresh token if the backend supports it, else login  |
 | Slow data        | the navigation freezes until the slowest `load` returns | streamed from `load` behind a skeleton - [Data loading](#data-loading) |
+| Forms            | a form library on top of the framework                  | form actions + `use:enhance`, validated with zod - [Forms](#forms)     |
 | Errors           | raw exception messages on screen                        | a safe message and an id that matches the log - [Errors](#errors)      |
 | Deploy target    | adapter and worker config assembled by hand             | `adapter-cloudflare` + `wrangler.jsonc`, ready to `wrangler deploy`    |
 
@@ -64,23 +65,32 @@ variable fails there, by name, instead of surfacing later as requests to a relat
 | `AUTH_COOKIE_MAX_AGE`          | Cookie lifetime, in seconds                   | `604800` (7 days)                |
 | `AUTH_COOKIE_SAMESITE`         | `SameSite` policy                             | `lax`                            |
 
-The `PUBLIC_*` variables are checked against a schema in `$lib/config/app.ts`: flags accept
-`true`/`false` (a typo is an error, not a silent `true`), and an empty value means "use the
-default". The `AUTH_COOKIE_*` variables get the same treatment in
-`features/auth/session.server.ts`: `AUTH_COOKIE_SAMESITE=strick` fails at startup instead of
-quietly becoming `lax`. `AUTH_COOKIE_SECURE=false` is for a local `.env` only.
+Every variable is declared once, in `src/env.ts`, with SvelteKit's `defineEnvVars` and a zod
+schema. SvelteKit validates them when the app starts and reports every invalid one by name; code
+reads the parsed values from `$app/env/public` (the `PUBLIC_*` ones, also available in the
+browser) and `$app/env/private` (the `AUTH_COOKIE_*` ones, server only). Flags accept exactly
+`true`/`false` (a typo is an error, not a silent `true`), an empty value means "use the default",
+and `AUTH_COOKIE_SAMESITE=strick` fails at startup instead of quietly becoming `lax`. The one rule
+that spans two variables - a client ID when Google is on - is checked in `#lib/config/app.ts`.
+`AUTH_COOKIE_SECURE=false` is for a local `.env` only.
+
+`vite build` runs the app to analyse it, but the variables belong to the deploy, not to the build
+machine: during the build `PUBLIC_API_URL` gets a placeholder, and the running worker is the one
+held to account.
 
 ## Architecture
 
 ```
 src/
+├── env.ts             # Every environment variable, with its schema (defineEnvVars)
 ├── hooks.server.ts    # Picks the auth handle (or a no-op) from config.auth.enabled
+├── hooks.client.ts    # Client-side handleError
 ├── error.html         # Fallback page for errors thrown before any page renders
 ├── lib/
 │   ├── core/          # api, service, errors, logger, permissions, query - infrastructure only
 │   ├── config/        # app.ts (branding/env), routes.ts, navigation.ts, permissions.ts
 │   ├── types/         # Types shared by more than one feature
-│   ├── utils/         # Pure functions - date, string, env
+│   ├── utils/         # Pure functions - date, string, env, forms, paths
 │   ├── hooks/         # Stateful runes classes: Disclosure, Filters, Pagination, IsMobile
 │   ├── features/      # Vertical slices (auth, users, ...) - components, services, types together
 │   ├── server/         # Server-only code, never imported from a `.svelte` file
@@ -91,7 +101,15 @@ src/
     └── api/           # Server endpoints - each enforces its own permission (see Permissions)
 ```
 
-Everything is imported from `$lib/...` by its real path; there are no barrels and no extra aliases.
+Everything is imported from `#lib/...` by its real path, with its `.js` extension
+(`#lib/core/errors.js`); there are no barrels and no extra aliases. `#lib` is a
+[subpath import](https://nodejs.org/api/packages.html#subpath-imports) declared in
+`package.json`'s `imports`, which replaces SvelteKit's `$lib` alias.
+
+Route paths in `#lib/config/routes.ts` and `navigation.ts` keep their leading slash, because they
+are compared with `url.pathname`. SvelteKit's `resolve()` reads a leading slash as a route ID, and
+route groups make `/admin` a different ID (`/(app)/admin`), so links built from them go through
+`resolvePathname()` (`#lib/utils/paths.ts`) instead.
 `hooks/`, `utils/` and `coral/` ship generic pieces a project may not use yet - they are the
 template's batteries, not dead code.
 
@@ -152,13 +170,13 @@ renewals can race with the same token - two tabs, or a navigation and an API cal
 treating the second as token reuse would sign out a user whose session was never compromised.
 
 With refresh off, or when the renewal fails, a client-side 401 re-runs the page's loads
-(`invalidateAll`). The request goes back through the hook, which is the one that decides: if the
+(`refreshAll`). The request goes back through the hook, which is the one that decides: if the
 session really is gone, it redirects to `/login?redirect=` the current page. No component handles
 401s; services built from `getAuth().api` get all of this for free.
 
 ## Permissions
 
-One `Permission` union (`$lib/config/permissions.ts`), written as `resource:action` -
+One `Permission` union (`#lib/config/permissions.ts`), written as `resource:action` -
 `users:delete`, not "the delete button on the users page" - so it means the same thing to a page
 guard and to the endpoint behind it:
 
@@ -175,7 +193,7 @@ Pages are declared as a tree and enforced once, in `hooks.server.ts`, before any
 new page with no entry is denied, not open by omission. Endpoints under `src/routes/api/` declare
 their own permission per handler instead, because a `GET` and a `DELETE` on the same path are not
 the same grant, and a path-keyed table can't say so. The check itself
-(`createPermissionGuard`, `$lib/features/auth/guard.server.ts`) throws rather than returning a
+(`createPermissionGuard`, `#lib/features/auth/guard.server.ts`) throws rather than returning a
 boolean - a 401 without a session, a 403 with one that lacks the permission - so there's nothing
 to forget to act on.
 
@@ -186,7 +204,7 @@ whole authorization model; there is no second place it could quietly disagree wi
 
 `src/lib/core/api.ts` builds an [air](https://github.com/imlargo/air) client from `config.api.baseUrl`
 and a token getter. Every feature's data access goes through a service that extends `BaseService`
-(`$lib/core/service.ts`) - nothing calls `fetch` directly from a component or a hook:
+(`#lib/core/service.ts`) - nothing calls `fetch` directly from a component or a hook:
 
 ```ts
 // src/lib/features/users/services/users.ts
@@ -210,7 +228,7 @@ every consumer that forgot to check.
 ## Data loading
 
 A slow API call must never freeze a navigation. Two patterns, both rendered with `AsyncView`
-(`$lib/components/blocks/AsyncView.svelte`) and a skeleton for the pending state:
+(`#lib/components/blocks/AsyncView.svelte`) and a skeleton for the pending state:
 
 | Pattern                  | When                                                | Reference                         |
 | ------------------------ | --------------------------------------------------- | --------------------------------- |
@@ -237,15 +255,33 @@ For the second pattern, pass a `Query` and run it in `onMount`: until it has run
 renders the skeleton, so the server-rendered page already shows it. Once there is data it stays on
 screen - searching or saving updates the list instead of blanking it - so a failed refetch is
 reported with a toast, while a failed first load is `AsyncView`'s error panel. Only the latest run
-writes its result, so a slow search cannot overwrite a newer one. Remote
-functions are deliberately not used.
+writes its result, so a slow search cannot overwrite a newer one. Remote functions are
+deliberately not used: they are still behind `experimental.remoteFunctions` in SvelteKit 3.
+
+## Forms
+
+Plain SvelteKit: no form library. A form that posts to the server is a form action enhanced with
+`use:enhance`; a form inside a client-side flow (a dialog that calls a service) handles its own
+`onsubmit`. Both validate with the feature's zod schema through `#lib/utils/forms.ts`:
+
+- `parseForm(schema, formData)` - the parsed data, or every message per field.
+- `validateField(schema, name, value)` - one field on its own, run when the user leaves it, so
+  feedback comes before the submit.
+
+Fields are laid out with shadcn's `Field` components and `Field.Error` shows the messages. The
+action answers with `fail(status, { ...errors })`, which reaches the page as its `form` prop - see
+`routes/(auth)/login/` and `features/auth/components/LoginForm.svelte` for a server action, and
+`features/users/components/UserFormDialog.svelte` for a client-side one. The server validates
+again regardless: the client check is for feedback, not for trust.
 
 ## Errors
 
-Every error becomes an `AppError` (`$lib/core/errors.ts`) whose `message` is always safe to
+Every error becomes an `AppError` (`#lib/core/errors.ts`) whose `message` is always safe to
 render: the backend's own message, or the default for its code - never the text of an exception.
-Unexpected errors also get an `errorId` in `handleError` (server and client), logged next to the
-full error and shown on the error page, so a screenshot from a user leads to the log line.
+`handleError` (server and client) receives every error, but only acts on the unexpected ones
+(`kind === 'unknown'`): those get an `errorId`, logged next to the full error and shown on the
+error page, so a screenshot from a user leads to the log line. An `error(403, ...)` keeps its own
+message, and SvelteKit's 404s are left alone.
 
 Errors are rendered at three levels:
 
@@ -268,7 +304,8 @@ Three layers:
 - **Server tests** (`*.test.ts`, Node): services, the auth hook, the permission matrix, endpoints.
 - **Component tests** (`*.svelte.test.ts`, a real Chromium tab via `@vitest/browser-playwright`):
   `features/auth/components/LoginForm.svelte.test.ts` is the reference. `test/setup-browser.ts`
-  gives components the `.env.test` values through `$env/dynamic/public`, as a real page would.
+  gives components the `.env.test` values through `$app/env/public`, parsed by the schemas in
+  `src/env.ts`, as a real page would.
   `src/lib/server/**` is excluded from this project on purpose.
 - **E2E smoke** (`e2e/*.e2e.ts`): builds the worker and runs it under `wrangler dev` with auth off,
   so it needs no backend. It covers booting, navigation, streaming, a create flow and the 404 page.
@@ -291,23 +328,22 @@ wrangler deploy
 `package.json`, before the first deploy. Workers Logs (`observability`) is on, so the `logger`'s
 output is searchable in the Cloudflare dashboard.
 
-Bindings are typed the way the
-[adapter docs](https://svelte.dev/docs/kit/adapter-cloudflare#Runtime-APIs) describe: declare each
-one in `wrangler.jsonc`, then add it to `App.Platform['env']` in `src/app.d.ts` with its type from
-`@cloudflare/workers-types` (`KVNamespace`, `R2Bucket`, ...). `ctx`, `caches` and `cf` are typed by
-the adapter. `wrangler types` is not used: its output changes depending on whether a build exists
-([sveltejs/cli#1096](https://github.com/sveltejs/cli/issues/1096)), which breaks `check` on a
-fresh clone.
+Bindings are typed by hand: declare each one in `wrangler.jsonc`, then add it to
+`App.Platform['env']` in `src/app.d.ts` with its type imported from `@cloudflare/workers-types`
+(`KVNamespace`, `R2Bucket`, ...), next to `ctx`, `caches` and `cf`. `wrangler types` is not used:
+it declares the Workers runtime types globally, and those redefine DOM types (`Element`,
+`Response`...) that components rely on, which breaks `check`.
 
 ## Customization checklist
 
-- [ ] Set `branding` in `$lib/config/app.ts` - name, logo, favicon and SEO all come from this one
+- [ ] Set `branding` in `#lib/config/app.ts` - name, logo, favicon and SEO all come from this one
       object, not from the pages that display them
 - [ ] Rename `"app"` to the project's real name in `package.json` and `wrangler.jsonc`
-- [ ] Add nav items in `$lib/config/navigation.ts` - each shows only to roles that may open its
+- [ ] Add nav items in `#lib/config/navigation.ts` - each shows only to roles that may open its
       route, read from the same table the hook enforces
-- [ ] Add permission keys, roles and the page-permission table in `$lib/config/permissions.ts`
+- [ ] Add permission keys, roles and the page-permission table in `#lib/config/permissions.ts`
 - [ ] Set `PUBLIC_API_URL` (and `PUBLIC_AUTH_BASE_URL`, if auth lives elsewhere) in `.env`
+- [ ] Declare any new environment variable in `src/env.ts`, never read from `process.env`
 - [ ] Add feature slices under `src/lib/features/`, following `features/users/` as the reference
       shape - `services/`, `schemas.ts`, `components/`, and `types.ts` once the slice has types of
       its own

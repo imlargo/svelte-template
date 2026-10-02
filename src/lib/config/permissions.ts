@@ -1,5 +1,5 @@
-import { UserRole } from '$lib/types/user';
-import { AUTH_ROUTES } from '$lib/config/routes';
+import { UserRole } from '#lib/types/user.js';
+import { AUTH_ROUTES } from '#lib/config/routes.js';
 
 /**
  * What can be done, as `resource:action`: a capability, not a place in the UI,

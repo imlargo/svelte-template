@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { KbdGroup } from '$lib/components/ui/kbd/index.js';
+import type { KbdGroup } from '#lib/components/ui/kbd/index.js';
 import type { KeyToken, Platform } from './keys.js';
 
 /** Everything the shadcn kbd group accepts - `class`, `aria-*`, `ref` - stays available. */

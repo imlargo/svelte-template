@@ -1,7 +1,7 @@
 import HomeIcon from '@lucide/svelte/icons/house';
 import ShieldIcon from '@lucide/svelte/icons/shield';
 import type { LucideIcon } from '@lucide/svelte';
-import type { Pathname } from '$app/types';
+import type { ResolvedPathname } from '$app/types';
 
 export enum NavigationGroup {
 	MAIN = 'main',
@@ -15,7 +15,7 @@ export enum NavigationGroup {
 export interface NavigationItem {
 	title: string;
 	icon: LucideIcon;
-	to: Pathname;
+	to: ResolvedPathname;
 	group: NavigationGroup;
 }
 

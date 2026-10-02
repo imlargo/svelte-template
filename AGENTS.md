@@ -5,7 +5,7 @@ obligatorias.
 
 ## Qué es este repo
 
-Template de SvelteKit 2 + Svelte 5 para proyectos de consultoría. Consume una API externa (no
+Template de SvelteKit 3 + Svelte 5 para proyectos de consultoría. Consume una API externa (no
 tiene base de datos) y trae resuelto lo aburrido: autenticación con cookies, permisos, layout con
 sidebar, formularios, componentes. No es un framework y no debería convertirse en uno: el objetivo
 es que se clone y se construya sin fricción ni sorpresas. Ver [`README.md`](./README.md) para el
@@ -28,7 +28,7 @@ inventar uno nuevo.
 - Ante ambigüedad entre dos enfoques válidos, elige el que ya predomina en el codebase; si el
   impacto es real y distinto entre ambos, pregunta en vez de asumir.
 - No introduzcas dependencias nuevas sin necesidad clara; verifica primero si algo existente
-  (`$lib/core`, `$lib/utils`, `$lib/hooks`) resuelve el problema.
+  (`#lib/core`, `#lib/utils`, `#lib/hooks`) resuelve el problema.
 - No arrastres deuda entre tareas: deja `pnpm run lint`, `pnpm run check` y `pnpm run test` en
   verde antes de dar algo por terminado.
 
@@ -47,25 +47,31 @@ inventar uno nuevo.
 ## Arquitectura / Código
 
 - **Services** son los únicos responsables de llamadas a la API. Nada de `fetch`/HTTP directo en
-  componentes o hooks. Un service extiende `BaseService` (`$lib/core/service.ts`) y vive en
+  componentes o hooks. Un service extiende `BaseService` (`#lib/core/service.ts`) y vive en
   `features/<slice>/services/` — ver `features/users/services/users.ts` como referencia.
 - **Composición sobre herencia** en componentes y hooks: piezas pequeñas y componibles. La
   excepción deliberada es la jerarquía de services (`extends BaseService`), que existe para
   compartir la resolución de token/cliente API entre todos los services.
 - **Prohibido magic strings:** usa constantes tipadas o `enum` para valores fijos, keys, rutas de
   API, estados. Las rutas a las que el código redirige o llama por path viven en
-  `$lib/config/routes.ts`. Para identidad de dominio con un conjunto cerrado de valores (`UserRole`), usa
+  `#lib/config/routes.ts`. Para identidad de dominio con un conjunto cerrado de valores (`UserRole`), usa
   `enum`. Para tags de capacidad tipo `"recurso:acción"` (`Permission` en
-  `$lib/config/permissions.ts`), un string-literal union con `as const satisfies` está bien —
+  `#lib/config/permissions.ts`), un string-literal union con `as const satisfies` está bien —
   sigue el patrón que ya usa la pieza equivalente antes de introducir uno nuevo.
+- **Variables de entorno:** toda variable se declara en `src/env.ts` (`defineEnvVars` + schema de
+  zod) y se lee de `$app/env/public` o `$app/env/private`. Nunca `process.env` ni los `$env/*`
+  (deprecados en SvelteKit 3).
+- **Links a rutas propias:** las rutas de `#lib/config/routes.ts` y `navigation.ts` llevan `/`
+  inicial porque se comparan con `url.pathname`; para un `href` pásalas por `resolvePathname()`
+  (`#lib/utils/paths.ts`), no por `resolve()`, que lee la `/` como route ID.
 
 ## Tipos
 
 - **Nunca `any`**, sin excepciones (tampoco `as any` para esquivar un error de tipos). Si el tipo
   real es complejo o viene de una respuesta externa, revisa la fuente (`features/<slice>/types.ts`,
-  `$lib/types/`) antes de tipar a mano. Si de verdad se desconoce la forma en tiempo de escritura,
+  `#lib/types/`) antes de tipar a mano. Si de verdad se desconoce la forma en tiempo de escritura,
   usa `unknown` y angosta el tipo antes de operar sobre él.
-- Antes de crear un tipo nuevo, busca si ya existe uno equivalente en `$lib/types/` (compartido por
+- Antes de crear un tipo nuevo, busca si ya existe uno equivalente en `#lib/types/` (compartido por
   más de un slice) o en `features/<slice>/types.ts` (propio de ese slice). Si algo parecido no es
   idéntico, verifica que sea el mismo concepto de dominio antes de reutilizarlo o fusionarlo.
 - Si no existe un tipo adecuado, créalo donde corresponda según el punto anterior — nunca inline ni
@@ -73,8 +79,8 @@ inventar uno nuevo.
 
 ## Estado
 
-- El estado compartido con runes vive en clases dentro de `$lib/hooks/` (`Disclosure`, `Filters`,
-  `Pagination`, `IsMobile`, en `$lib/hooks/*.svelte.ts`). Antes de crear uno nuevo, evalúa si el
+- El estado compartido con runes vive en clases dentro de `#lib/hooks/` (`Disclosure`, `Filters`,
+  `Pagination`, `IsMobile`, en `#lib/hooks/*.svelte.ts`). Antes de crear uno nuevo, evalúa si el
   estado es realmente compartido o si es local a un componente — en ese caso, un `$state` dentro
   del propio componente basta.
 - **`$state` a nivel de módulo está prohibido para datos que dependan del usuario.** En SSR los
@@ -92,11 +98,21 @@ inventar uno nuevo.
   `AsyncView` + skeleton. Referencia: `routes/(app)/+page.server.ts`.
 - Los datos que el usuario busca, filtra o edita en el mismo sitio los carga la propia página con
   `Query` + `AsyncView` (en `onMount`, no con `if (browser)`). Referencia: `routes/(app)/admin/`.
-- No se usan remote functions.
+- No se usan remote functions (siguen siendo experimentales en SvelteKit 3).
 - En el cliente, un service se crea con `getAuth().api`, nunca con un token suelto: así hereda la
   renovación de sesión y el manejo de 401. En el servidor, con `{ token: locals.accessToken, fetch }`.
 - Ningún componente maneja 401: la sesión expirada se renueva o redirige a login en
   `features/auth/transport.ts` y en el hook.
+
+## Formularios
+
+- Sin librería de formularios. Un form que envía al servidor es una form action con `use:enhance`;
+  uno dentro de un flujo de cliente (un dialog que llama a un service) maneja su propio `onsubmit`.
+  Referencias: `features/auth/components/LoginForm.svelte` y
+  `features/users/components/UserFormDialog.svelte`.
+- Se validan con el schema de zod del slice vía `#lib/utils/forms.ts` (`parseForm`,
+  `validateField`), y se maquetan con `Field` de shadcn. El servidor valida siempre, aunque el
+  cliente ya lo haya hecho.
 
 ## Errores
 
@@ -104,27 +120,29 @@ inventar uno nuevo.
   muestres `err.message` de un error sin normalizar.
 - Si un error es esperado, lánzalo como `AppError` con el código que corresponda. Un `Error`
   genérico se trata como un bug: se muestra el mensaje por defecto y el detalle va solo al log.
+- `handleError` recibe todos los errores, pero solo actúa sobre los inesperados
+  (`kind === 'unknown'`): un `error(403, ...)` ya trae su mensaje para el usuario.
 
 ## Permisos
 
 Deny by default: rol desconocido → sin permisos, ruta no declarada → denegada. Un olvido debe
 producir un 403, no un acceso. Al agregar una página o un permiso nuevo, decláralo explícitamente
-en `$lib/config/permissions.ts` — no hay un valor "sin restricción" que puedas usar por descuido.
+en `#lib/config/permissions.ts` — no hay un valor "sin restricción" que puedas usar por descuido.
 
 ## Convenciones de código
 
 - Sigue el naming y la estructura de carpetas existentes (verifica antes de crear archivos).
 - **Cero barrels:** nada de `index.ts` propio que reexporte. Importa por la ruta real, siempre
-  desde `$lib/...` (los `index.js` de `ui/` son la convención de shadcn, no una excepción a copiar).
+  desde `#lib/...` (los `index.js` de `ui/` son la convención de shadcn, no una excepción a copiar).
 - **Idiomático antes que ingenioso:** si SvelteKit ya lo resuelve (`afterNavigate`, `load`, form
   actions, `page.url`), se usa eso. `$effect` es para sincronizar con algo externo a Svelte, nunca
   para comunicar componentes ni derivar valores.
 - Mantén los componentes enfocados: si uno crece en responsabilidades, extrae subcomponentes o
-  hooks. La lógica reutilizable vive en `$lib/hooks/` o `$lib/utils/`, no duplicada en componentes.
+  hooks. La lógica reutilizable vive en `#lib/hooks/` o `#lib/utils/`, no duplicada en componentes.
 - Si una función es pura y sin estado (formateo, validación, transformación) y es probable que se
-  use en más de un lugar, extráela a `$lib/utils/`; si tiene estado/reactividad, a `$lib/hooks/`.
+  use en más de un lugar, extráela a `#lib/utils/`; si tiene estado/reactividad, a `#lib/hooks/`.
   Antes de crear una nueva, revisa si ya existe algo equivalente ahí.
-- **Baterías incluidas, abstracciones no:** `$lib/hooks/`, `$lib/utils/` y `coral/` traen piezas
+- **Baterías incluidas, abstracciones no:** `#lib/hooks/`, `#lib/utils/` y `coral/` traen piezas
   genéricas que un proyecto puede no usar todavía, a propósito: son el punto de partida del
   template, no código muerto. Fuera de ellas, nada de abstracciones "por si acaso" — la tercera
   repetición justifica una abstracción, la primera y la segunda no.

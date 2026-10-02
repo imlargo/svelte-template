@@ -15,11 +15,11 @@
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
-	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import * as Table from '#lib/components/ui/table/index.js';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { cn } from '#lib/utils.js';
 	import { focusRing } from '../../lib/focus.js';
 	import { idsBetween, nextSort, selectionState, toggleAll, toggleId } from '../../lib/table.js';
 	import type { DataTableProps } from './types.js';

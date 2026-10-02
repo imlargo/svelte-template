@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { CommandDialog } from '$lib/components/ui/command/index.js';
+import type { CommandDialog } from '#lib/components/ui/command/index.js';
 import type { CommandAction } from './actions.js';
 
 /** What the `action` snippet receives. */

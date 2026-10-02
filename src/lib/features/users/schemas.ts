@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole } from '$lib/types/user';
+import { UserRole } from '#lib/types/user.js';
 
 export const UserFormSchema = z.object({
 	name: z.string().trim().min(2, 'Name must be at least 2 characters.').max(80),

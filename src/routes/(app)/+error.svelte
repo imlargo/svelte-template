@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import ErrorState from '$lib/components/blocks/ErrorState.svelte';
+	import ErrorState from '#lib/components/blocks/ErrorState.svelte';
 </script>
 
 <!-- Rendered inside the (app) layout, so an error in one page keeps the sidebar

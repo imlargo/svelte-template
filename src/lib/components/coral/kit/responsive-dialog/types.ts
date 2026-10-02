@@ -5,13 +5,13 @@
 
 import type { ComponentProps, Snippet } from 'svelte';
 import type { HTMLAttributes } from 'svelte/elements';
-import type { Dialog, DialogContent } from '$lib/components/ui/dialog/index.js';
+import type { Dialog, DialogContent } from '#lib/components/ui/dialog/index.js';
 import type {
 	DialogClose,
 	DialogDescription,
 	DialogTitle,
 	DialogTrigger
-} from '$lib/components/ui/dialog/index.js';
+} from '#lib/components/ui/dialog/index.js';
 
 export type ResponsiveDialogProps = Omit<ComponentProps<typeof Dialog>, 'children'> & {
 	/**

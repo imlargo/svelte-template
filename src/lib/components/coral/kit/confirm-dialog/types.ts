@@ -4,8 +4,8 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { AlertDialog } from '$lib/components/ui/alert-dialog/index.js';
-import type { ButtonVariant } from '$lib/components/ui/button/index.js';
+import type { AlertDialog } from '#lib/components/ui/alert-dialog/index.js';
+import type { ButtonVariant } from '#lib/components/ui/button/index.js';
 
 /** Everything the shadcn alert-dialog root accepts - `open`, `onOpenChange` - stays available. */
 type RootProps = Omit<ComponentProps<typeof AlertDialog>, 'children'>;

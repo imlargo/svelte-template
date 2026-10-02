@@ -4,9 +4,9 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Calendar } from '$lib/components/ui/calendar/index.js';
-import type { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
-import type { PopoverContent } from '$lib/components/ui/popover/index.js';
+import type { Calendar } from '#lib/components/ui/calendar/index.js';
+import type { RangeCalendar } from '#lib/components/ui/range-calendar/index.js';
+import type { PopoverContent } from '#lib/components/ui/popover/index.js';
 import type { TriggerAttributes } from '../../lib/trigger.js';
 import type { Preset } from './presets.js';
 

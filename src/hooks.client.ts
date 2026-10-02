@@ -1,10 +1,10 @@
-import type { HandleClientError } from '@sveltejs/kit';
-import { logger } from '$lib/core/logger';
+import type { HandleClientError } from '@sveltejs/kit/hooks';
+import { logger } from '#lib/core/logger.js';
 
 // The client twin of the server's handleError: same safe message, same kind of
 // id, so a report from the browser can be matched with its console line.
-export const handleError: HandleClientError = ({ error, status }) => {
-	if (status === 404) return { message: 'Not found.' };
+export const handleError: HandleClientError = ({ kind, error }) => {
+	if (kind !== 'unknown') return;
 
 	const errorId = createErrorId();
 	return { message: logger.error('client', error, { errorId }), errorId };

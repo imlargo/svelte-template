@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { AvatarGroup } from '$lib/components/ui/avatar/index.js';
+import type { AvatarGroup } from '#lib/components/ui/avatar/index.js';
 
 /** What the default avatar reads from an item. The same fields `kit/avatar` takes. */
 export type AvatarStackPerson = {

@@ -1,31 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { actions } from './+page.server';
-import { AppError } from '$lib/core/errors';
-import { encodeRedirect } from '$lib/features/auth/redirect';
+import { AppError } from '#lib/core/errors.js';
+import { encodeRedirect } from '#lib/features/auth/redirect.js';
 
 const { login, logError } = vi.hoisted(() => ({ login: vi.fn(), logError: vi.fn() }));
 
-vi.mock('$lib/features/auth/services/auth', () => ({
+vi.mock('#lib/features/auth/services/auth.js', () => ({
 	AuthService: class {
 		login = login;
 	}
 }));
 
-vi.mock('$lib/core/logger', () => ({
+vi.mock('#lib/core/logger.js', () => ({
 	logger: { error: logError, warn: vi.fn(), info: vi.fn() }
 }));
 
 const TOKENS = { access_token: 'access', refresh_token: 'refresh', expires_at: 0 };
 
-async function submitLogin(search = '') {
+async function submitLogin(
+	search = '',
+	fields: Record<string, string> = { email: 'ada@example.com', password: 'secret' }
+) {
 	const set: Record<string, string> = {};
 	const url = new URL(`http://localhost/login?/login${search}`);
 	const event = {
 		url,
 		request: new Request(url, {
 			method: 'POST',
-			body: new URLSearchParams({ email: 'ada@example.com', password: 'secret' })
+			body: new URLSearchParams(fields)
 		}),
 		cookies: {
 			set: (name: string, value: string) => {
@@ -72,9 +75,19 @@ describe('login action', () => {
 		expect(isActionFailure(result)).toBe(true);
 		expect(result).toMatchObject({
 			status: 401,
-			data: { form: { message: 'Invalid email or password.' } }
+			data: { email: 'ada@example.com', message: 'Invalid email or password.' }
 		});
 		expect(logError).not.toHaveBeenCalled();
+	});
+
+	it('answers every invalid field without calling the backend', async () => {
+		const { result } = await submitLogin('', { email: 'nope', password: '' });
+
+		expect(result).toMatchObject({
+			status: 400,
+			data: { email: 'nope', errors: { email: expect.any(Array), password: expect.any(Array) } }
+		});
+		expect(login).not.toHaveBeenCalled();
 	});
 
 	it('does not blame the password when the backend is down', async () => {

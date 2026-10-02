@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Select, SelectTrigger } from '$lib/components/ui/select/index.js';
+import type { Select, SelectTrigger } from '#lib/components/ui/select/index.js';
 import type { Option, Options } from '../../lib/options.js';
 import type { TriggerAttributes } from '../../lib/trigger.js';
 

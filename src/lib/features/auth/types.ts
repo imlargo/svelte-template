@@ -1,4 +1,4 @@
-import type { User } from '$lib/types/user';
+import type { User } from '#lib/types/user.js';
 
 /** Token pair as the API returns it. */
 export interface AuthTokensResponse {

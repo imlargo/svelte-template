@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { InputGroupInput } from '$lib/components/ui/input-group/index.js';
+import type { InputGroupInput } from '#lib/components/ui/input-group/index.js';
 
 /**
  * Everything the shadcn input accepts - `name`, `id`, `placeholder`, `aria-*`, `ref` - stays

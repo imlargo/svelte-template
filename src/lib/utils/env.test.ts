@@ -1,30 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { flag, parseEnv, unset } from './env';
+import { flag, unset } from './env';
 
-const Schema = z.object({
-	URL: z.url(),
-	ENABLED: flag(true),
-	NAME: z.preprocess(unset, z.string().default('fallback'))
+describe('flag', () => {
+	it('takes the fallback when missing or empty', () => {
+		expect(flag(true).parse(undefined)).toBe(true);
+		expect(flag(false).parse('')).toBe(false);
+	});
+
+	it('accepts exactly true or false', () => {
+		expect(flag(true).parse('false')).toBe(false);
+		expect(flag(false).parse('true')).toBe(true);
+		expect(flag(true).safeParse('yes').success).toBe(false);
+		expect(flag(true).safeParse('TRUE').success).toBe(false);
+	});
 });
 
-describe('parseEnv', () => {
-	it('applies defaults to missing and empty variables', () => {
-		expect(parseEnv(Schema, { URL: 'http://api.test', NAME: '' })).toEqual({
-			URL: 'http://api.test',
-			ENABLED: true,
-			NAME: 'fallback'
-		});
+describe('unset', () => {
+	it('lets an empty value fall back to the default', () => {
+		expect(unset(z.string().default('fallback')).parse('')).toBe('fallback');
 	});
 
-	it('accepts exactly true or false as a flag', () => {
-		expect(parseEnv(Schema, { URL: 'http://api.test', ENABLED: 'false' }).ENABLED).toBe(false);
-		expect(() => parseEnv(Schema, { URL: 'http://api.test', ENABLED: 'yes' })).toThrow(/ENABLED/);
-	});
-
-	it('names every invalid variable in one error', () => {
-		expect(() => parseEnv(Schema, { URL: 'not a url', ENABLED: '1' })).toThrow(
-			/URL:[\s\S]*ENABLED:/
-		);
+	it('still validates a value that is set', () => {
+		expect(unset(z.url().optional()).safeParse('not a url').success).toBe(false);
 	});
 });

@@ -4,8 +4,8 @@
 	 * @version 1.0.0
 	 */
 	import { MediaQuery } from 'svelte/reactivity';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Drawer from '#lib/components/ui/drawer/index.js';
 	import { setResponsiveDialog } from './context.js';
 	import type { ResponsiveDialogProps } from './types.js';
 

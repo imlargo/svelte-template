@@ -1,7 +1,10 @@
-import { config } from '$lib/config/app';
-import { AUTH_ROUTES } from '$lib/config/routes';
+import { config } from '#lib/config/app.js';
+import { AUTH_ROUTES } from '#lib/config/routes.js';
 
-const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
+/** Allowed by the login action's redirect: SvelteKit refuses external ones unless listed. */
+export const GOOGLE_AUTH_ORIGIN = 'https://accounts.google.com';
+
+const GOOGLE_AUTH_ENDPOINT = `${GOOGLE_AUTH_ORIGIN}/o/oauth2/v2/auth`;
 
 /** Set on the login URL when the OAuth callback could not complete the sign-in. */
 export const OAUTH_FAILED_PARAM = 'error';

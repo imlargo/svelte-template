@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
 import { createPermissionGuard } from './guard.server';
-import type { Permission } from '$lib/config/permissions';
-import { UserRole, type User } from '$lib/types/user';
+import type { Permission } from '#lib/config/permissions.js';
+import { UserRole, type User } from '#lib/types/user.js';
 
 // The guard is the enforcement point: every protected route calls it, so what
 // it lets through is what the app lets through.

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import ErrorState from '$lib/components/blocks/ErrorState.svelte';
+	import ErrorState from '#lib/components/blocks/ErrorState.svelte';
 </script>
 
 <!-- Outside the app shell: auth pages, and anything the (app) boundary cannot catch. -->

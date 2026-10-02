@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
-	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
-	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
-	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-	import { AppError } from '$lib/core/errors';
-	import { createQuery } from '$lib/core/query.svelte';
+	import PageHeader from '#lib/components/blocks/PageHeader.svelte';
+	import DocumentTitle from '#lib/components/blocks/DocumentTitle.svelte';
+	import AsyncView from '#lib/components/blocks/AsyncView.svelte';
+	import EmptyState from '#lib/components/blocks/EmptyState.svelte';
+	import * as Card from '#lib/components/ui/card/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { AppError } from '#lib/core/errors.js';
+	import { createQuery } from '#lib/core/query.svelte.js';
 	import { toast } from 'svelte-sonner';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';

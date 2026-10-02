@@ -15,14 +15,15 @@
  * The token is never inspected here: the backend that issued it is the
  * authority, and asking it (`/auth/me`) also yields the user's current role.
  */
-import { error, redirect, type Cookies, type Handle } from '@sveltejs/kit';
-import { config } from '$lib/config/app';
-import { AUTH_ROUTE_PERMISSIONS, PUBLIC_ROUTE_PREFIXES } from '$lib/config/permissions';
-import { API_ROUTE_PREFIX, AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
-import { isPrefixOf, permissionForRoute } from '$lib/core/permissions';
-import { normalizeError } from '$lib/core/errors';
-import { logger } from '$lib/core/logger';
-import type { User } from '$lib/types/user';
+import { error, redirect, type Cookies } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
+import { config } from '#lib/config/app.js';
+import { AUTH_ROUTE_PERMISSIONS, PUBLIC_ROUTE_PREFIXES } from '#lib/config/permissions.js';
+import { API_ROUTE_PREFIX, AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
+import { isPrefixOf, permissionForRoute } from '#lib/core/permissions.js';
+import { normalizeError } from '#lib/core/errors.js';
+import { logger } from '#lib/core/logger.js';
+import type { User } from '#lib/types/user.js';
 import { AuthService } from './services/auth';
 import { createPermissionGuard } from './guard.server';
 import { REDIRECT_PARAM, encodeRedirect } from './redirect';

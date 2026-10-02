@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import { cn } from '$lib/utils';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		title,

@@ -3,7 +3,7 @@
 	 * @coral/kit/avatar
 	 * @version 1.0.0
 	 */
-	import { Avatar as Root, AvatarFallback, AvatarImage } from '$lib/components/ui/avatar/index.js';
+	import { Avatar as Root, AvatarFallback, AvatarImage } from '#lib/components/ui/avatar/index.js';
 	import { initials } from './initials.js';
 	import type { AvatarProps } from './types.js';
 

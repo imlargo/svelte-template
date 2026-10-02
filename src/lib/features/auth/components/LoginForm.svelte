@@ -1,22 +1,22 @@
 <script lang="ts">
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils';
-	import { config } from '$lib/config/app';
-	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
-	import { untrack } from 'svelte';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { LoginSchema } from '$lib/features/auth/schemas';
-	import { REDIRECT_PARAM } from '$lib/features/auth/redirect';
+	import { enhance } from '$app/forms';
+	import * as Field from '#lib/components/ui/field/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
+	import { config } from '#lib/config/app.js';
+	import { LoginSchema, type LoginFailure, type LoginInput } from '#lib/features/auth/schemas.js';
+	import { REDIRECT_PARAM } from '#lib/features/auth/redirect.js';
+	import { toFieldErrors, validateField, type FieldErrors } from '#lib/utils/forms.js';
 
 	let {
-		form: formData,
+		form = null,
 		signInError = null,
 		redirect = null,
 		class: className
 	}: {
-		form: SuperValidated<Infer<typeof LoginSchema>>;
+		/** The login action's answer when it did not sign the user in. */
+		form?: LoginFailure | null;
 		/** Set when the user comes back from a failed OAuth round trip. */
 		signInError?: string | null;
 		/** The encoded `?redirect=` value, carried to both actions. */
@@ -30,14 +30,13 @@
 		redirect ? `&${new URLSearchParams({ [REDIRECT_PARAM]: redirect })}` : ''
 	);
 
-	const form = superForm(
-		untrack(() => formData),
-		{
-			validators: zod4Client(LoginSchema),
-			invalidateAll: false
-		}
-	);
-	const { form: fields, message, enhance } = form;
+	// The server's verdict, until the user edits a field and gets a fresh one.
+	let errors = $derived<FieldErrors<LoginInput>>(form?.errors ?? {});
+
+	function validate(event: Event & { currentTarget: HTMLInputElement }) {
+		const { name, value } = event.currentTarget;
+		errors = { ...errors, [name]: validateField(LoginSchema, name as keyof LoginInput, value) };
+	}
 
 	const showPassword = config.auth.methods.password;
 	const showGoogle = config.auth.methods.google.enabled;
@@ -57,9 +56,9 @@
 		</p>
 	</div>
 
-	{#if $message || signInError}
+	{#if form?.message || signInError}
 		<p class="rounded-md bg-destructive/10 px-3 py-2 text-center text-sm text-destructive">
-			{$message ?? signInError}
+			{form?.message ?? signInError}
 		</p>
 	{/if}
 
@@ -94,39 +93,38 @@
 	{/if}
 
 	{#if showPassword}
-		<form method="POST" action="?/login{actionQuery}" use:enhance class="grid gap-6">
-			<Form.Field {form} name="email">
-				<Form.Control>
-					{#snippet children({ props })}
-						<Form.Label>Email</Form.Label>
-						<Input
-							{...props}
-							type="email"
-							placeholder="you@example.com"
-							autocomplete="email"
-							bind:value={$fields.email}
-						/>
-					{/snippet}
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
+		<form method="POST" action="?/login{actionQuery}" use:enhance novalidate>
+			<Field.Group>
+				<Field.Field data-invalid={errors.email ? true : undefined}>
+					<Field.Label for="email">Email</Field.Label>
+					<Input
+						id="email"
+						name="email"
+						type="email"
+						placeholder="you@example.com"
+						autocomplete="email"
+						value={form?.email ?? ''}
+						aria-invalid={errors.email ? true : undefined}
+						onchange={validate}
+					/>
+					<Field.Error errors={toFieldErrors(errors.email)} />
+				</Field.Field>
 
-			<Form.Field {form} name="password">
-				<Form.Control>
-					{#snippet children({ props })}
-						<Form.Label>Password</Form.Label>
-						<Input
-							{...props}
-							type="password"
-							autocomplete="current-password"
-							bind:value={$fields.password}
-						/>
-					{/snippet}
-				</Form.Control>
-				<Form.FieldErrors />
-			</Form.Field>
+				<Field.Field data-invalid={errors.password ? true : undefined}>
+					<Field.Label for="password">Password</Field.Label>
+					<Input
+						id="password"
+						name="password"
+						type="password"
+						autocomplete="current-password"
+						aria-invalid={errors.password ? true : undefined}
+						onchange={validate}
+					/>
+					<Field.Error errors={toFieldErrors(errors.password)} />
+				</Field.Field>
 
-			<Button type="submit" class="w-full">Sign in</Button>
+				<Button type="submit" class="w-full">Sign in</Button>
+			</Field.Group>
 		</form>
 	{/if}
 </div>

@@ -5,7 +5,7 @@
 	 */
 	import { tick } from 'svelte';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { focusRingInset } from '../../lib/focus.js';
 	import { ancestorsOf, expandableSiblings, typeahead, visibleRows } from './tree.js';
 	import type { TreeRow } from './tree.js';

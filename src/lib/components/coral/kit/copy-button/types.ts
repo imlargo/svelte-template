@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Button } from '$lib/components/ui/button/index.js';
+import type { Button } from '#lib/components/ui/button/index.js';
 import type { CopySource } from './clipboard.js';
 
 /** Where a copy stands. `copied` and `failed` fall back to `idle` after `timeout`. */

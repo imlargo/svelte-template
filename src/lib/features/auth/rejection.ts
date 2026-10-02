@@ -1,4 +1,4 @@
-import { normalizeError } from '$lib/core/errors';
+import { normalizeError } from '#lib/core/errors.js';
 
 /**
  * Whether the backend refused the credentials, as opposed to failing to

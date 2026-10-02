@@ -4,9 +4,9 @@
 	 * @version 1.0.0
 	 */
 	import XIcon from '@lucide/svelte/icons/x';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 	import HiddenField from '../../lib/hidden-field.svelte';
 	import { flatten, toGroups } from '../../lib/options.js';
 	import type { SelectProps } from './types.js';

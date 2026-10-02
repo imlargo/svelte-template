@@ -3,8 +3,8 @@
 	 * @coral/kit/confirm-dialog
 	 * @version 1.0.0
 	 */
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { Action } from '../../lib/action.svelte.js';
 	import type { ConfirmDialogProps } from './types.js';
 

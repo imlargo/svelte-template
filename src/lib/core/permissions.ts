@@ -1,6 +1,6 @@
 /**
  * Role-based access checks, project-agnostic: the data is always passed in
- * (see `$lib/config/permissions`). These answer questions; enforcement is
+ * (see `#lib/config/permissions`). These answer questions; enforcement is
  * `locals.requirePermission` (`features/auth/guard.server.ts`).
  */
 

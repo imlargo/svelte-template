@@ -3,7 +3,7 @@
 	 * @coral/kit/stepper
 	 * @version 1.0.0
 	 */
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { getStepper } from './context.js';
 	import type { StepperContentProps } from './types.js';
 

@@ -3,8 +3,8 @@
 	 * @coral/kit/activity-calendar
 	 * @version 1.0.0
 	 */
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
+	import { cn } from '#lib/utils.js';
 	import { dateTimeFormat } from '../../lib/intl.js';
 	import { focusRingTight } from '../../lib/focus.js';
 	import { weekdayAt } from './dates.js';

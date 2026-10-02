@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
-	import { AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
+	import { resolvePathname } from '#lib/utils/paths.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import DocumentTitle from '#lib/components/blocks/DocumentTitle.svelte';
+	import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
 
 	let {
 		status,
@@ -40,8 +40,8 @@
 		</p>
 	{/if}
 	{#if status === 401}
-		<Button href={resolve(AUTH_ROUTES.login)} variant="outline">Sign in</Button>
+		<Button href={resolvePathname(AUTH_ROUTES.login)} variant="outline">Sign in</Button>
 	{:else}
-		<Button href={resolve(HOME_ROUTE)} variant="outline">Go home</Button>
+		<Button href={resolvePathname(HOME_ROUTE)} variant="outline">Go home</Button>
 	{/if}
 </div>

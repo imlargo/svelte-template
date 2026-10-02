@@ -1,6 +1,6 @@
 import { create } from '@imlargo/air';
 import type { AirClient, Fetch } from '@imlargo/air';
-import { config } from '$lib/config/app';
+import { config } from '#lib/config/app.js';
 
 /** A fixed token, or a getter read on every request so a renewed one is picked up. */
 type TokenSource = string | null | undefined | (() => string | null | undefined);

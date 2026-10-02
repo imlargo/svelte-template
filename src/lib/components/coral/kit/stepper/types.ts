@@ -5,7 +5,7 @@
 
 import type { ComponentProps, Snippet } from 'svelte';
 import type { HTMLAttributes, HTMLOlAttributes } from 'svelte/elements';
-import type { Button } from '$lib/components/ui/button/index.js';
+import type { Button } from '#lib/components/ui/button/index.js';
 import type { StepperContext } from './context.js';
 import type { StepState } from './steps.js';
 

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { config } from '$lib/config/app';
-	import { NAVIGATION_ITEMS } from '$lib/config/navigation';
-	import { isPrefixOf } from '$lib/core/permissions';
+	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import { config } from '#lib/config/app.js';
+	import { NAVIGATION_ITEMS } from '#lib/config/navigation.js';
+	import { isPrefixOf } from '#lib/core/permissions.js';
 
 	// Deepest route first, so a nested page takes its closest entry's title.
 	const byDepth = [...NAVIGATION_ITEMS].sort((a, b) => b.to.length - a.to.length);

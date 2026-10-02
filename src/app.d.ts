@@ -1,21 +1,29 @@
-import type { Fetcher } from '@cloudflare/workers-types';
-import type { User } from '$lib/types/user';
-import type { RequirePermission } from '$lib/features/auth/guard.server';
+import type {
+	CacheStorage,
+	ExecutionContext,
+	Fetcher,
+	IncomingRequestCfProperties
+} from '@cloudflare/workers-types';
+import type { User } from '#lib/types/user.js';
+import type { RequirePermission } from '#lib/features/auth/guard.server.js';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
 	namespace App {
-		// `env` holds the bindings declared in wrangler.jsonc, typed with
-		// @cloudflare/workers-types; the adapter types `ctx`, `caches` and `cf`.
+		// Imported, not global: the Workers runtime types redefine DOM ones
+		// (`Element`, `Response`...) and would break components that use them.
+		// `env` holds the bindings declared in wrangler.jsonc.
 		interface Platform {
 			env: {
 				ASSETS: Fetcher;
 			};
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf?: IncomingRequestCfProperties;
 		}
 
 		interface Error {
-			message: string;
 			/** Set by `handleError` for unexpected errors, and logged alongside them. */
 			errorId?: string;
 		}

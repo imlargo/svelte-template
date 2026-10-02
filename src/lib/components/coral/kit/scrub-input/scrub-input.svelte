@@ -3,8 +3,8 @@
 	 * @coral/kit/scrub-input
 	 * @version 1.0.0
 	 */
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { cn } from '#lib/utils.js';
 	import { decimalsOf } from '../../lib/number.js';
 	import { numberField, numberFieldClass } from '../../lib/number-field.js';
 	import { amountFor, consume } from './scrub.js';

@@ -12,4 +12,4 @@ src/lib/components/ui/
 # Agent tooling — written by the tools, not by us
 .claude/
 .agents/
-shadcn-svelte/
+skills-lock.json

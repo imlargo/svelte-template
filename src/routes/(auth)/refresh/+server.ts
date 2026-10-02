@@ -4,13 +4,13 @@
  * so only the server can spend it. Public to the hook because it
  * authenticates itself with that cookie.
  */
-import { error, json } from '@sveltejs/kit';
-import { config } from '$lib/config/app';
-import { logger } from '$lib/core/logger';
-import { isCredentialRejection } from '$lib/features/auth/rejection';
-import { renewSession } from '$lib/features/auth/renew.server';
-import { clearSession, getSession, type Session } from '$lib/features/auth/session.server';
-import type { RefreshedSession } from '$lib/features/auth/types';
+import { error } from '@sveltejs/kit';
+import { config } from '#lib/config/app.js';
+import { logger } from '#lib/core/logger.js';
+import { isCredentialRejection } from '#lib/features/auth/rejection.js';
+import { renewSession } from '#lib/features/auth/renew.server.js';
+import { clearSession, getSession, type Session } from '#lib/features/auth/session.server.js';
+import type { RefreshedSession } from '#lib/features/auth/types.js';
 import type { RequestHandler } from './$types';
 
 const SESSION_EXPIRED = 'Your session has expired. Sign in again.';
@@ -33,5 +33,5 @@ export const POST: RequestHandler = async ({ cookies }) => {
 		error(503, 'Cannot renew your session right now. Please try again in a moment.');
 	}
 
-	return json({ accessToken: renewed.accessToken } satisfies RefreshedSession);
+	return Response.json({ accessToken: renewed.accessToken } satisfies RefreshedSession);
 };

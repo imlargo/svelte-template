@@ -14,7 +14,9 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			// Not under Vitest: its dev emulation starts a workerd per test project,
+			// which the tests never use and which keeps the process from exiting.
+			adapter: process.env.VITEST ? undefined : adapter()
 		})
 	],
 	test: {
@@ -31,7 +33,7 @@ export default defineConfig({
 					},
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
 					exclude: ['src/lib/server/**'],
-					// See test/setup-browser.ts: components read $env/dynamic/public.
+					// See test/setup-browser.ts: components read $app/env/public.
 					env: loadEnv('test', process.cwd(), 'PUBLIC_'),
 					setupFiles: ['./test/setup-browser.ts']
 				}

@@ -26,3 +26,4 @@ test-results
 
 # Husky
 .husky/_
+worker-configuration.d.ts

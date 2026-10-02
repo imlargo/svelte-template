@@ -6,9 +6,9 @@
 	import { untrack } from 'svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import XIcon from '@lucide/svelte/icons/x';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import { Spinner } from '$lib/components/ui/spinner/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import { cn } from '#lib/utils.js';
 	import { debounce } from '../../lib/debounce.js';
 	import { effectiveTerm, hasChanged } from './term.js';
 	import type { SearchInputProps } from './types.js';

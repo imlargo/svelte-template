@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { ROLE_PERMISSIONS, type Permission } from '$lib/config/permissions';
-import { hasPermission } from '$lib/core/permissions';
-import type { User } from '$lib/types/user';
+import { ROLE_PERMISSIONS, type Permission } from '#lib/config/permissions.js';
+import { hasPermission } from '#lib/core/permissions.js';
+import type { User } from '#lib/types/user.js';
 
 export type RequirePermission = (permission: Permission) => void;
 

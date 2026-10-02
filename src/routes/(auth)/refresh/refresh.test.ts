@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
 import { POST } from './+server';
-import { AppError } from '$lib/core/errors';
+import { AppError } from '#lib/core/errors.js';
 
 // The browser's only way to renew a session. What it does with a dead refresh
 // token and with an outage mirrors the hook, and is asserted the same way.
@@ -11,18 +11,18 @@ const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 const { refreshFlag } = vi.hoisted(() => ({ refreshFlag: { enabled: false } }));
 
 // A test-owned flag in place of the real config's, which stays untouched.
-vi.mock('$lib/config/app', async (importOriginal) => {
-	const { config } = await importOriginal<typeof import('$lib/config/app')>();
+vi.mock('#lib/config/app.js', async (importOriginal) => {
+	const { config } = await importOriginal<typeof import('#lib/config/app.js')>();
 	return { config: { ...config, auth: { ...config.auth, refresh: refreshFlag } } };
 });
 
-vi.mock('$lib/features/auth/services/auth', () => ({
+vi.mock('#lib/features/auth/services/auth.js', () => ({
 	AuthService: class {
 		refresh = refresh;
 	}
 }));
 
-vi.mock('$lib/core/logger', () => ({
+vi.mock('#lib/core/logger.js', () => ({
 	logger: { error: vi.fn(() => 'logged'), warn: vi.fn(), info: vi.fn() }
 }));
 

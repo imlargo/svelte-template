@@ -5,8 +5,8 @@
 	 */
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { cn } from '#lib/utils.js';
 	import { decimalsOf } from '../../lib/number.js';
 	import { numberField, numberFieldClass } from '../../lib/number-field.js';
 	import type { NumberInputProps } from './types.js';

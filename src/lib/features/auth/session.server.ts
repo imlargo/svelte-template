@@ -4,44 +4,35 @@
  * The cookie lifetime is not the token lifetime: the backend decides when an
  * access token expires, and the hook finds out on the next `/auth/me`.
  */
-import { env } from '$env/dynamic/private';
+import {
+	AUTH_COOKIE_DOMAIN,
+	AUTH_COOKIE_MAX_AGE,
+	AUTH_COOKIE_SAMESITE,
+	AUTH_COOKIE_SECURE
+} from '$app/env/private';
 import type { Cookies } from '@sveltejs/kit';
 import { z } from 'zod';
-import { flag, parseEnv, unset } from '$lib/utils/env';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 const OAUTH_STATE_COOKIE = 'oauth_state';
 
-const DEFAULT_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 /** Long enough for the round trip to the provider, short enough to be useless later. */
 const OAUTH_STATE_MAX_AGE = 60 * 10;
-
-const CookieEnvSchema = z.object({
-	AUTH_COOKIE_DOMAIN: z.preprocess(unset, z.string().optional()),
-	AUTH_COOKIE_SECURE: flag(true),
-	AUTH_COOKIE_MAX_AGE: z.preprocess(
-		unset,
-		z.coerce.number().int().positive().default(DEFAULT_MAX_AGE)
-	),
-	AUTH_COOKIE_SAMESITE: z.preprocess(unset, z.enum(['lax', 'strict', 'none']).default('lax'))
-});
-
-const cookieEnv = parseEnv(CookieEnvSchema, env);
 
 function cookieOptions(maxAge: number) {
 	return {
 		path: '/',
 		httpOnly: true,
-		secure: cookieEnv.AUTH_COOKIE_SECURE,
-		sameSite: cookieEnv.AUTH_COOKIE_SAMESITE,
-		domain: cookieEnv.AUTH_COOKIE_DOMAIN,
+		secure: AUTH_COOKIE_SECURE,
+		sameSite: AUTH_COOKIE_SAMESITE,
+		domain: AUTH_COOKIE_DOMAIN,
 		maxAge
 	} as const;
 }
 
 function deleteCookie(cookies: Cookies, name: string): void {
-	cookies.delete(name, { path: '/', domain: cookieEnv.AUTH_COOKIE_DOMAIN });
+	cookies.delete(name, { path: '/', domain: AUTH_COOKIE_DOMAIN });
 }
 
 export interface Session {
@@ -58,7 +49,7 @@ export function getSession(cookies: Cookies): Session | null {
 }
 
 export function setSession(cookies: Cookies, session: Session): void {
-	const options = cookieOptions(cookieEnv.AUTH_COOKIE_MAX_AGE);
+	const options = cookieOptions(AUTH_COOKIE_MAX_AGE);
 	cookies.set(ACCESS_TOKEN_COOKIE, session.accessToken, options);
 	cookies.set(REFRESH_TOKEN_COOKIE, session.refreshToken, options);
 }
