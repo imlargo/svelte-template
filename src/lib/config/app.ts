@@ -10,7 +10,7 @@ export interface AppConfig {
 		baseUrl: string;
 	};
 	auth: {
-		/** Base URL when auth lives on its own host. Empty falls back to the data API. */
+		/** The auth service's base URL: `PUBLIC_AUTH_BASE_URL`, or the data API when unset. */
 		baseUrl: string;
 		enabled: boolean;
 		methods: {
@@ -44,7 +44,7 @@ export interface AppConfig {
 const PublicEnvSchema = z
 	.object({
 		PUBLIC_API_URL: z.url(),
-		PUBLIC_AUTH_BASE_URL: z.preprocess(unset, z.url().default('')),
+		PUBLIC_AUTH_BASE_URL: z.preprocess(unset, z.url().optional()),
 		PUBLIC_AUTH_ENABLED: flag(true),
 		PUBLIC_AUTH_PASSWORD_ENABLED: flag(true),
 		PUBLIC_AUTH_GOOGLE_ENABLED: flag(false),
@@ -71,7 +71,7 @@ export const config: AppConfig = {
 		baseUrl: publicEnv.PUBLIC_API_URL
 	},
 	auth: {
-		baseUrl: publicEnv.PUBLIC_AUTH_BASE_URL,
+		baseUrl: publicEnv.PUBLIC_AUTH_BASE_URL ?? publicEnv.PUBLIC_API_URL,
 		enabled: publicEnv.PUBLIC_AUTH_ENABLED,
 		methods: {
 			password: publicEnv.PUBLIC_AUTH_PASSWORD_ENABLED,
