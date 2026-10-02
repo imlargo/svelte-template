@@ -36,7 +36,7 @@ describe('createPermissionGuard', () => {
 	});
 
 	it('denies a signed-in role that does not hold it with 403', () => {
-		// The B3 case: a member reaching /admin by typing the URL.
+		// A member reaching /admin by typing the URL.
 		expect(statusFor(userWith(UserRole.MEMBER), 'users:delete')).toBe(403);
 	});
 
@@ -53,8 +53,8 @@ describe('createPermissionGuard', () => {
 	});
 
 	it('lets a lesser role through what it was granted', () => {
-		// There is no "unrestricted" permission any more: a member reaches the
-		// dashboard because the grant is written down, not by falling through.
+		// A member reaches the dashboard because the grant is written down, not
+		// by falling through to some default.
 		expect(statusFor(userWith(UserRole.MEMBER), 'dashboard:read')).toBeNull();
 		expect(statusFor(userWith('viewer'), 'dashboard:read')).toBe(403);
 	});

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
+	import { AUTH_ROUTES } from '$lib/config/routes';
 	import Avatar from '$lib/components/coral/kit/avatar/avatar.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -65,7 +66,7 @@
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
 				<!-- A POST, so link prefetching can never sign the user out on its own. -->
-				<form method="POST" action={resolve('/logout')} use:enhance>
+				<form method="POST" action={resolve(AUTH_ROUTES.logout)} use:enhance>
 					<DropdownMenu.Item>
 						{#snippet child({ props }: { props: Record<string, unknown> })}
 							<button type="submit" class="w-full" {...props}>

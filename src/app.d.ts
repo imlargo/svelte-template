@@ -6,10 +6,8 @@ import type { RequirePermission } from '$lib/features/auth/guard.server';
 // for information about these interfaces
 declare global {
 	namespace App {
-		// `ctx`, `caches` and `cf` are typed by @sveltejs/adapter-cloudflare.
-		// `env` holds the bindings declared in wrangler.jsonc: add one there, type
-		// it here with its type from @cloudflare/workers-types.
-		// See https://svelte.dev/docs/kit/adapter-cloudflare#Runtime-APIs
+		// `env` holds the bindings declared in wrangler.jsonc, typed with
+		// @cloudflare/workers-types; the adapter types `ctx`, `caches` and `cf`.
 		interface Platform {
 			env: {
 				ASSETS: Fetcher;
@@ -27,10 +25,9 @@ declare global {
 			/** The refresh token stays in its cookie and never reaches locals or the client. */
 			accessToken?: string | null;
 			/**
-			 * Throws 403 unless the current user holds the permission (401 with no
-			 * session). Always present: every request passes through the hook, which
-			 * installs it before any route runs. Call it in `+layout.server.ts` to
-			 * cover a page subtree, or at the top of a `+server.ts` handler.
+			 * Throws 401 without a session, 403 without the permission. Always
+			 * installed by the hook; call it at the top of every `+server.ts` handler
+			 * and destructive form action.
 			 */
 			requirePermission: RequirePermission;
 		}

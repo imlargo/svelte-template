@@ -1,12 +1,12 @@
 import { normalizeError, type AppError } from './errors';
 
 /**
- * Minimal async-call state for the client: data/error plus read-only flags.
- * Covers what happens after the first render — data from `load` doesn't need this.
+ * Async-call state for data the page loads itself (see `AsyncView`). Data from
+ * `load` does not need this.
  *
- * One `Query` tracks one call at a time. Overlapping `run()` calls are not
- * ordered: the last one to *resolve* wins, which may not be the last one
- * started. If you fire it per keystroke, debounce at the call site.
+ * Only the latest `run()` writes its outcome: a slower, older call that
+ * settles afterwards is dropped, so a fast search cannot be overwritten by a
+ * stale one. A failed run keeps the previous `data`.
  */
 export class Query<T> {
 	// `$state.raw` because API responses are reassigned wholesale, never mutated.
@@ -14,16 +14,20 @@ export class Query<T> {
 	error = $state.raw<AppError | null>(null);
 	isLoading = $state(false);
 
+	#latest = 0;
+
 	async run(fetcher: () => Promise<T>): Promise<void> {
+		const run = ++this.#latest;
 		this.isLoading = true;
 		this.error = null;
 
 		try {
-			this.data = await fetcher();
+			const data = await fetcher();
+			if (run === this.#latest) this.data = data;
 		} catch (err) {
-			this.error = normalizeError(err);
+			if (run === this.#latest) this.error = normalizeError(err);
 		} finally {
-			this.isLoading = false;
+			if (run === this.#latest) this.isLoading = false;
 		}
 	}
 }

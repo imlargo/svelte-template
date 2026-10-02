@@ -1,20 +1,20 @@
 <script lang="ts">
 	import LoginForm from '$lib/features/auth/components/LoginForm.svelte';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 	import { resolve } from '$app/paths';
 	import { config } from '$lib/config/app';
+	import { HOME_ROUTE } from '$lib/config/routes';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
 
-<svelte:head>
-	<title>{config.branding.seo.title} — Log in</title>
-</svelte:head>
+<DocumentTitle title="Sign in" />
 
 <div class="grid min-h-svh lg:grid-cols-2">
 	<div class="flex flex-col gap-4 p-6 md:p-10">
 		<div class="flex justify-center gap-2 md:justify-start">
-			<a href={resolve('/')} class="flex items-center gap-2 font-medium">
+			<a href={resolve(HOME_ROUTE)} class="flex items-center gap-2 font-medium">
 				<div
 					class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground"
 				>
@@ -25,7 +25,7 @@
 		</div>
 		<div class="flex flex-1 items-center justify-center">
 			<div class="w-full max-w-xs">
-				<LoginForm form={data.form} signInError={data.signInError} />
+				<LoginForm form={data.form} signInError={data.signInError} redirect={data.redirect} />
 			</div>
 		</div>
 	</div>

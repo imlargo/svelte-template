@@ -4,13 +4,15 @@
  */
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
+import { AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
 import { logger } from '$lib/core/logger';
 import { AuthService } from '$lib/features/auth/services/auth';
+import { OAUTH_FAILED_PARAM } from '$lib/features/auth/google';
 import { decodeRedirect } from '$lib/features/auth/redirect';
 import { clearSession, setSession, takeOAuthState } from '$lib/features/auth/session.server';
 import type { RequestHandler } from './$types';
 
-const FAILED_SIGN_IN = `${config.auth.loginPath}?error=oauth`;
+const FAILED_SIGN_IN = `${AUTH_ROUTES.login}?${new URLSearchParams({ [OAUTH_FAILED_PARAM]: 'oauth' })}`;
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	if (!config.auth.methods.google.enabled) error(404, 'Google sign-in is not enabled.');
@@ -21,7 +23,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const state = url.searchParams.get('state');
 
 	if (!code || !state || !stored || stored.nonce !== state) {
-		logger.error('auth', new Error('Rejected Google callback: missing or mismatched OAuth state'));
+		logger.warn('auth', 'Rejected Google callback: missing or mismatched OAuth state');
 		clearSession(cookies);
 		redirect(303, FAILED_SIGN_IN);
 	}
@@ -38,5 +40,5 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		redirect(303, FAILED_SIGN_IN);
 	}
 
-	redirect(303, decodeRedirect(stored.redirectTo) ?? config.auth.defaultRedirectPath);
+	redirect(303, decodeRedirect(stored.redirectTo) ?? HOME_ROUTE);
 };

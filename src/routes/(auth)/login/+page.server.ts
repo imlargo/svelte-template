@@ -2,16 +2,19 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { config } from '$lib/config/app';
+import { HOME_ROUTE } from '$lib/config/routes';
+import { logger } from '$lib/core/logger';
 import { AuthService } from '$lib/features/auth/services/auth';
 import { LoginSchema } from '$lib/features/auth/schemas';
-import { decodeRedirect } from '$lib/features/auth/redirect';
-import { buildGoogleAuthUrl } from '$lib/features/auth/google';
+import { REDIRECT_PARAM, decodeRedirect } from '$lib/features/auth/redirect';
+import { OAUTH_FAILED_PARAM, buildGoogleAuthUrl } from '$lib/features/auth/google';
+import { isCredentialRejection } from '$lib/features/auth/rejection';
 import { getSession, setOAuthState, setSession } from '$lib/features/auth/session.server';
 import type { Actions, PageServerLoad } from './$types';
 
 /** Where to land after signing in, honouring the `?redirect=` the auth hook set. */
 function destination(url: URL): string {
-	return decodeRedirect(url.searchParams.get('redirect')) ?? config.auth.defaultRedirectPath;
+	return decodeRedirect(url.searchParams.get(REDIRECT_PARAM)) ?? HOME_ROUTE;
 }
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
@@ -19,8 +22,10 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 
 	return {
 		form: await superValidate(zod4(LoginSchema)),
-		// Set by the OAuth callback when it could not complete the sign-in.
-		signInError: url.searchParams.has('error') ? 'Could not sign you in. Please try again.' : null
+		redirect: url.searchParams.get(REDIRECT_PARAM),
+		signInError: url.searchParams.has(OAUTH_FAILED_PARAM)
+			? 'Could not sign you in. Please try again.'
+			: null
 	};
 };
 
@@ -35,9 +40,15 @@ export const actions = {
 				accessToken: tokens.access_token,
 				refreshToken: tokens.refresh_token
 			});
-		} catch {
-			// Deliberately vague: telling them which half was wrong enumerates accounts.
-			return message(form, 'Invalid email or password.', { status: 401 });
+		} catch (err) {
+			// Deliberately vague: saying which half was wrong enumerates accounts.
+			if (isCredentialRejection(err)) {
+				return message(form, 'Invalid email or password.', { status: 401 });
+			}
+			logger.error('auth', err);
+			return message(form, 'Cannot sign you in right now. Please try again in a moment.', {
+				status: 503
+			});
 		}
 
 		redirect(303, destination(url));
@@ -47,7 +58,7 @@ export const actions = {
 		if (!config.auth.methods.google.enabled) error(404, 'Google sign-in is not enabled.');
 
 		const nonce = crypto.randomUUID();
-		setOAuthState(cookies, { nonce, redirectTo: url.searchParams.get('redirect') });
+		setOAuthState(cookies, { nonce, redirectTo: url.searchParams.get(REDIRECT_PARAM) });
 
 		redirect(303, buildGoogleAuthUrl(url.origin, nonce));
 	}

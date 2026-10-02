@@ -5,10 +5,8 @@ import { BaseService } from '$lib/core/service';
 import { config } from '$lib/config/app';
 
 export class AuthService extends BaseService {
-	// Auth may live on its own host. Falls back to the data API when
-	// PUBLIC_AUTH_BASE_URL is unset, which is the single-backend case.
 	constructor(auth: ApiAuth = {}) {
-		super(auth, config.auth.baseUrl || config.api.baseUrl);
+		super(auth, config.auth.baseUrl);
 	}
 
 	login(data: SignInRequest) {
@@ -24,15 +22,12 @@ export class AuthService extends BaseService {
 	}
 
 	/**
-	 * Only called with `PUBLIC_AUTH_REFRESH_ENABLED=true`. The contract the
-	 * backend has to meet: `POST /auth/refresh` with `{ refresh_token }` answers
-	 * a fresh token pair, and a refresh token it no longer accepts answers 401.
-	 * A backend that does not rotate refresh tokens can send the same one back.
+	 * Only called with `PUBLIC_AUTH_REFRESH_ENABLED=true`. The backend answers a
+	 * fresh token pair, or 401 for a refresh token it no longer accepts.
 	 *
-	 * A backend that rotates them must accept the token it just replaced for a
-	 * few seconds. Two renewals can race with the same token — two tabs, or a
-	 * navigation and an API call at once — and treating the second as reuse
-	 * would revoke a session nobody stole.
+	 * A backend that rotates refresh tokens must accept the one it just replaced
+	 * for a few seconds: two tabs can renew with the same token at once, and
+	 * treating the second as reuse would revoke a session nobody stole.
 	 */
 	refresh(refreshToken: string) {
 		return this.expectBody(

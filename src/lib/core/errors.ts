@@ -23,7 +23,7 @@ export type ErrorCode =
 /** Doubles as the registry of valid codes — see `codeFromStatus`. */
 const MESSAGES: Record<ErrorCode, string> = {
 	NETWORK: 'Connection error. Check your internet connection.',
-	UNAUTHORIZED: 'You need to log in to perform this action.',
+	UNAUTHORIZED: 'You need to sign in to perform this action.',
 	FORBIDDEN: 'You do not have permission for this action.',
 	NOT_FOUND: 'The requested resource was not found.',
 	CONFLICT: 'A conflict occurred. The resource may already exist.',

@@ -5,10 +5,8 @@
  */
 import type { PageServerLoad } from './$types';
 
-// Not awaited on purpose. A promise returned from `load` is streamed: the page
-// renders now, with skeletons, and the cards fill in when it settles. Awaiting
-// it here would hold the whole navigation — sidebar included — for as long as
-// the slowest call takes. Await only what the page cannot render without.
+// Not awaited: a promise returned from `load` streams, so the page renders now
+// with skeletons instead of holding the navigation for the slowest call.
 export const load: PageServerLoad = () => ({
 	stats: demoStats()
 });

@@ -1,10 +1,3 @@
-/**
- * API client factory, backed by air (https://github.com/imlargo/air).
- *
- * Usage:
- *   import { createApiClient } from '$lib/core/api';
- *   const client = createApiClient({ token: () => auth.accessToken });
- */
 import { create } from '@imlargo/air';
 import type { AirClient, Fetch } from '@imlargo/air';
 import { config } from '$lib/config/app';
@@ -13,10 +6,9 @@ import { config } from '$lib/config/app';
 type TokenSource = string | null | undefined | (() => string | null | undefined);
 
 /**
- * Who a request is made as, and through what. Services take this instead of a
- * bare token because the transport matters as much as the credential: on the
- * server it is the per-request `event.fetch`, on the client a `fetch` that
- * knows how to react to a 401 (see `features/auth/client-session.svelte.ts`).
+ * Who a request is made as, and through what: on the server the per-request
+ * `event.fetch`, on the client a `fetch` that reacts to a 401
+ * (`features/auth/client-session.svelte.ts`).
  */
 export interface ApiAuth {
 	token?: TokenSource;
@@ -28,6 +20,7 @@ export type ApiClientOptions = ApiAuth & {
 	baseUrl?: string;
 };
 
+/** An air client (https://github.com/imlargo/air) that sends the token as a bearer header. */
 export function createApiClient(options: ApiClientOptions = {}): AirClient {
 	const { baseUrl = config.api.baseUrl, token, fetch } = options;
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import * as Empty from '$lib/components/ui/empty/index.js';
 	import { cn } from '$lib/utils';
 
 	let {
@@ -17,26 +18,17 @@
 	} = $props();
 </script>
 
-<div
-	class={cn(
-		'flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-8 text-center',
-		className
-	)}
->
-	{#if icon}
-		<div
-			class="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
-		>
-			{@render icon()}
-		</div>
-	{/if}
-	<div class="flex flex-col gap-1">
-		<p class="text-sm font-medium">{title}</p>
-		{#if description}
-			<p class="text-sm text-muted-foreground">{description}</p>
+<Empty.Root class={cn('border', className)}>
+	<Empty.Header>
+		{#if icon}
+			<Empty.Media variant="icon">{@render icon()}</Empty.Media>
 		{/if}
-	</div>
+		<Empty.Title>{title}</Empty.Title>
+		{#if description}
+			<Empty.Description>{description}</Empty.Description>
+		{/if}
+	</Empty.Header>
 	{#if action}
-		{@render action()}
+		<Empty.Content>{@render action()}</Empty.Content>
 	{/if}
-</div>
+</Empty.Root>

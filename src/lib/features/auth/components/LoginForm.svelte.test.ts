@@ -34,6 +34,13 @@ describe('LoginForm', () => {
 			.toBeVisible();
 	});
 
+	it('posts to an action that keeps where the user was headed', async () => {
+		const screen = await render(LoginForm, { form: emptyForm(), redirect: 'L2FkbWlu' });
+
+		const form = screen.container.querySelector('form');
+		expect(form?.getAttribute('action')).toBe('?/login&redirect=L2FkbWlu');
+	});
+
 	it('validates a field when the user leaves it', async () => {
 		// Submitting is not covered here: superforms' submit goes through
 		// SvelteKit's router, which only exists in a real app (e2e/).

@@ -15,7 +15,7 @@
 
 <svelte:head>
 	<link rel="icon" href={config.branding.favicon} />
-	<!-- Fallback title/description: a page with its own <svelte:head> title overrides this. -->
+	<!-- Fallback title/description: a page's <DocumentTitle> overrides the title. -->
 	<title>{config.branding.seo.title}</title>
 	<meta name="description" content={config.branding.seo.description} />
 	<meta property="og:title" content={config.branding.seo.title} />
@@ -25,11 +25,4 @@
 <ModeWatcher />
 <Toaster />
 
-<a
-	href="#main-content"
-	class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:ring-2 focus:ring-ring"
->
-	Skip to main content
-</a>
-
-{@render children?.()}
+{@render children()}

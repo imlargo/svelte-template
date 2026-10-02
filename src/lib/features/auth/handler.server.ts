@@ -1,84 +1,59 @@
 /**
  * The auth hook: one pass per request that decides whether it may continue.
  *
- * Authentication is central — a request either carries a valid session or it
- * does not, and a route that forgets to ask must not be a route that opens.
+ * Authentication is central: a route that forgets to ask must not open.
+ * Authorization is split, because pages and endpoints are different shapes:
  *
- * Authorization is split on purpose, because the two halves of a full-stack app
- * are not the same shape:
+ * - **Pages** are declared in `AUTH_ROUTE_PERMISSIONS` and enforced here,
+ *   before any load runs. Undeclared means denied.
+ * - **Endpoints** call `locals.requirePermission` themselves, per method, so
+ *   one path can ask for `users:read` on GET and `users:delete` on DELETE.
  *
- * - **Pages** are a tree the user navigates. They are declared as a tree
- *   (`AUTH_ROUTE_PERMISSIONS`) and enforced here, once, before any load runs.
- *   Undeclared means denied, so a new page cannot ship open by omission.
- * - **Endpoints** are not. Each handler calls `locals.requirePermission` itself
- *   and this hook does not second-guess it, so who may open a screen and who
- *   may call the endpoint behind it stay separate decisions — and one path can
- *   still ask for `users:read` on GET and `users:delete` on DELETE.
+ * Form actions ride on their page's permission; a destructive one needs its
+ * own `locals.requirePermission` call, exactly like an endpoint.
  *
- * What they share is the answer to "who holds this permission"
- * (`ROLE_PERMISSIONS`) and the object that enforces it (`guard.server.ts`).
- * What they do not share is how a route says what it needs, or how a denial
- * comes back: a page gets a redirect or an error page, a fetch gets a status.
- *
- * Form actions ride on a page route, so the page's permission is all they get.
- * A destructive action needs its own `locals.requirePermission` call, exactly
- * like an endpoint.
- *
- * The token itself is never inspected here. The backend that issued it is the
- * authority on whether it is still valid, and asking it (`/auth/me`) is both
- * the check and the way we learn the user's current role. Verifying a JWT
- * locally would need its signing key and would still trust a role snapshot
- * frozen at issue time.
- *
- * With `PUBLIC_AUTH_REFRESH_ENABLED`, a rejected access token gets one renewal
- * before the session is given up on: the refresh token buys a new pair, the
- * cookies are rotated, and `/auth/me` is asked again. Only if the backend
- * rejects the refresh token too is the session over.
+ * The token is never inspected here: the backend that issued it is the
+ * authority, and asking it (`/auth/me`) also yields the user's current role.
  */
 import { error, redirect, type Cookies, type Handle } from '@sveltejs/kit';
 import { config } from '$lib/config/app';
-import { AUTH_ROUTE_PERMISSIONS } from '$lib/config/permissions';
+import { AUTH_ROUTE_PERMISSIONS, PUBLIC_ROUTE_PREFIXES } from '$lib/config/permissions';
+import { API_ROUTE_PREFIX, AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
 import { isPrefixOf, permissionForRoute } from '$lib/core/permissions';
 import { normalizeError } from '$lib/core/errors';
 import { logger } from '$lib/core/logger';
+import type { User } from '$lib/types/user';
 import { AuthService } from './services/auth';
 import { createPermissionGuard } from './guard.server';
-import { encodeRedirect } from './redirect';
+import { REDIRECT_PARAM, encodeRedirect } from './redirect';
+import { isCredentialRejection } from './rejection';
 import { renewSession } from './renew.server';
 import { clearSession, getSession, type Session } from './session.server';
-import type { User } from '$lib/types/user';
 
 function isPublicRoute(pathname: string): boolean {
-	return config.auth.publicRoutes.some((prefix) => isPrefixOf(prefix, pathname));
+	return PUBLIC_ROUTE_PREFIXES.some((prefix) => isPrefixOf(prefix, pathname));
 }
 
 /**
- * Endpoints get a status; page requests get sent to the login page. A `fetch()`
- * follows a 303 in silence, receives the login HTML with a 200, and fails on
- * parse — so the user sees a JSON syntax error instead of "your session
- * expired".
- *
- * Not to be confused with SvelteKit's `event.isDataRequest`, which is true for
- * the `__data.json` fetches behind client-side navigation. Those are pages: a
- * redirect is the right answer, and SvelteKit turns it into one the router
- * follows.
+ * Endpoints get a status, pages a redirect: a `fetch()` follows a 303 in
+ * silence and then fails parsing the login HTML. Not SvelteKit's
+ * `isDataRequest`, which marks client-side navigations — those are pages.
  */
 function isEndpointRequest(pathname: string): boolean {
-	return pathname.startsWith('/api/');
+	return isPrefixOf(API_ROUTE_PREFIX, pathname);
 }
 
 function loginUrl(pathname: string, search: string): string {
-	// Landing on the default route carries nothing worth coming back to.
-	if (pathname === config.auth.defaultRedirectPath && !search) return config.auth.loginPath;
-	// Escaped because base64 uses '+' and '=', which are not query-string safe.
-	const target = encodeURIComponent(encodeRedirect(pathname + search));
-	return `${config.auth.loginPath}?redirect=${target}`;
+	// Landing on home carries nothing worth coming back to.
+	if (pathname === HOME_ROUTE && !search) return AUTH_ROUTES.login;
+	const params = new URLSearchParams({ [REDIRECT_PARAM]: encodeRedirect(pathname + search) });
+	return `${AUTH_ROUTES.login}?${params}`;
 }
 
 /**
- * Asks the backend who the session belongs to, renewing it once on the way if
- * the access token was rejected and refresh is on. Returns the session that
- * was actually used, which is the renewed one when a renewal happened.
+ * Asks the backend who the session belongs to, renewing it once first if the
+ * access token was rejected and refresh is on. Returns the session actually
+ * used, which is the renewed one after a renewal.
  */
 async function resolveSession(
 	cookies: Cookies,
@@ -97,21 +72,16 @@ async function resolveSession(
 export const handleAuth: Handle = async ({ event, resolve }) => {
 	const { pathname, search } = event.url;
 
-	// Installed once, reading the user lazily, so there is no window in which
-	// `locals` carries a guard bound to the wrong user and nothing to reassign
-	// later. Before the session resolves it answers 401, which is correct.
+	// Installed before the session resolves and reading the user lazily, so it
+	// is never bound to the wrong user. Until then it answers 401.
 	event.locals.requirePermission = createPermissionGuard(() => event.locals.user);
 
-	// No route matched, so there is nothing to protect and nobody to protect it
-	// from. Letting SvelteKit answer its own 404 keeps a mistyped URL from
-	// costing a round trip to /auth/me and from being logged as a missing
-	// permission — it is a 404, not a 403.
+	// No route matched: let SvelteKit answer its 404 without a trip to /auth/me.
 	if (!event.route.id) return resolve(event);
 
 	if (isPublicRoute(pathname)) return resolve(event);
 
-	// Annotated `() => never` so the narrowing survives the call: without it the
-	// compiler keeps treating `stored` as possibly null after `endSession()`.
+	// `() => never` keeps `stored` narrowed to non-null after the call.
 	const endSession: () => never = () => {
 		clearSession(event.cookies);
 		if (isEndpointRequest(pathname)) error(401, 'Your session has expired. Sign in again.');
@@ -126,11 +96,8 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	try {
 		({ user, session } = await resolveSession(event.cookies, stored));
 	} catch (err) {
-		// Only a rejected token ends the session. A backend that is down or
-		// erroring must not sign everyone out: that turns an outage into a
-		// stampede of logins and throws away whatever the user was doing.
-		const { code } = normalizeError(err);
-		if (code !== 'UNAUTHORIZED' && code !== 'FORBIDDEN') {
+		// A backend that is down must not sign everyone out.
+		if (!isCredentialRejection(err)) {
 			logger.error('auth', err);
 			error(503, 'Cannot verify your session right now. Please try again in a moment.');
 		}
@@ -140,13 +107,10 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 	event.locals.accessToken = session.accessToken;
 
-	// Endpoints authorize themselves, per handler and per method. Applying the
-	// page table to them is what made every /api/ call 403 before this existed.
 	if (!isEndpointRequest(pathname)) {
 		const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, pathname);
 		if (!required) {
-			// Not a user problem: the page exists but nobody declared it. Say so in
-			// the log, and give the visitor the same 403 as any other refusal.
+			// A developer's omission, not the user's: log it, answer like any refusal.
 			logger.warn('auth', 'Undeclared page route', { pathname });
 			error(403, 'You do not have access to this page.');
 		}

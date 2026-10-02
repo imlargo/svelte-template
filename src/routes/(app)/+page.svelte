@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
 	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
@@ -22,8 +24,6 @@
 
 	const items = createQuery<string[]>();
 
-	// The toast goes here, not inside `run`: core knows nothing about the UI, and
-	// only the caller knows whether this particular failure is worth interrupting for.
 	async function load(fail = false) {
 		await items.run(async () => {
 			await new Promise((r) => setTimeout(r, 800));
@@ -31,9 +31,17 @@
 			return ['Item A', 'Item B', 'Item C'];
 		});
 
-		if (items.error) toast.error(items.error.message);
+		// A first load that fails is AsyncView's error panel; a later one keeps
+		// the list on screen, so it is reported here instead.
+		if (items.error && items.data !== null) toast.error(items.error.message);
 	}
+
+	// Starts as an empty list, so the empty state, the data and a failure are
+	// each a click away.
+	onMount(() => items.run(async () => []));
 </script>
+
+<DocumentTitle title="Dashboard" />
 
 <div class="flex flex-col gap-6">
 	<PageHeader title="Dashboard" description="Welcome to your app. Start building here.">

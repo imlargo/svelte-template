@@ -1,15 +1,13 @@
 import { redirect } from '@sveltejs/kit';
-import { config } from '$lib/config/app';
+import { AUTH_ROUTES } from '$lib/config/routes';
 import { clearSession } from '$lib/features/auth/session.server';
 import type { Actions } from './$types';
 
-/**
- * POST only. As a `load` this ran on GET, so SvelteKit's link prefetch — or an
- * injected `<img src="/logout">` — signed the user out on its own.
- */
+// An action, not a `load`: a GET would let link prefetching, or an injected
+// `<img src="/logout">`, sign the user out.
 export const actions = {
 	default: async ({ cookies }) => {
 		clearSession(cookies);
-		redirect(303, config.auth.loginPath);
+		redirect(303, AUTH_ROUTES.login);
 	}
 } satisfies Actions;

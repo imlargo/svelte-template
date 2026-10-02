@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 </script>
 
-<svelte:head><title>Sign out</title></svelte:head>
+<DocumentTitle title="Sign out" />
 
 <!-- Reached by visiting /logout directly; the sidebar posts to this action too. -->
 <div class="flex min-h-svh items-center justify-center p-6">
