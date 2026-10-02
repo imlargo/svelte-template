@@ -4,8 +4,9 @@
 	"version": "0.0.1",
 	"type": "module",
 	"engines": {
-		"node": ">=22"
+		"node": ">=22.22.1"
 	},
+	"packageManager": "pnpm@11.10.0",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",

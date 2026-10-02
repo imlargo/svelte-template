@@ -5,7 +5,7 @@ obligatorias.
 
 ## Qué es este repo
 
-Template de SvelteKit 2 + Svelte 5 para proyectos de consultoría. Consume una API externa (no
+Template de SvelteKit 3 + Svelte 5 para proyectos de consultoría. Consume una API externa (no
 tiene base de datos) y trae resuelto lo aburrido: autenticación con cookies, permisos, layout con
 sidebar, formularios, componentes. No es un framework y no debería convertirse en uno: el objetivo
 es que se clone y se construya sin fricción ni sorpresas. Ver [`README.md`](./README.md) para el
@@ -58,6 +58,12 @@ inventar uno nuevo.
   `enum`. Para tags de capacidad tipo `"recurso:acción"` (`Permission` en
   `#lib/config/permissions.ts`), un string-literal union con `as const satisfies` está bien —
   sigue el patrón que ya usa la pieza equivalente antes de introducir uno nuevo.
+- **Variables de entorno:** toda variable se declara en `src/env.ts` (`defineEnvVars` + schema de
+  zod) y se lee de `$app/env/public` o `$app/env/private`. Nunca `process.env` ni los `$env/*`
+  (deprecados en SvelteKit 3).
+- **Links a rutas propias:** las rutas de `#lib/config/routes.ts` y `navigation.ts` llevan `/`
+  inicial porque se comparan con `url.pathname`; para un `href` pásalas por `resolvePathname()`
+  (`#lib/utils/paths.ts`), no por `resolve()`, que lee la `/` como route ID.
 
 ## Tipos
 
@@ -92,11 +98,21 @@ inventar uno nuevo.
   `AsyncView` + skeleton. Referencia: `routes/(app)/+page.server.ts`.
 - Los datos que el usuario busca, filtra o edita en el mismo sitio los carga la propia página con
   `Query` + `AsyncView` (en `onMount`, no con `if (browser)`). Referencia: `routes/(app)/admin/`.
-- No se usan remote functions.
+- No se usan remote functions (siguen siendo experimentales en SvelteKit 3).
 - En el cliente, un service se crea con `getAuth().api`, nunca con un token suelto: así hereda la
   renovación de sesión y el manejo de 401. En el servidor, con `{ token: locals.accessToken, fetch }`.
 - Ningún componente maneja 401: la sesión expirada se renueva o redirige a login en
   `features/auth/transport.ts` y en el hook.
+
+## Formularios
+
+- Sin librería de formularios. Un form que envía al servidor es una form action con `use:enhance`;
+  uno dentro de un flujo de cliente (un dialog que llama a un service) maneja su propio `onsubmit`.
+  Referencias: `features/auth/components/LoginForm.svelte` y
+  `features/users/components/UserFormDialog.svelte`.
+- Se validan con el schema de zod del slice vía `#lib/utils/forms.ts` (`parseForm`,
+  `validateField`), y se maquetan con `Field` de shadcn. El servidor valida siempre, aunque el
+  cliente ya lo haya hecho.
 
 ## Errores
 
@@ -104,6 +120,8 @@ inventar uno nuevo.
   muestres `err.message` de un error sin normalizar.
 - Si un error es esperado, lánzalo como `AppError` con el código que corresponda. Un `Error`
   genérico se trata como un bug: se muestra el mensaje por defecto y el detalle va solo al log.
+- `handleError` recibe todos los errores, pero solo actúa sobre los inesperados
+  (`kind === 'unknown'`): un `error(403, ...)` ya trae su mensaje para el usuario.
 
 ## Permisos
 
