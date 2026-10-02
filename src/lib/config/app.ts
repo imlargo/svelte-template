@@ -1,8 +1,6 @@
 import { building } from '$app/environment';
 import { env } from '$env/dynamic/public';
-import type { Pathname } from '$app/types';
 import { z } from 'zod';
-import { AUTH_PUBLIC_ROUTE_PREFIXES } from '$lib/config/permissions';
 import { flag, parseEnv, unset } from '$lib/utils/env';
 import defaultLogo from '$lib/assets/logo.svg';
 import defaultFavicon from '$lib/assets/favicon.svg';
@@ -15,10 +13,6 @@ export interface AppConfig {
 		/** Base URL when auth lives on its own host. Empty falls back to the data API. */
 		baseUrl: string;
 		enabled: boolean;
-		loginPath: Pathname;
-		defaultRedirectPath: string;
-		/** Route prefixes reachable without a session. See AUTH_PUBLIC_ROUTE_PREFIXES. */
-		publicRoutes: string[];
 		methods: {
 			password: boolean;
 			google: {
@@ -79,9 +73,6 @@ export const config: AppConfig = {
 	auth: {
 		baseUrl: publicEnv.PUBLIC_AUTH_BASE_URL,
 		enabled: publicEnv.PUBLIC_AUTH_ENABLED,
-		loginPath: '/login',
-		defaultRedirectPath: '/',
-		publicRoutes: [...AUTH_PUBLIC_ROUTE_PREFIXES],
 		methods: {
 			password: publicEnv.PUBLIC_AUTH_PASSWORD_ENABLED,
 			google: {

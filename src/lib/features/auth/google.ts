@@ -1,19 +1,20 @@
 import { config } from '$lib/config/app';
+import { AUTH_ROUTES } from '$lib/config/routes';
 
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 
-/** Google requires an exact match with the URI registered in the console. */
-export const GOOGLE_CALLBACK_PATH = '/authorize';
+/** Set on the login URL when the OAuth callback could not complete the sign-in. */
+export const OAUTH_FAILED_PARAM = 'error';
 
 /**
- * `state` is echoed back by Google to the callback, where it is compared with
- * the nonce stored in a cookie. Without it, an attacker can hand a victim a
- * ready-made callback URL and sign them into the attacker's account.
+ * `state` comes back to the callback, which compares it with the nonce in its
+ * cookie. Without it, an attacker can hand a victim a ready-made callback URL
+ * and sign them into the attacker's account.
  */
 export function buildGoogleAuthUrl(origin: string, state: string): string {
 	const params = new URLSearchParams({
 		client_id: config.auth.methods.google.clientId,
-		redirect_uri: `${origin}${GOOGLE_CALLBACK_PATH}`,
+		redirect_uri: `${origin}${AUTH_ROUTES.authorize}`,
 		response_type: 'code',
 		prompt: 'select_account',
 		scope: 'openid profile email',

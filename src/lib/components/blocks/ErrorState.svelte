@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { config } from '$lib/config/app';
+	import { AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
 
 	let {
 		status,
@@ -37,8 +37,8 @@
 		</p>
 	{/if}
 	{#if status === 401}
-		<Button href={resolve(config.auth.loginPath)} variant="outline">Sign in</Button>
+		<Button href={resolve(AUTH_ROUTES.login)} variant="outline">Sign in</Button>
 	{:else}
-		<Button href={resolve('/')} variant="outline">Go home</Button>
+		<Button href={resolve(HOME_ROUTE)} variant="outline">Go home</Button>
 	{/if}
 </div>

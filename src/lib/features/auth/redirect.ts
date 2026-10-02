@@ -1,29 +1,21 @@
 /**
- * Handling of the `?redirect=` parameter used by the auth flow.
- *
- * `handleAuth` encodes the path the user was trying to reach, and the
- * login/authorize pages decode it after a successful sign-in. Checking that the
- * decoded value starts with `/` is NOT enough: `//evil.com` passes that test but
- * is a protocol-relative URL, so redirecting to it leaves the site. Every value
- * is re-parsed against a throwaway origin and rejected unless it stays on it.
+ * The `?redirect=` parameter of the auth flow: the hook encodes where the user
+ * was going, and login/authorize decode it after signing in.
  */
 
-// Only exists so the URL parser can tell us whether the path escaped its origin.
-// Never resolved or requested.
+export const REDIRECT_PARAM = 'redirect';
+
+// Only lets the URL parser tell whether a path escaped its origin. Never requested.
 const INTERNAL_ORIGIN = 'http://redirect.invalid';
 
-/**
- * Encodes a same-origin path for use as the `?redirect=` value.
- * Note: base64 is Latin-1 only, so non-ASCII paths still throw here.
- */
+/** Base64 is Latin-1 only, so a non-ASCII path throws here. */
 export function encodeRedirect(pathAndSearch: string): string {
 	return btoa(pathAndSearch);
 }
 
 /**
- * Returns `path` only if it points somewhere on this origin, otherwise null.
- * Rejects absolute URLs, protocol-relative URLs (`//host`) and their backslash
- * variants (`/\host`), which the URL parser also resolves off-origin.
+ * Returns `path` only if it stays on this origin. Starting with `/` is not
+ * enough: `//evil.com` and `/\evil.com` resolve off-origin.
  */
 export function sanitizeRedirect(path: string): string | null {
 	if (!path.startsWith('/')) return null;
@@ -40,10 +32,7 @@ export function sanitizeRedirect(path: string): string | null {
 	return url.pathname + url.search + url.hash;
 }
 
-/**
- * Decodes a `?redirect=` value into a safe same-origin path.
- * Returns null when the value is missing, malformed, or points off-origin.
- */
+/** A safe same-origin path, or null when the value is missing, malformed or off-origin. */
 export function decodeRedirect(value: string | null | undefined): string | null {
 	if (!value) return null;
 
@@ -51,7 +40,7 @@ export function decodeRedirect(value: string | null | undefined): string | null 
 	try {
 		decoded = atob(value);
 	} catch {
-		return null; // malformed base64
+		return null;
 	}
 
 	return sanitizeRedirect(decoded);
