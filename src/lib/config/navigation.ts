@@ -1,47 +1,35 @@
 import HomeIcon from '@lucide/svelte/icons/house';
 import ShieldIcon from '@lucide/svelte/icons/shield';
 import type { LucideIcon } from '@lucide/svelte';
-import type { Permission } from '$lib/config/permissions';
+import type { Pathname } from '$app/types';
 
 export enum NavigationGroup {
-	Main = 'main',
-	Admin = 'admin'
+	MAIN = 'main',
+	ADMIN = 'admin'
 }
 
+/**
+ * A sidebar entry. It shows only to users who may open `to`, which is looked
+ * up in `AUTH_ROUTE_PERMISSIONS` — the menu and the hook read the same table.
+ */
 export interface NavigationItem {
 	title: string;
 	icon: LucideIcon;
-	to: string;
+	to: Pathname;
 	group: NavigationGroup;
-	/**
-	 * Hides the item when the user lacks it. Presentation only — the hook is what
-	 * enforces the route, and it looks the permission up in
-	 * AUTH_ROUTE_PERMISSIONS. Keep the two in agreement or the menu will offer a
-	 * link that 403s.
-	 */
-	requiredPermission: Permission;
 }
 
-// ─── Navigation items ─────────────────────────────────────────────────────────
-// Add/remove items here. The sidebar and site-header derive from this list.
+export interface NavigationSection {
+	label: string;
+	items: NavigationItem[];
+}
+
 export const NAVIGATION_ITEMS: NavigationItem[] = [
-	{
-		title: 'Dashboard',
-		icon: HomeIcon,
-		to: '/',
-		group: NavigationGroup.Main,
-		requiredPermission: 'dashboard:read'
-	},
-	{
-		title: 'Admin',
-		icon: ShieldIcon,
-		to: '/admin',
-		group: NavigationGroup.Admin,
-		requiredPermission: 'users:read'
-	}
+	{ title: 'Dashboard', icon: HomeIcon, to: '/', group: NavigationGroup.MAIN },
+	{ title: 'Admin', icon: ShieldIcon, to: '/admin', group: NavigationGroup.ADMIN }
 ];
 
 export const NAVIGATION_GROUP_LABELS: Record<NavigationGroup, string> = {
-	[NavigationGroup.Main]: 'Main',
-	[NavigationGroup.Admin]: 'Administration'
+	[NavigationGroup.MAIN]: 'Main',
+	[NavigationGroup.ADMIN]: 'Administration'
 };

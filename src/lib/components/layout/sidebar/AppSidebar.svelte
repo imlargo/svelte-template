@@ -5,17 +5,18 @@
 	import type { ComponentProps } from 'svelte';
 	import type { User } from '$lib/types/user';
 	import {
-		NAVIGATION_ITEMS,
 		NAVIGATION_GROUP_LABELS,
-		NavigationGroup
+		NAVIGATION_ITEMS,
+		NavigationGroup,
+		type NavigationItem,
+		type NavigationSection
 	} from '$lib/config/navigation';
 	import { config } from '$lib/config/app';
-	import { ROLE_PERMISSIONS, ROLE_LABELS } from '$lib/config/permissions';
-	import { hasPermission } from '$lib/core/permissions';
+	import { HOME_ROUTE } from '$lib/config/routes';
+	import { AUTH_ROUTE_PERMISSIONS, ROLE_LABELS, ROLE_PERMISSIONS } from '$lib/config/permissions';
+	import { hasPermission, permissionForRoute } from '$lib/core/permissions';
 	import NavMain from './NavMain.svelte';
 	import NavUser from './NavUser.svelte';
-
-	const sidebar = Sidebar.useSidebar();
 
 	let {
 		user,
@@ -24,36 +25,29 @@
 		user: User | null;
 	} & Omit<ComponentProps<typeof Sidebar.Root>, 'children'> = $props();
 
-	// Presentation only — hiding a link is not access control. The hook enforces it.
-	// With auth off there is no user and therefore no role, so filtering would
-	// leave the menu empty in the very mode meant for working without a backend.
-	let visibleItems = $derived(
-		config.auth.enabled
-			? NAVIGATION_ITEMS.filter((item) =>
-					hasPermission(ROLE_PERMISSIONS, user?.role, item.requiredPermission)
-				)
-			: NAVIGATION_ITEMS
+	const sidebar = Sidebar.useSidebar();
+
+	// Presentation only: the hook enforces the same table. With auth off there
+	// is no role to check, so every item shows.
+	function canOpen(item: NavigationItem): boolean {
+		if (!config.auth.enabled) return true;
+		const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, item.to);
+		return required !== null && hasPermission(ROLE_PERMISSIONS, user?.role, required);
+	}
+
+	const sections: NavigationSection[] = $derived(
+		Object.values(NavigationGroup)
+			.map((group) => ({
+				label: NAVIGATION_GROUP_LABELS[group],
+				items: NAVIGATION_ITEMS.filter((item) => item.group === group && canOpen(item))
+			}))
+			.filter((section) => section.items.length > 0)
 	);
 
-	let navMainGroups = $derived.by(() => {
-		const mainItems = visibleItems
-			.filter((item) => item.group === NavigationGroup.Main)
-			.map((item) => ({ title: item.title, icon: item.icon, url: item.to }));
-
-		const adminItems = visibleItems
-			.filter((item) => item.group === NavigationGroup.Admin)
-			.map((item) => ({ title: item.title, icon: item.icon, url: item.to }));
-
-		return [
-			{ label: NAVIGATION_GROUP_LABELS[NavigationGroup.Main], items: mainItems },
-			{ label: NAVIGATION_GROUP_LABELS[NavigationGroup.Admin], items: adminItems }
-		].filter((group) => group.items.length > 0);
-	});
-
-	let displayUser = $derived({
+	const displayUser = $derived({
 		name: user?.name ?? user?.email ?? 'User',
 		email: user?.email ?? '',
-		roleLabel: user?.role ? (ROLE_LABELS[user.role] ?? user.role) : '',
+		roleLabel: user ? (ROLE_LABELS[user.role] ?? user.role) : '',
 		avatar: user?.avatar ?? null
 	});
 
@@ -72,7 +66,7 @@
 					class="group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
 				>
 					{#snippet child({ props })}
-						<a href={resolve('/')} {...props}>
+						<a href={resolve(HOME_ROUTE)} {...props}>
 							<div
 								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
 							>
@@ -89,7 +83,7 @@
 	</Sidebar.Header>
 
 	<Sidebar.Content>
-		<NavMain groups={navMainGroups} />
+		<NavMain {sections} />
 	</Sidebar.Content>
 
 	<Sidebar.Footer>

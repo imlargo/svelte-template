@@ -73,23 +73,10 @@ describe('permissionForRoute', () => {
 	});
 });
 
-describe('the sidebar never offers a link the hook would refuse', () => {
-	// Nav visibility and route access are declared separately on purpose — you
-	// may want a screen reachable but unlisted. The reverse is always a bug: a
-	// menu entry that 403s on click. This is the only direction worth pinning.
-	it.each(Object.values(UserRole))('holds for %s', (role) => {
-		for (const item of NAVIGATION_ITEMS) {
-			if (!hasPermission(ROLE_PERMISSIONS, role, item.requiredPermission)) continue;
-
-			const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, item.to);
-			expect(
-				required,
-				`${item.to} is in the menu but not in AUTH_ROUTE_PERMISSIONS`
-			).not.toBeNull();
-			expect(
-				hasPermission(ROLE_PERMISSIONS, role, required!),
-				`${role} sees "${item.title}" but would be refused at ${item.to}`
-			).toBe(true);
-		}
+describe('navigation', () => {
+	// The sidebar shows an item only to roles that may open its route, so an
+	// item whose route is undeclared would silently vanish for everyone.
+	it.each(NAVIGATION_ITEMS)('declares the route of "$title"', (item) => {
+		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, item.to)).not.toBeNull();
 	});
 });

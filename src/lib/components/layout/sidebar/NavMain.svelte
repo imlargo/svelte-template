@@ -1,46 +1,24 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import type { Pathname } from '$app/types';
-	import type { LucideIcon } from '@lucide/svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import type { NavigationSection } from '$lib/config/navigation';
+	import { isPrefixOf } from '$lib/core/permissions';
 
-	type NavItem = {
-		title: string;
-		// Not Pathname: some configured routes (e.g. /settings, /admin) don't exist
-		// yet in this starter. See lib/config/navigation.ts.
-		url: string;
-		icon: LucideIcon;
-	};
-
-	type NavGroup = {
-		label: string;
-		items: NavItem[];
-	};
-
-	let { groups }: { groups: NavGroup[] } = $props();
-
-	function isActive(url: string): boolean {
-		const pathname = page.url.pathname;
-		if (url === '/') return pathname === '/';
-		return pathname === url || pathname.startsWith(url + '/');
-	}
+	let { sections }: { sections: NavigationSection[] } = $props();
 </script>
 
-{#each groups as group (group.label)}
+{#each sections as section (section.label)}
 	<Sidebar.Group>
-		<Sidebar.GroupLabel>{group.label}</Sidebar.GroupLabel>
+		<Sidebar.GroupLabel>{section.label}</Sidebar.GroupLabel>
 		<Sidebar.GroupContent>
 			<Sidebar.Menu>
-				{#each group.items as item (item.url)}
+				{#each section.items as item (item.to)}
+					{@const active = isPrefixOf(item.to, page.url.pathname)}
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton isActive={isActive(item.url)} tooltipContent={item.title}>
+						<Sidebar.MenuButton isActive={active} tooltipContent={item.title}>
 							{#snippet child({ props })}
-								<a
-									href={resolve(item.url as Pathname)}
-									{...props}
-									aria-current={isActive(item.url) ? 'page' : undefined}
-								>
+								<a href={resolve(item.to)} {...props} aria-current={active ? 'page' : undefined}>
 									<item.icon />
 									<span>{item.title}</span>
 								</a>
