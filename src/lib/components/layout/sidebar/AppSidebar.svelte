@@ -55,7 +55,9 @@
 		avatar: user?.avatar ?? null
 	});
 
-	afterNavigate(() => {
+	afterNavigate(({ shallow }) => {
+		// A shallow navigation (`goto` with `shallow: true`) only updates history state.
+		if (shallow) return;
 		if (sidebar.isMobile && sidebar.openMobile) sidebar.setOpenMobile(false);
 	});
 </script>

@@ -115,7 +115,7 @@ importers:
         specifier: ^5.56.7
         version: 5.57.1(@typescript-eslint/types@8.71.0)
       svelte-check:
-        specifier: ^4.6.0
+        specifier: ^4.7.5
         version: 4.7.6(picomatch@4.0.7)(svelte@5.57.1(@typescript-eslint/types@8.71.0))(typescript@6.0.3)
       svelte-sonner:
         specifier: ^1.2.1

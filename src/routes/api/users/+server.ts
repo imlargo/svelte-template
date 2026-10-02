@@ -5,7 +5,6 @@
  * Error bodies use the `{ status, message }` shape that `normalizeError` parses,
  * so failures surface as typed `AppError`s on the client.
  */
-import { json } from '@sveltejs/kit';
 import { createUser, emailTaken, listUsers } from '#lib/server/users-store.js';
 import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
@@ -15,7 +14,7 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async ({ url, locals }) => {
 	locals.requirePermission('users:read');
 
-	return json(listUsers(url.searchParams.get('q') ?? undefined));
+	return Response.json(listUsers(url.searchParams.get('q') ?? undefined));
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -23,18 +22,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	const parsed = UserFormSchema.safeParse(await request.json());
 	if (!parsed.success) {
-		return json(
+		return Response.json(
 			{ status: 'BAD_REQUEST', message: parsed.error.issues[0]?.message ?? 'Invalid user data.' },
 			{ status: 400 }
 		);
 	}
 
 	if (emailTaken(parsed.data.email)) {
-		return json(
+		return Response.json(
 			{ status: 'CONFLICT', message: `${parsed.data.email} is already registered.` },
 			{ status: 409 }
 		);
 	}
 
-	return json(createUser(parsed.data), { status: 201 });
+	return Response.json(createUser(parsed.data), { status: 201 });
 };

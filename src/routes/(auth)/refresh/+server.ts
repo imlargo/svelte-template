@@ -4,7 +4,7 @@
  * so only the server can spend it. Public to the hook because it
  * authenticates itself with that cookie.
  */
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { config } from '#lib/config/app.js';
 import { logger } from '#lib/core/logger.js';
 import { isCredentialRejection } from '#lib/features/auth/rejection.js';
@@ -33,5 +33,5 @@ export const POST: RequestHandler = async ({ cookies }) => {
 		error(503, 'Cannot renew your session right now. Please try again in a moment.');
 	}
 
-	return json({ accessToken: renewed.accessToken } satisfies RefreshedSession);
+	return Response.json({ accessToken: renewed.accessToken } satisfies RefreshedSession);
 };

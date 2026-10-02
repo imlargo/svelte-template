@@ -1,13 +1,12 @@
 /**
  * DEMO SCAFFOLDING — see `#lib/server/users-store.js`.
  */
-import { json } from '@sveltejs/kit';
 import { deleteUser, emailTaken, findUser, updateUser } from '#lib/server/users-store.js';
 import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
 
 const notFound = (id: string) =>
-	json({ status: 'NOT_FOUND', message: `No user with id ${id}.` }, { status: 404 });
+	Response.json({ status: 'NOT_FOUND', message: `No user with id ${id}.` }, { status: 404 });
 
 // Endpoints get no layout, so each handler guards itself. Three methods, three
 // permissions: this is the granularity a path-keyed table cannot express.
@@ -15,7 +14,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	locals.requirePermission('users:read');
 
 	const user = findUser(params.id);
-	return user ? json(user) : notFound(params.id);
+	return user ? Response.json(user) : notFound(params.id);
 };
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
@@ -25,20 +24,20 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	const parsed = UserFormSchema.partial().safeParse(await request.json());
 	if (!parsed.success) {
-		return json(
+		return Response.json(
 			{ status: 'BAD_REQUEST', message: parsed.error.issues[0]?.message ?? 'Invalid user data.' },
 			{ status: 400 }
 		);
 	}
 
 	if (parsed.data.email && emailTaken(parsed.data.email, params.id)) {
-		return json(
+		return Response.json(
 			{ status: 'CONFLICT', message: `${parsed.data.email} is already registered.` },
 			{ status: 409 }
 		);
 	}
 
-	return json(updateUser(params.id, parsed.data));
+	return Response.json(updateUser(params.id, parsed.data));
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
