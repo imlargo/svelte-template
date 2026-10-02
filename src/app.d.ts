@@ -1,9 +1,3 @@
-import type {
-	CacheStorage,
-	ExecutionContext,
-	Fetcher,
-	IncomingRequestCfProperties
-} from '@cloudflare/workers-types';
 import type { User } from '#lib/types/user.js';
 import type { RequirePermission } from '#lib/features/auth/guard.server.js';
 
@@ -11,18 +5,6 @@ import type { RequirePermission } from '#lib/features/auth/guard.server.js';
 // for information about these interfaces
 declare global {
 	namespace App {
-		// Imported, not global: the Workers runtime types redefine DOM ones
-		// (`Element`, `Response`...) and would break components that use them.
-		// `env` holds the bindings declared in wrangler.jsonc.
-		interface Platform {
-			env: {
-				ASSETS: Fetcher;
-			};
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf?: IncomingRequestCfProperties;
-		}
-
 		interface Error {
 			/** Set by `handleError` for unexpected errors, and logged alongside them. */
 			errorId?: string;

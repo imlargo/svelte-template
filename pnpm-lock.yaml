@@ -109,7 +109,7 @@ importers:
         specifier: ^1.7.0
         version: 1.7.0(svelte@5.57.1(@typescript-eslint/types@8.71.0))
       svelte:
-        specifier: ^5.56.7
+        specifier: ^5.57.1
         version: 5.57.1(@typescript-eslint/types@8.71.0)
       svelte-check:
         specifier: ^4.7.5

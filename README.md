@@ -83,6 +83,7 @@ held to account.
 ```
 src/
 ├── env.ts             # Every environment variable, with its schema (defineEnvVars)
+├── cloudflare.d.ts    # Types for the Worker bindings, read from `cloudflare:workers`
 ├── hooks.server.ts    # Picks the auth handle (or a no-op) from config.auth.enabled
 ├── hooks.client.ts    # Client-side handleError
 ├── error.html         # Fallback page for errors thrown before any page renders
@@ -328,10 +329,12 @@ wrangler deploy
 `package.json`, before the first deploy. Workers Logs (`observability`) is on, so the `logger`'s
 output is searchable in the Cloudflare dashboard.
 
-Bindings are typed by hand: declare each one in `wrangler.jsonc`, then add it to
-`App.Platform['env']` in `src/app.d.ts` with its type imported from `@cloudflare/workers-types`
-(`KVNamespace`, `R2Bucket`, ...), next to `ctx`, `caches` and `cf`. `wrangler types` is not used:
-it declares the Workers runtime types globally, and those redefine DOM types (`Element`,
+Cloudflare's APIs are not on `platform`: bindings and `waitUntil` are imported from
+`cloudflare:workers` (`import { env } from 'cloudflare:workers'`, on the server only), `cf` is
+`request.cf`, and `caches` is a global. The adapter provides that module in dev too. Bindings are
+typed by hand: declare each one in `wrangler.jsonc`, then add it to `env` in `src/cloudflare.d.ts`
+with its type from `@cloudflare/workers-types` (`KVNamespace`, `R2Bucket`, ...). `wrangler types` is
+not used: it declares the Workers runtime types globally, and those redefine DOM types (`Element`,
 `Response`...) that components rely on, which breaks `check`.
 
 ## Customization checklist
