@@ -47,6 +47,44 @@ describe('Query', () => {
 		expect(query.data).toBe('ok');
 	});
 
+	it('keeps the previous data when a run fails', async () => {
+		const query = createQuery<string>();
+		await query.run(async () => 'first');
+
+		await query.run(async () => {
+			throw new Error('boom');
+		});
+
+		expect(query.data).toBe('first');
+		expect(query.error).not.toBe(null);
+	});
+
+	it('ignores an older run that settles after a newer one', async () => {
+		const query = createQuery<string>();
+		let settleSlow!: (value: string) => void;
+
+		const slow = query.run(() => new Promise<string>((resolve) => (settleSlow = resolve)));
+		await query.run(async () => 'fast');
+		settleSlow('stale');
+		await slow;
+
+		expect(query.data).toBe('fast');
+		expect(query.isLoading).toBe(false);
+	});
+
+	it('is loading until the latest run settles', async () => {
+		const query = createQuery<string>();
+		let settleSlow!: (value: string) => void;
+
+		await query.run(async () => 'first');
+		const slow = query.run(() => new Promise<string>((resolve) => (settleSlow = resolve)));
+		expect(query.isLoading).toBe(true);
+
+		settleSlow('second');
+		await slow;
+		expect(query.isLoading).toBe(false);
+	});
+
 	it('is loading while the call is in flight', async () => {
 		const query = createQuery<string>();
 
