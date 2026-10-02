@@ -43,6 +43,9 @@ test('a user can be created, and the list updates in place', async ({ page }) =>
 	const email = `e2e-${Date.now()}@example.com`;
 
 	await page.goto('/admin');
+	// The list loads in `onMount`, so it showing means the page is hydrated: a
+	// click before that lands on server HTML and opens nothing.
+	await expect(page.getByRole('cell', { name: 'Ada Lovelace' })).toBeVisible();
 	await page.getByRole('button', { name: 'New user' }).click();
 
 	const dialog = page.getByRole('dialog');
