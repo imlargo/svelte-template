@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
 	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
@@ -39,6 +40,8 @@
 	// each a click away.
 	onMount(() => items.run(async () => []));
 </script>
+
+<DocumentTitle title="Dashboard" />
 
 <div class="flex flex-col gap-6">
 	<PageHeader title="Dashboard" description="Welcome to your app. Start building here.">

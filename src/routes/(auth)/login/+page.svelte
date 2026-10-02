@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LoginForm from '$lib/features/auth/components/LoginForm.svelte';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 	import { resolve } from '$app/paths';
 	import { config } from '$lib/config/app';
 	import { HOME_ROUTE } from '$lib/config/routes';
@@ -8,9 +9,7 @@
 	let { data }: PageProps = $props();
 </script>
 
-<svelte:head>
-	<title>{config.branding.seo.title} — Log in</title>
-</svelte:head>
+<DocumentTitle title="Sign in" />
 
 <div class="grid min-h-svh lg:grid-cols-2">
 	<div class="flex flex-col gap-4 p-6 md:p-10">

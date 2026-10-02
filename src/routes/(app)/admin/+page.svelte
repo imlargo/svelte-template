@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import PageHeader from '$lib/components/blocks/PageHeader.svelte';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 	import AsyncView from '$lib/components/blocks/AsyncView.svelte';
 	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
 	import SearchInput from '$lib/components/coral/kit/search-input/search-input.svelte';
@@ -87,7 +88,7 @@
 	}
 </script>
 
-<svelte:head><title>Users · Admin</title></svelte:head>
+<DocumentTitle title="Users" />
 
 <div class="flex flex-col gap-6">
 	<PageHeader title="Users" description="Create, edit and remove the people in this workspace.">

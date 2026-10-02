@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
 	import { AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
 
 	let {
@@ -24,6 +25,8 @@
 
 	const title = $derived(TITLES[status] ?? 'Something went wrong');
 </script>
+
+<DocumentTitle {title} />
 
 <div class="flex flex-col items-center gap-4 text-center">
 	<p class="text-6xl font-bold text-muted-foreground">{status}</p>

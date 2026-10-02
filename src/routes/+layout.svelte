@@ -15,7 +15,7 @@
 
 <svelte:head>
 	<link rel="icon" href={config.branding.favicon} />
-	<!-- Fallback title/description: a page with its own <svelte:head> title overrides this. -->
+	<!-- Fallback title/description: a page's <DocumentTitle> overrides the title. -->
 	<title>{config.branding.seo.title}</title>
 	<meta name="description" content={config.branding.seo.description} />
 	<meta property="og:title" content={config.branding.seo.title} />
