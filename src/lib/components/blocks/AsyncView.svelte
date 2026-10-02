@@ -2,8 +2,9 @@
 	import type { Snippet } from 'svelte';
 	import type { Query } from '$lib/core/query.svelte';
 	import { normalizeError, type AppError } from '$lib/core/errors';
-	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
-	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
+	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import EmptyState from '$lib/components/blocks/EmptyState.svelte';
+	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
 
 	let {
 		source,
@@ -23,8 +24,7 @@
 		error?: Snippet<[AppError]>;
 	} = $props();
 
-	// A list that came back with nothing is the only "empty" this knows about —
-	// no isEmpty prop to configure. Anything else belongs inside `children`.
+	// A list that came back with nothing is the only "empty" this knows about.
 	function isEmpty(data: T): boolean {
 		return Array.isArray(data) && data.length === 0;
 	}
@@ -35,7 +35,7 @@
 		{@render loadingSnippet()}
 	{:else}
 		<div class="flex flex-1 items-center justify-center py-12">
-			<LoaderCircleIcon class="size-6 animate-spin text-muted-foreground" />
+			<Spinner class="size-6 text-muted-foreground" />
 		</div>
 	{/if}
 {/snippet}
@@ -44,11 +44,11 @@
 	{#if errorSnippet}
 		{@render errorSnippet(err)}
 	{:else}
-		<div class="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center">
-			<AlertCircleIcon class="size-8 text-destructive" />
-			<p class="text-sm font-medium text-destructive">Something went wrong</p>
-			<p class="text-sm text-muted-foreground">{err.message}</p>
-		</div>
+		<EmptyState title="Something went wrong" description={err.message}>
+			{#snippet icon()}
+				<CircleAlertIcon class="text-destructive" />
+			{/snippet}
+		</EmptyState>
 	{/if}
 {/snippet}
 
@@ -57,9 +57,7 @@
 		{#if emptySnippet}
 			{@render emptySnippet()}
 		{:else}
-			<div class="flex flex-1 items-center justify-center py-12">
-				<p class="text-sm text-muted-foreground">No results found.</p>
-			</div>
+			<EmptyState title="No results found." />
 		{/if}
 	{:else}
 		{@render children(data)}
