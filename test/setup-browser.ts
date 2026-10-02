@@ -9,7 +9,7 @@ import { variables } from '../src/env';
  */
 const env = Object.fromEntries(
 	Object.entries(variables)
-		.filter(([, config]) => config.public)
+		.filter(([, config]) => 'public' in config && config.public)
 		.map(([name, config]) => {
 			const result = config.schema['~standard'].validate(import.meta.env[name]);
 			if (result instanceof Promise || result.issues)

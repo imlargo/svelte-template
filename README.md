@@ -294,7 +294,7 @@ Errors are rendered at three levels:
 ## Testing
 
 ```sh
-pnpm run test        # vitest once (component + server tests), then the e2e suite
+pnpm run test        # vitest, run once - component tests (Chromium) and server tests both
 pnpm run test:unit   # vitest, watch mode
 pnpm run test:e2e    # Playwright, against the built worker
 ```
@@ -320,7 +320,7 @@ no secrets. Their shared setup lives in `.github/actions/setup`.
 Built for Cloudflare Workers via `@sveltejs/adapter-cloudflare`:
 
 ```sh
-pnpm run build     # wrangler types --check, then vite build
+pnpm run build     # vite build
 wrangler deploy
 ```
 
@@ -328,11 +328,11 @@ wrangler deploy
 `package.json`, before the first deploy. Workers Logs (`observability`) is on, so the `logger`'s
 output is searchable in the Cloudflare dashboard.
 
-Bindings are typed by `wrangler types`: declare each one in `wrangler.jsonc` and run
-`pnpm run gen`, which regenerates `worker-configuration.d.ts`. `App.Platform['env']` in
-`src/app.d.ts` is that generated `Env`, so a new binding is typed without editing it. `build` and
-`check` run `wrangler types --check`, which fails when the generated file is out of date with
-`wrangler.jsonc`.
+Bindings are typed by hand: declare each one in `wrangler.jsonc`, then add it to
+`App.Platform['env']` in `src/app.d.ts` with its type imported from `@cloudflare/workers-types`
+(`KVNamespace`, `R2Bucket`, ...), next to `ctx`, `caches` and `cf`. `wrangler types` is not used:
+it declares the Workers runtime types globally, and those redefine DOM types (`Element`,
+`Response`...) that components rely on, which breaks `check`.
 
 ## Customization checklist
 
@@ -362,10 +362,9 @@ demo pages on purpose: it is there so a project does not start by building a com
 pnpm run dev          # Dev server, http://localhost:5173
 pnpm run build        # Production build
 pnpm run preview      # Serve the built worker locally, port 4173
-pnpm run check        # wrangler types --check, svelte-kit sync, svelte-check
+pnpm run check        # svelte-kit sync, svelte-check
 pnpm run lint         # Prettier + ESLint
 pnpm run format       # Prettier --write
-pnpm run gen          # wrangler types: regenerate worker-configuration.d.ts
-pnpm run test         # Vitest (browser + server projects) once, then the e2e suite
+pnpm run test         # Vitest (browser + server projects), once
 pnpm run test:e2e     # Playwright smoke suite against the built worker
 ```
