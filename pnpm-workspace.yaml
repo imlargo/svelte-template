@@ -4,5 +4,4 @@ allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
   - '@sveltejs/adapter-cloudflare@8.0.0'
-  - '@sveltejs/enhanced-img@1.0.0'
   - '@sveltejs/kit@3.0.0'

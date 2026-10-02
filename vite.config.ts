@@ -1,4 +1,3 @@
-import { enhancedImages } from '@sveltejs/enhanced-img';
 import tailwindcss from '@tailwindcss/vite';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
@@ -8,7 +7,6 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [
-		enhancedImages(),
 		tailwindcss(),
 		sveltekit({
 			compilerOptions: {
