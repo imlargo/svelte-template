@@ -23,8 +23,8 @@ export class ClientSession implements AuthState {
 
 	/**
 	 * Follows the layout data, and is overwritten in place when `/refresh`
-	 * renews the token between navigations. The next navigation brings the
-	 * server's value back, which by then is that same renewed token.
+	 * renews the token between navigations; the next navigation brings back
+	 * that same token from the server.
 	 */
 	accessToken = $derived.by(() => this.#data().accessToken);
 
@@ -35,10 +35,8 @@ export class ClientSession implements AuthState {
 		this.api = {
 			token: () => this.accessToken,
 			fetch: createAuthTransport({
-				// A 401 is not the browser's to judge: re-running the loads sends a
-				// request through the auth hook, which redirects to sign in — back
-				// to this page afterwards — if the session really is gone. Nobody
-				// awaits this, so a failure is logged rather than left unhandled.
+				// The server judges a 401: re-running the loads goes through the hook,
+				// which sends the user to sign in if the session really is gone.
 				onUnauthorized: () => invalidateAll().catch((err) => logger.error('auth', err)),
 				renew: config.auth.refresh.enabled ? (fetch) => this.#renew(fetch) : undefined
 			})

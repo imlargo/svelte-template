@@ -1,14 +1,6 @@
 /**
- * Role-based access checks. Pure and project-agnostic: the permission data is
- * always passed in, so this module knows nothing about the roles, permissions
- * or routes of any particular app. See `$lib/config/permissions` for the data.
- *
- * Deny by default, and it falls out of the data rather than being bolted on: a
- * role holds exactly the permissions granted to it, so a role the frontend has
- * never heard of resolves to no grants at all and is denied without a single
- * special case. There is no "unrestricted" value to get wrong.
- *
- * This module answers questions; it does not enforce anything. Enforcement is
+ * Role-based access checks, project-agnostic: the data is always passed in
+ * (see `$lib/config/permissions`). These answer questions; enforcement is
  * `locals.requirePermission` (`features/auth/guard.server.ts`).
  */
 
@@ -18,6 +10,7 @@ export type RolePermissions<R extends string, P extends string> = Record<R, read
 /** Maps a page route prefix to the permission needed to open it. */
 export type RoutePermissions<P extends string> = Record<string, P>;
 
+/** Deny by default: an unknown or missing role holds nothing. */
 export function hasPermission<R extends string, P extends string>(
 	grants: RolePermissions<R, P>,
 	role: string | null | undefined,
@@ -29,24 +22,16 @@ export function hasPermission<R extends string, P extends string>(
 }
 
 /**
- * Whether `pathname` is `route` or sits under it, matching whole segments only:
- * '/admin' covers '/admin/users' but not '/admin-panel'.
- *
- * The root entry needs no special case — it compares against '//', so '/'
- * matches itself and nothing else. That matters: as a plain string prefix it
- * would swallow every path and undo the deny-by-default.
+ * Whether `pathname` is `route` or sits under it, by whole segments: '/admin'
+ * covers '/admin/users' but not '/admin-panel', and '/' matches only itself.
  */
 export function isPrefixOf(route: string, pathname: string): boolean {
 	return pathname === route || pathname.startsWith(`${route}/`);
 }
 
 /**
- * The permission a page route needs, or null when the route is not declared —
- * which callers must treat as denied. Longest prefix wins, so '/admin/users'
- * uses its own rule when it has one instead of the shallower '/admin'.
- *
- * Page routes only. Endpoints declare theirs per handler: the same path answers
- * to several methods, and this table has one entry per path.
+ * The permission a page needs, by longest matching prefix, or null when the
+ * page is not declared — which callers must treat as denied.
  */
 export function permissionForRoute<P extends string>(
 	routes: RoutePermissions<P>,
