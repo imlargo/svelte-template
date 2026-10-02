@@ -14,15 +14,7 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter(),
-			alias: {
-				$components: './src/lib/components',
-				$ui: './src/lib/components/ui',
-				$core: './src/lib/core',
-				$hooks: './src/lib/hooks',
-				$types: './src/lib/types',
-				$utils: './src/lib/utils'
-			}
+			adapter: adapter()
 		})
 	],
 	test: {
