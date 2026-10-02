@@ -9,8 +9,8 @@
  *
  * Restarting the dev server resets it.
  */
-import { UserRole } from '$lib/types/user';
-import type { User } from '$lib/types/user';
+import { UserRole } from '#lib/types/user.js';
+import type { User } from '#lib/types/user.js';
 
 const SEED: User[] = [
 	['Ada Lovelace', 'ada@example.com', UserRole.ADMIN],

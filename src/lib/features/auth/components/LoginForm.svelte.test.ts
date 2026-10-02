@@ -3,7 +3,7 @@ import { render } from 'vitest-browser-svelte';
 import { defaults } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import LoginForm from './LoginForm.svelte';
-import { LoginSchema } from '$lib/features/auth/schemas';
+import { LoginSchema } from '#lib/features/auth/schemas.js';
 
 // The reference component test: runs in a real Chromium tab (the `client`
 // Vitest project), so what is asserted is what a user would see and do.

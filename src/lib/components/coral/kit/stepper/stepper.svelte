@@ -4,7 +4,7 @@
 	 * @version 1.0.0
 	 */
 	import { tick } from 'svelte';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { Action } from '../../lib/action.svelte.js';
 	import { setStepper } from './context.js';
 	import { adjacent, canVisit, complete, stateOf } from './steps.js';

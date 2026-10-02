@@ -3,7 +3,7 @@
 	 * @coral/kit/shortcut
 	 * @version 1.0.0
 	 */
-	import { Kbd, KbdGroup } from '$lib/components/ui/kbd/index.js';
+	import { Kbd, KbdGroup } from '#lib/components/ui/kbd/index.js';
 	import { parse, tokens } from './keys.js';
 	import { listen } from './listen.js';
 	import { PlatformState } from './platform.svelte.js';

@@ -1,16 +1,16 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Form from '#lib/components/ui/form/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { untrack } from 'svelte';
 	import { defaults, superForm } from 'sveltekit-superforms';
 	import { zod4, zod4Client } from 'sveltekit-superforms/adapters';
-	import { UserFormSchema, type UserFormData } from '$lib/features/users/schemas';
-	import { ROLE_LABELS } from '$lib/config/permissions';
-	import { UserRole } from '$lib/types/user';
-	import type { User } from '$lib/types/user';
+	import { UserFormSchema, type UserFormData } from '#lib/features/users/schemas.js';
+	import { ROLE_LABELS } from '#lib/config/permissions.js';
+	import { UserRole } from '#lib/types/user.js';
+	import type { User } from '#lib/types/user.js';
 
 	let {
 		open = $bindable(),

@@ -1,6 +1,6 @@
 import type { Fetcher } from '@cloudflare/workers-types';
-import type { User } from '$lib/types/user';
-import type { RequirePermission } from '$lib/features/auth/guard.server';
+import type { User } from '#lib/types/user.js';
+import type { RequirePermission } from '#lib/features/auth/guard.server.js';
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces

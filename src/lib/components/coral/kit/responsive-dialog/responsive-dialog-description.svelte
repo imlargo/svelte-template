@@ -3,8 +3,8 @@
 	 * @coral/kit/responsive-dialog
 	 * @version 1.0.0
 	 */
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Drawer from '#lib/components/ui/drawer/index.js';
 	import { getResponsiveDialog } from './context.js';
 	import type { ResponsiveDialogDescriptionProps } from './types.js';
 

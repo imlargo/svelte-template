@@ -1,6 +1,6 @@
 import { createContext } from 'svelte';
-import type { ApiAuth } from '$lib/core/api';
-import type { User } from '$lib/types/user';
+import type { ApiAuth } from '#lib/core/api.js';
+import type { User } from '#lib/types/user.js';
 
 /**
  * The client's auth state, in context — that is, per request. Never a

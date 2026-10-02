@@ -7,7 +7,7 @@
 import { env } from '$env/dynamic/private';
 import type { Cookies } from '@sveltejs/kit';
 import { z } from 'zod';
-import { flag, parseEnv, unset } from '$lib/utils/env';
+import { flag, parseEnv, unset } from '#lib/utils/env.js';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';

@@ -1,9 +1,9 @@
 /**
- * DEMO SCAFFOLDING — see `$lib/server/users-store`.
+ * DEMO SCAFFOLDING — see `#lib/server/users-store.js`.
  */
 import { json } from '@sveltejs/kit';
-import { deleteUser, emailTaken, findUser, updateUser } from '$lib/server/users-store';
-import { UserFormSchema } from '$lib/features/users/schemas';
+import { deleteUser, emailTaken, findUser, updateUser } from '#lib/server/users-store.js';
+import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
 
 const notFound = (id: string) =>

@@ -1,5 +1,5 @@
-import type { HandleClientError } from '@sveltejs/kit';
-import { logger } from '$lib/core/logger';
+import type { HandleClientError } from '@sveltejs/kit/hooks';
+import { logger } from '#lib/core/logger.js';
 
 // The client twin of the server's handleError: same safe message, same kind of
 // id, so a report from the browser can be matched with its console line.

@@ -1,14 +1,14 @@
 <script lang="ts">
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils';
-	import { config } from '$lib/config/app';
+	import * as Form from '#lib/components/ui/form/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
+	import { config } from '#lib/config/app.js';
 	import { superForm, type SuperValidated, type Infer } from 'sveltekit-superforms';
 	import { untrack } from 'svelte';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { LoginSchema } from '$lib/features/auth/schemas';
-	import { REDIRECT_PARAM } from '$lib/features/auth/redirect';
+	import { LoginSchema } from '#lib/features/auth/schemas.js';
+	import { REDIRECT_PARAM } from '#lib/features/auth/redirect.js';
 
 	let {
 		form: formData,

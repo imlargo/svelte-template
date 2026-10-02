@@ -1,5 +1,5 @@
-import { config } from '$lib/config/app';
-import { AUTH_ROUTES } from '$lib/config/routes';
+import { config } from '#lib/config/app.js';
+import { AUTH_ROUTES } from '#lib/config/routes.js';
 
 const GOOGLE_AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 

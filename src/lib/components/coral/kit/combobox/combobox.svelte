@@ -6,12 +6,12 @@
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import XIcon from '@lucide/svelte/icons/x';
-	import * as Command from '$lib/components/ui/command/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Spinner } from '$lib/components/ui/spinner/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as Command from '#lib/components/ui/command/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import { cn } from '#lib/utils.js';
 	import HiddenField from '../../lib/hidden-field.svelte';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { debounce } from '../../lib/debounce.js';

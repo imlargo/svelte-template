@@ -4,9 +4,9 @@
 	 * @version 1.0.0
 	 */
 	import { tick, untrack } from 'svelte';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import { Spinner } from '$lib/components/ui/spinner/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import { cn } from '#lib/utils.js';
 	import { Action } from '../../lib/action.svelte.js';
 	import { focusRing } from '../../lib/focus.js';
 	import type { InlineEditProps } from './types.js';

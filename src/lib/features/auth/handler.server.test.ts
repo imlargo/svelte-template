@@ -1,8 +1,9 @@
+import { isHttpError, isRedirect } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit/hooks';
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
-import { isHttpError, isRedirect, type Handle } from '@sveltejs/kit';
 import { handleAuth } from './handler.server';
-import { AppError } from '$lib/core/errors';
-import { UserRole, type User } from '$lib/types/user';
+import { AppError } from '#lib/core/errors.js';
+import { UserRole, type User } from '#lib/types/user.js';
 
 // The hook is the only thing standing between an anonymous request and the app,
 // so what it does on a missing, rejected or unverifiable session is asserted
@@ -23,14 +24,14 @@ vi.mock('./services/auth', () => ({
 const { refreshFlag } = vi.hoisted(() => ({ refreshFlag: { enabled: false } }));
 
 // A test-owned flag in place of the real config's, which stays untouched.
-vi.mock('$lib/config/app', async (importOriginal) => {
-	const { config } = await importOriginal<typeof import('$lib/config/app')>();
+vi.mock('#lib/config/app.js', async (importOriginal) => {
+	const { config } = await importOriginal<typeof import('#lib/config/app.js')>();
 	return { config: { ...config, auth: { ...config.auth, refresh: refreshFlag } } };
 });
 
 // Silenced on purpose: the outage case logs, and its own behaviour is covered
 // by core/logger.test.ts.
-vi.mock('$lib/core/logger', () => ({
+vi.mock('#lib/core/logger.js', () => ({
 	logger: { error: vi.fn(() => 'logged'), warn: vi.fn(), info: vi.fn() }
 }));
 

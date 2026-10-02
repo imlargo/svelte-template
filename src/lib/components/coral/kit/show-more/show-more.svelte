@@ -4,8 +4,8 @@
 	 * @version 1.0.0
 	 */
 	import { tick } from 'svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 	import type { ShowMoreProps } from './types.js';
 
 	let {

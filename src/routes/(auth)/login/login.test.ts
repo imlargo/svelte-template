@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { actions } from './+page.server';
-import { AppError } from '$lib/core/errors';
-import { encodeRedirect } from '$lib/features/auth/redirect';
+import { AppError } from '#lib/core/errors.js';
+import { encodeRedirect } from '#lib/features/auth/redirect.js';
 
 const { login, logError } = vi.hoisted(() => ({ login: vi.fn(), logError: vi.fn() }));
 
-vi.mock('$lib/features/auth/services/auth', () => ({
+vi.mock('#lib/features/auth/services/auth.js', () => ({
 	AuthService: class {
 		login = login;
 	}
 }));
 
-vi.mock('$lib/core/logger', () => ({
+vi.mock('#lib/core/logger.js', () => ({
 	logger: { error: logError, warn: vi.fn(), info: vi.fn() }
 }));
 

@@ -1,9 +1,9 @@
-import { building } from '$app/environment';
+import { building } from '$app/env';
 import { env } from '$env/dynamic/public';
 import { z } from 'zod';
-import { flag, parseEnv, unset } from '$lib/utils/env';
-import defaultLogo from '$lib/assets/logo.svg';
-import defaultFavicon from '$lib/assets/favicon.svg';
+import { flag, parseEnv, unset } from '#lib/utils/env.js';
+import defaultLogo from '#lib/assets/logo.svg';
+import defaultFavicon from '#lib/assets/favicon.svg';
 
 export interface AppConfig {
 	api: {

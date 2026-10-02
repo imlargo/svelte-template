@@ -5,8 +5,8 @@
 	 */
 	import { prefersReducedMotion } from 'svelte/motion';
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 	import { isAtEnd, unreadSince } from './follow.js';
 	import type { FollowScrollProps } from './types.js';
 

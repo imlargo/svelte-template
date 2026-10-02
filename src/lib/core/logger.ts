@@ -3,7 +3,7 @@
  * class that implements `Logger` and reassign `logger` — nothing else in the
  * codebase changes.
  */
-import { normalizeError } from '$lib/core/errors';
+import { normalizeError } from '#lib/core/errors.js';
 
 /** Searchable detail attached to a log line — an `errorId`, a pathname. Never a token. */
 type LogContext = Record<string, unknown>;

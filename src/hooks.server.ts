@@ -1,7 +1,7 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit';
-import { config } from '$lib/config/app';
-import { logger } from '$lib/core/logger';
-import { handleAuth } from '$lib/features/auth/handler.server';
+import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
+import { config } from '#lib/config/app.js';
+import { logger } from '#lib/core/logger.js';
+import { handleAuth } from '#lib/features/auth/handler.server.js';
 
 // With auth off there is no user to check against, so every permission passes.
 // Installed anyway: `locals.requirePermission` is declared as always present,

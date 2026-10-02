@@ -7,7 +7,7 @@
 	import { flip } from 'svelte/animate';
 	import { prefersReducedMotion } from 'svelte/motion';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
-	import { cn } from '$lib/utils.js';
+	import { cn } from '#lib/utils.js';
 	import { Announcer } from '../../lib/announce.svelte.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { focusRing } from '../../lib/focus.js';

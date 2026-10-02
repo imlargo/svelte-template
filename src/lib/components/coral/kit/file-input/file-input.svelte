@@ -7,9 +7,9 @@
 	import FileIcon from '@lucide/svelte/icons/file';
 	import UploadIcon from '@lucide/svelte/icons/upload';
 	import XIcon from '@lucide/svelte/icons/x';
-	import * as Attachment from '$lib/components/ui/attachment/index.js';
-	import * as Empty from '$lib/components/ui/empty/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as Attachment from '#lib/components/ui/attachment/index.js';
+	import * as Empty from '#lib/components/ui/empty/index.js';
+	import { cn } from '#lib/utils.js';
 	import { describeAccept } from './accept.js';
 	import { collect } from './collect.js';
 	import { formatBytes } from './format-bytes.js';

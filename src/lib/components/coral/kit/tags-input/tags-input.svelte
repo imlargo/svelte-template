@@ -5,9 +5,9 @@
 	 */
 	import { tick } from 'svelte';
 	import XIcon from '@lucide/svelte/icons/x';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
+	import { cn } from '#lib/utils.js';
 	import { focusRing } from '../../lib/focus.js';
 	import { add, split } from './tags.js';
 	import type { TagsInputProps } from './types.js';

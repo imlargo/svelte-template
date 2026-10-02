@@ -1,7 +1,7 @@
-import type { User } from '$lib/types/user';
-import type { UserFormData } from '$lib/features/users/schemas';
-import type { ApiAuth } from '$lib/core/api';
-import { BaseService } from '$lib/core/service';
+import type { User } from '#lib/types/user.js';
+import type { UserFormData } from '#lib/features/users/schemas.js';
+import type { ApiAuth } from '#lib/core/api.js';
+import { BaseService } from '#lib/core/service.js';
 
 export class UsersService extends BaseService {
 	/**

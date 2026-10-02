@@ -6,11 +6,11 @@
 	import { tick } from 'svelte';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
 	import XIcon from '@lucide/svelte/icons/x';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { Calendar } from '$lib/components/ui/calendar/index.js';
-	import { RangeCalendar } from '$lib/components/ui/range-calendar/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { cn } from '$lib/utils.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
+	import { Calendar } from '#lib/components/ui/calendar/index.js';
+	import { RangeCalendar } from '#lib/components/ui/range-calendar/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 	import HiddenField from '../../lib/hidden-field.svelte';
 	import { formatDay, formatDayRange, isSameDay, isSameRange } from './format.js';
 	import { activePreset, resolvePreset } from './presets.js';

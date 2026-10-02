@@ -3,13 +3,13 @@
  * where the browser goes next.
  */
 import { error, redirect } from '@sveltejs/kit';
-import { config } from '$lib/config/app';
-import { AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
-import { logger } from '$lib/core/logger';
-import { AuthService } from '$lib/features/auth/services/auth';
-import { OAUTH_FAILED_PARAM } from '$lib/features/auth/google';
-import { decodeRedirect } from '$lib/features/auth/redirect';
-import { clearSession, setSession, takeOAuthState } from '$lib/features/auth/session.server';
+import { config } from '#lib/config/app.js';
+import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
+import { logger } from '#lib/core/logger.js';
+import { AuthService } from '#lib/features/auth/services/auth.js';
+import { OAUTH_FAILED_PARAM } from '#lib/features/auth/google.js';
+import { decodeRedirect } from '#lib/features/auth/redirect.js';
+import { clearSession, setSession, takeOAuthState } from '#lib/features/auth/session.server.js';
 import type { RequestHandler } from './$types';
 
 const FAILED_SIGN_IN = `${AUTH_ROUTES.login}?${new URLSearchParams({ [OAUTH_FAILED_PARAM]: 'oauth' })}`;

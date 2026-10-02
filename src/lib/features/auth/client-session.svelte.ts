@@ -1,9 +1,9 @@
 import { invalidateAll } from '$app/navigation';
 import type { Fetch } from '@imlargo/air';
-import type { ApiAuth } from '$lib/core/api';
-import { config } from '$lib/config/app';
-import { logger } from '$lib/core/logger';
-import type { User } from '$lib/types/user';
+import type { ApiAuth } from '#lib/core/api.js';
+import { config } from '#lib/config/app.js';
+import { logger } from '#lib/core/logger.js';
+import type { User } from '#lib/types/user.js';
 import type { AuthState } from './context';
 import { SessionService } from './services/session';
 import { createAuthTransport } from './transport';

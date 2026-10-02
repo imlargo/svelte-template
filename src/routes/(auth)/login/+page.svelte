@@ -1,9 +1,9 @@
 <script lang="ts">
-	import LoginForm from '$lib/features/auth/components/LoginForm.svelte';
-	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
+	import LoginForm from '#lib/features/auth/components/LoginForm.svelte';
+	import DocumentTitle from '#lib/components/blocks/DocumentTitle.svelte';
 	import { resolve } from '$app/paths';
-	import { config } from '$lib/config/app';
-	import { HOME_ROUTE } from '$lib/config/routes';
+	import { config } from '#lib/config/app.js';
+	import { HOME_ROUTE } from '#lib/config/routes.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

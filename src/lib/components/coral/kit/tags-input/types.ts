@@ -4,8 +4,8 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { BadgeVariant } from '$lib/components/ui/badge/index.js';
-import type { InputGroupInput } from '$lib/components/ui/input-group/index.js';
+import type { BadgeVariant } from '#lib/components/ui/badge/index.js';
+import type { InputGroupInput } from '#lib/components/ui/input-group/index.js';
 import type { TagRejection } from './tags.js';
 
 /**

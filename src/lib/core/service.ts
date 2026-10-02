@@ -1,5 +1,5 @@
-import { createApiClient, type ApiAuth } from '$lib/core/api';
-import { AppError } from '$lib/core/errors';
+import { createApiClient, type ApiAuth } from '#lib/core/api.js';
+import { AppError } from '#lib/core/errors.js';
 import type { AirClient } from '@imlargo/air';
 
 /**

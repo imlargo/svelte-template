@@ -3,7 +3,7 @@
 	 * @coral/kit/avatar-stack
 	 * @version 1.0.0
 	 */
-	import { AvatarGroup, AvatarGroupCount } from '$lib/components/ui/avatar/index.js';
+	import { AvatarGroup, AvatarGroupCount } from '#lib/components/ui/avatar/index.js';
 	import Avatar from '../avatar/avatar.svelte';
 	import { split } from './overflow.js';
 	import type { AvatarStackPerson, AvatarStackProps } from './types.js';

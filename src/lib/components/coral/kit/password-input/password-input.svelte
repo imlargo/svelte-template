@@ -7,7 +7,7 @@
 	import ArrowBigUpDashIcon from '@lucide/svelte/icons/arrow-big-up-dash';
 	import EyeIcon from '@lucide/svelte/icons/eye';
 	import EyeOffIcon from '@lucide/svelte/icons/eye-off';
-	import * as InputGroup from '$lib/components/ui/input-group/index.js';
+	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import type { PasswordInputProps } from './types.js';
 

@@ -3,9 +3,9 @@
 	 * @coral/kit/action-button
 	 * @version 1.0.0
 	 */
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Spinner } from '$lib/components/ui/spinner/index.js';
-	import { cn } from '$lib/utils.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import { cn } from '#lib/utils.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { Action } from '../../lib/action.svelte.js';
 	import type { ActionButtonProps } from './types.js';

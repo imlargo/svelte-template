@@ -1,15 +1,15 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { config } from '$lib/config/app';
-import { HOME_ROUTE } from '$lib/config/routes';
-import { logger } from '$lib/core/logger';
-import { AuthService } from '$lib/features/auth/services/auth';
-import { LoginSchema } from '$lib/features/auth/schemas';
-import { REDIRECT_PARAM, decodeRedirect } from '$lib/features/auth/redirect';
-import { OAUTH_FAILED_PARAM, buildGoogleAuthUrl } from '$lib/features/auth/google';
-import { isCredentialRejection } from '$lib/features/auth/rejection';
-import { getSession, setOAuthState, setSession } from '$lib/features/auth/session.server';
+import { config } from '#lib/config/app.js';
+import { HOME_ROUTE } from '#lib/config/routes.js';
+import { logger } from '#lib/core/logger.js';
+import { AuthService } from '#lib/features/auth/services/auth.js';
+import { LoginSchema } from '#lib/features/auth/schemas.js';
+import { REDIRECT_PARAM, decodeRedirect } from '#lib/features/auth/redirect.js';
+import { OAUTH_FAILED_PARAM, buildGoogleAuthUrl } from '#lib/features/auth/google.js';
+import { isCredentialRejection } from '#lib/features/auth/rejection.js';
+import { getSession, setOAuthState, setSession } from '#lib/features/auth/session.server.js';
 import type { Actions, PageServerLoad } from './$types';
 
 /** Where to land after signing in, honouring the `?redirect=` the auth hook set. */

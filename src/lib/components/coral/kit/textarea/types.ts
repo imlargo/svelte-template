@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Textarea } from '$lib/components/ui/textarea/index.js';
+import type { Textarea } from '#lib/components/ui/textarea/index.js';
 
 /**
  * Everything the shadcn textarea accepts - `name`, `id`, `placeholder`, `required`, `disabled`,

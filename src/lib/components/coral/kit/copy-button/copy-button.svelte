@@ -6,7 +6,7 @@
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import XIcon from '@lucide/svelte/icons/x';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { Announcer } from '../../lib/announce.svelte.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { resolveText, writeText } from './clipboard.js';

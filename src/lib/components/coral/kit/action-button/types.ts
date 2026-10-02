@@ -4,7 +4,7 @@
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Button } from '$lib/components/ui/button/index.js';
+import type { Button } from '#lib/components/ui/button/index.js';
 
 /**
  * Everything the shadcn button accepts - `variant`, `size`, `type`, `form`, `aria-*`, `ref` - stays

@@ -3,7 +3,7 @@
 	 * @coral/kit/stepper
 	 * @version 1.0.0
 	 */
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { getStepper } from './context.js';
 	import type { StepperPreviousProps } from './types.js';
 

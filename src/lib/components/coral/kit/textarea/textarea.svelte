@@ -4,8 +4,8 @@
 	 * @version 1.0.0
 	 */
 	import { untrack } from 'svelte';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import { cn } from '$lib/utils.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { cn } from '#lib/utils.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { countOf, heightFor, remaining } from './measure.js';
 	import type { TextareaProps } from './types.js';

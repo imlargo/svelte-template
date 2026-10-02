@@ -3,8 +3,8 @@
 	 * @coral/kit/command-palette
 	 * @version 1.0.0
 	 */
-	import * as Command from '$lib/components/ui/command/index.js';
-	import { Spinner } from '$lib/components/ui/spinner/index.js';
+	import * as Command from '#lib/components/ui/command/index.js';
+	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { Action } from '../../lib/action.svelte.js';
 	import { debounce } from '../../lib/debounce.js';
 	import { onClose } from '../../lib/on-close.svelte.js';

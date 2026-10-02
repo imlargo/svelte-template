@@ -1,8 +1,12 @@
-import type { AuthTokensResponse, SignInRequest, SignInResponse } from '$lib/features/auth/types';
-import type { User } from '$lib/types/user';
-import type { ApiAuth } from '$lib/core/api';
-import { BaseService } from '$lib/core/service';
-import { config } from '$lib/config/app';
+import type {
+	AuthTokensResponse,
+	SignInRequest,
+	SignInResponse
+} from '#lib/features/auth/types.js';
+import type { User } from '#lib/types/user.js';
+import type { ApiAuth } from '#lib/core/api.js';
+import { BaseService } from '#lib/core/service.js';
+import { config } from '#lib/config/app.js';
 
 export class AuthService extends BaseService {
 	constructor(auth: ApiAuth = {}) {

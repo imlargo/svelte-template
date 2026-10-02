@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { hasPermission, permissionForRoute } from './permissions';
-import { AUTH_ROUTE_PERMISSIONS, ROLE_PERMISSIONS, type Permission } from '$lib/config/permissions';
-import { NAVIGATION_ITEMS } from '$lib/config/navigation';
-import { UserRole } from '$lib/types/user';
+import {
+	AUTH_ROUTE_PERMISSIONS,
+	ROLE_PERMISSIONS,
+	type Permission
+} from '#lib/config/permissions.js';
+import { NAVIGATION_ITEMS } from '#lib/config/navigation.js';
+import { UserRole } from '#lib/types/user.js';
 
 // This is the access control of the app: the role × permission matrix is
 // asserted in full, and the unknown role and the undeclared page are the cases

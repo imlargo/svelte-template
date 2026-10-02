@@ -1,13 +1,13 @@
 /**
  * DEMO SCAFFOLDING — stands in for your real users endpoint. See
- * `$lib/server/users-store`. Delete both when you point at a real backend.
+ * `#lib/server/users-store.js`. Delete both when you point at a real backend.
  *
  * Error bodies use the `{ status, message }` shape that `normalizeError` parses,
  * so failures surface as typed `AppError`s on the client.
  */
 import { json } from '@sveltejs/kit';
-import { createUser, emailTaken, listUsers } from '$lib/server/users-store';
-import { UserFormSchema } from '$lib/features/users/schemas';
+import { createUser, emailTaken, listUsers } from '#lib/server/users-store.js';
+import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
 
 // Endpoints get no layout, so each handler guards itself, asking for what it

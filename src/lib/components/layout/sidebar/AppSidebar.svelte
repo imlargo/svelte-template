@@ -1,20 +1,24 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
-	import type { User } from '$lib/types/user';
+	import type { User } from '#lib/types/user.js';
 	import {
 		NAVIGATION_GROUP_LABELS,
 		NAVIGATION_ITEMS,
 		NavigationGroup,
 		type NavigationItem,
 		type NavigationSection
-	} from '$lib/config/navigation';
-	import { config } from '$lib/config/app';
-	import { HOME_ROUTE } from '$lib/config/routes';
-	import { AUTH_ROUTE_PERMISSIONS, ROLE_LABELS, ROLE_PERMISSIONS } from '$lib/config/permissions';
-	import { hasPermission, permissionForRoute } from '$lib/core/permissions';
+	} from '#lib/config/navigation.js';
+	import { config } from '#lib/config/app.js';
+	import { HOME_ROUTE } from '#lib/config/routes.js';
+	import {
+		AUTH_ROUTE_PERMISSIONS,
+		ROLE_LABELS,
+		ROLE_PERMISSIONS
+	} from '#lib/config/permissions.js';
+	import { hasPermission, permissionForRoute } from '#lib/core/permissions.js';
 	import NavMain from './NavMain.svelte';
 	import NavUser from './NavUser.svelte';
 
@@ -51,7 +55,8 @@
 		avatar: user?.avatar ?? null
 	});
 
-	afterNavigate(() => {
+	afterNavigate(({ shallow }) => {
+		if (shallow) return;
 		if (sidebar.isMobile && sidebar.openMobile) sidebar.setOpenMobile(false);
 	});
 </script>
@@ -82,13 +87,7 @@
 		</Sidebar.Menu>
 	</Sidebar.Header>
 
-	<Sidebar.Content>
-		<NavMain {sections} />
-	</Sidebar.Content>
-
-	<Sidebar.Footer>
-		<NavUser user={displayUser} />
-	</Sidebar.Footer>
-
+	<Sidebar.Content><NavMain {sections} /></Sidebar.Content>
+	<Sidebar.Footer><NavUser user={displayUser} /></Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

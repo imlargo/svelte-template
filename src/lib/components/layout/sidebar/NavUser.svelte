@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
-	import { AUTH_ROUTES } from '$lib/config/routes';
-	import Avatar from '$lib/components/coral/kit/avatar/avatar.svelte';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { AUTH_ROUTES } from '#lib/config/routes.js';
+	import Avatar from '#lib/components/coral/kit/avatar/avatar.svelte';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import { toggleMode, mode } from 'mode-watcher';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';

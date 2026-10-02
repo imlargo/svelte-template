@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import DocumentTitle from '$lib/components/blocks/DocumentTitle.svelte';
-	import { AUTH_ROUTES, HOME_ROUTE } from '$lib/config/routes';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import DocumentTitle from '#lib/components/blocks/DocumentTitle.svelte';
+	import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
 
 	let {
 		status,

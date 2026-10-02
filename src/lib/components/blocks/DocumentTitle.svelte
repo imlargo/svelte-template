@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { config } from '$lib/config/app';
+	import { config } from '#lib/config/app.js';
 
 	let { title }: { title: string } = $props();
 </script>
