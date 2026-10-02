@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 
 	return {
 		form: await superValidate(zod4(LoginSchema)),
+		redirect: url.searchParams.get(REDIRECT_PARAM),
 		signInError: url.searchParams.has(OAUTH_FAILED_PARAM)
 			? 'Could not sign you in. Please try again.'
 			: null

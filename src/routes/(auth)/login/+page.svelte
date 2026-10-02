@@ -26,7 +26,7 @@
 		</div>
 		<div class="flex flex-1 items-center justify-center">
 			<div class="w-full max-w-xs">
-				<LoginForm form={data.form} signInError={data.signInError} />
+				<LoginForm form={data.form} signInError={data.signInError} redirect={data.redirect} />
 			</div>
 		</div>
 	</div>
