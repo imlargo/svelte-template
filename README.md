@@ -16,7 +16,7 @@
 - **Deny-by-default permissions.** An undeclared route or an unknown role grants nothing; a
   forgotten permission fails loudly as a 403, not silently as an open page.
 - **A layered `src/lib`** - `core` (infrastructure), `features` (vertical slices), `components`
-  (`ui`/`kit`/`blocks`/`layout`) - so a new feature has one obvious place to live.
+  (`ui`/`coral`/`blocks`/`layout`) - so a new feature has one obvious place to live.
 - **shadcn-svelte**, used as intended: the primitives in `components/ui/` stay untouched; every
   composition sits beside them, never inside them.
 
@@ -66,8 +66,9 @@ variable fails there, by name, instead of surfacing later as requests to a relat
 
 The `PUBLIC_*` variables are checked against a schema in `$lib/config/app.ts`: flags accept
 `true`/`false` (a typo is an error, not a silent `true`), and an empty value means "use the
-default". `AUTH_COOKIE_SECURE` is on unless set to exactly `false`, which only a local `.env`
-should do.
+default". The `AUTH_COOKIE_*` variables get the same treatment in
+`features/auth/session.server.ts`: `AUTH_COOKIE_SAMESITE=strick` fails at startup instead of
+quietly becoming `lax`. `AUTH_COOKIE_SECURE=false` is for a local `.env` only.
 
 ## Architecture
 
@@ -77,9 +78,9 @@ src/
 ├── error.html         # Fallback page for errors thrown before any page renders
 ├── lib/
 │   ├── core/          # api, service, errors, logger, permissions, query - infrastructure only
-│   ├── config/        # app.ts (branding/env), navigation.ts, permissions.ts
+│   ├── config/        # app.ts (branding/env), routes.ts, navigation.ts, permissions.ts
 │   ├── types/         # Types shared by more than one feature
-│   ├── utils/         # Pure functions - date, string
+│   ├── utils/         # Pure functions - date, string, env
 │   ├── hooks/         # Stateful runes classes: Disclosure, Filters, Pagination, IsMobile
 │   ├── features/      # Vertical slices (auth, users, ...) - components, services, types together
 │   ├── server/         # Server-only code, never imported from a `.svelte` file
@@ -90,8 +91,9 @@ src/
     └── api/           # Server endpoints - each enforces its own permission (see Permissions)
 ```
 
-`$components`, `$ui`, `$core`, `$hooks`, `$types` and `$utils` are real aliases (declared in
-`vite.config.ts`, no separate `svelte.config.js`), not barrels - each resolves straight to a file.
+Everything is imported from `$lib/...` by its real path; there are no barrels and no extra aliases.
+`hooks/`, `utils/` and `coral/` ship generic pieces a project may not use yet - they are the
+template's batteries, not dead code.
 
 See [`AGENTS.md`](./AGENTS.md) for the conventions this structure depends on: where a type belongs,
 when a hook earns its own file, and the rules around `$state` at module scope on the server.
@@ -188,17 +190,17 @@ and a token getter. Every feature's data access goes through a service that exte
 
 ```ts
 // src/lib/features/users/services/users.ts
-export class UserService extends BaseService {
-	getAll() {
-		return this.expectBody(this.api.get<User[]>('/users'));
+export class UsersService extends BaseService {
+	list(search?: string) {
+		return this.expectBody(this.api.get<User[]>('/api/users', { query: { q: search } }));
 	}
 }
 
 // Server: the token from locals, and the per-request fetch
-const service = new UserService({ token: locals.accessToken, fetch });
+const service = new UsersService({ token: locals.accessToken, fetch });
 
 // Client: the session's credentials - a renewed token is picked up, and a 401 is handled
-const service = new UserService(getAuth().api);
+const service = new UsersService(getAuth().api);
 ```
 
 `expectBody` narrows air's `T | null` for an endpoint that must answer with a body - a `204` there
@@ -231,8 +233,11 @@ export const load = ({ locals, fetch }) => ({
 ```
 
 `await` in `load` only what the page cannot render without; everything else goes out as a promise.
-For the second pattern, pass a `Query` instead: a refetch keeps the current data on screen until
-the new result lands, so searching or saving updates the list instead of blanking it. Remote
+For the second pattern, pass a `Query` and run it in `onMount`: until it has run, `AsyncView`
+renders the skeleton, so the server-rendered page already shows it. Once there is data it stays on
+screen - searching or saving updates the list instead of blanking it - so a failed refetch is
+reported with a toast, while a failed first load is `AsyncView`'s error panel. Only the latest run
+writes its result, so a slow search cannot overwrite a newer one. Remote
 functions are deliberately not used.
 
 ## Errors
@@ -299,11 +304,13 @@ fresh clone.
 - [ ] Set `branding` in `$lib/config/app.ts` - name, logo, favicon and SEO all come from this one
       object, not from the pages that display them
 - [ ] Rename `"app"` to the project's real name in `package.json` and `wrangler.jsonc`
-- [ ] Add nav items in `$lib/config/navigation.ts`
+- [ ] Add nav items in `$lib/config/navigation.ts` - each shows only to roles that may open its
+      route, read from the same table the hook enforces
 - [ ] Add permission keys, roles and the page-permission table in `$lib/config/permissions.ts`
 - [ ] Set `PUBLIC_API_URL` (and `PUBLIC_AUTH_BASE_URL`, if auth lives elsewhere) in `.env`
 - [ ] Add feature slices under `src/lib/features/`, following `features/users/` as the reference
-      shape - `services/`, `schemas.ts`, `types.ts`, `components/`
+      shape - `services/`, `schemas.ts`, `components/`, and `types.ts` once the slice has types of
+      its own
 
 ## Coral
 

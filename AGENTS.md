@@ -41,6 +41,8 @@ inventar uno nuevo.
 - `src/lib/components/ui/` (shadcn) es **intocable**: no editar, no extender, no borrar archivos
   ahí — está excluido de `prettier`/`eslint` a propósito. Compón variantes por fuera (wrappers,
   props, composición), nunca modificando la fuente.
+- `src/lib/components/coral/` es un kit vendorizado sobre shadcn (combobox, data table, date
+  picker…): misma regla que `ui/`. Se actualiza copiando una versión nueva, nunca editándolo aquí.
 
 ## Arquitectura / Código
 
@@ -51,7 +53,8 @@ inventar uno nuevo.
   excepción deliberada es la jerarquía de services (`extends BaseService`), que existe para
   compartir la resolución de token/cliente API entre todos los services.
 - **Prohibido magic strings:** usa constantes tipadas o `enum` para valores fijos, keys, rutas de
-  API, estados. Para identidad de dominio con un conjunto cerrado de valores (`UserRole`), usa
+  API, estados. Las rutas a las que el código redirige o llama por path viven en
+  `$lib/config/routes.ts`. Para identidad de dominio con un conjunto cerrado de valores (`UserRole`), usa
   `enum`. Para tags de capacidad tipo `"recurso:acción"` (`Permission` en
   `$lib/config/permissions.ts`), un string-literal union con `as const satisfies` está bien —
   sigue el patrón que ya usa la pieza equivalente antes de introducir uno nuevo.
@@ -111,9 +114,8 @@ en `$lib/config/permissions.ts` — no hay un valor "sin restricción" que pueda
 ## Convenciones de código
 
 - Sigue el naming y la estructura de carpetas existentes (verifica antes de crear archivos).
-- **Cero barrels:** nada de `index.ts` que reexporte. Importa por la ruta real. Los aliases
-  (`$components`, `$ui`, `$core`, `$hooks`, `$types`, `$utils`) sí se usan porque resuelven a un
-  archivo concreto — no ocultan nada.
+- **Cero barrels:** nada de `index.ts` propio que reexporte. Importa por la ruta real, siempre
+  desde `$lib/...` (los `index.js` de `ui/` son la convención de shadcn, no una excepción a copiar).
 - **Idiomático antes que ingenioso:** si SvelteKit ya lo resuelve (`afterNavigate`, `load`, form
   actions, `page.url`), se usa eso. `$effect` es para sincronizar con algo externo a Svelte, nunca
   para comunicar componentes ni derivar valores.
@@ -122,9 +124,10 @@ en `$lib/config/permissions.ts` — no hay un valor "sin restricción" que pueda
 - Si una función es pura y sin estado (formateo, validación, transformación) y es probable que se
   use en más de un lugar, extráela a `$lib/utils/`; si tiene estado/reactividad, a `$lib/hooks/`.
   Antes de crear una nueva, revisa si ya existe algo equivalente ahí.
-- **Cero exports sin consumidor, cero abstracciones "por si acaso":** la tercera repetición
-  justifica una abstracción, la primera y la segunda no. Borrar es borrar — moverlo de carpeta o
-  añadirle un test no lo convierte en usado.
+- **Baterías incluidas, abstracciones no:** `$lib/hooks/`, `$lib/utils/` y `coral/` traen piezas
+  genéricas que un proyecto puede no usar todavía, a propósito: son el punto de partida del
+  template, no código muerto. Fuera de ellas, nada de abstracciones "por si acaso" — la tercera
+  repetición justifica una abstracción, la primera y la segunda no.
 - No dejes código muerto, comentarios de debug ni `console.log` en el código final.
 - Los cambios deben ser mínimos y acotados a la tarea: no refactorices código no relacionado sin
   que se pida.
