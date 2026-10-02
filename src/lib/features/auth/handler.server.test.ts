@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import { isHttpError, isRedirect, type Handle } from '@sveltejs/kit';
 import { handleAuth } from './handler.server';
-import { config } from '$lib/config/app';
 import { AppError } from '$lib/core/errors';
 import { UserRole, type User } from '$lib/types/user';
 
@@ -20,6 +19,14 @@ vi.mock('./services/auth', () => ({
 		refresh = refresh;
 	}
 }));
+
+const { refreshFlag } = vi.hoisted(() => ({ refreshFlag: { enabled: false } }));
+
+// A test-owned flag in place of the real config's, which stays untouched.
+vi.mock('$lib/config/app', async (importOriginal) => {
+	const { config } = await importOriginal<typeof import('$lib/config/app')>();
+	return { config: { ...config, auth: { ...config.auth, refresh: refreshFlag } } };
+});
 
 // Silenced on purpose: the outage case logs, and its own behaviour is covered
 // by core/logger.test.ts.
@@ -175,7 +182,7 @@ describe('handleAuth', () => {
 
 describe('handleAuth on page routes', () => {
 	it('denies a signed-in role that lacks the permission', async () => {
-		// The B3 case, end to end: a member typing /admin in the address bar.
+		// A member typing /admin in the address bar.
 		getMe.mockResolvedValue(userWith(UserRole.MEMBER));
 
 		const { outcome } = await callAuth('/admin', SESSION);
@@ -211,9 +218,8 @@ describe('handleAuth on page routes', () => {
 
 describe('handleAuth on endpoints', () => {
 	it('does not apply the page table to /api', async () => {
-		// The regression this whole change exists for: /api/users is absent from
-		// AUTH_ROUTE_PERMISSIONS by design, and used to 403 for everyone — admins
-		// included — because the hook judged it as if it were a page.
+		// /api/users is absent from AUTH_ROUTE_PERMISSIONS by design: judging it
+		// as a page would 403 every call, admins included.
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
 		const { outcome } = await callAuth('/api/users', SESSION);
@@ -237,10 +243,10 @@ describe('handleAuth with refresh enabled', () => {
 	const RENEWED = { access_token: 'access-new', refresh_token: 'refresh-new', expires_at: 0 };
 
 	beforeEach(() => {
-		config.auth.refresh.enabled = true;
+		refreshFlag.enabled = true;
 	});
 	afterEach(() => {
-		config.auth.refresh.enabled = false;
+		refreshFlag.enabled = false;
 	});
 
 	it('renews an expired access token and carries on with the new one', async () => {

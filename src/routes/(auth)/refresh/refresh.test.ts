@@ -1,13 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
 import { POST } from './+server';
-import { config } from '$lib/config/app';
 import { AppError } from '$lib/core/errors';
 
 // The browser's only way to renew a session. What it does with a dead refresh
 // token and with an outage mirrors the hook, and is asserted the same way.
 
 const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+const { refreshFlag } = vi.hoisted(() => ({ refreshFlag: { enabled: false } }));
+
+// A test-owned flag in place of the real config's, which stays untouched.
+vi.mock('$lib/config/app', async (importOriginal) => {
+	const { config } = await importOriginal<typeof import('$lib/config/app')>();
+	return { config: { ...config, auth: { ...config.auth, refresh: refreshFlag } } };
+});
 
 vi.mock('$lib/features/auth/services/auth', () => ({
 	AuthService: class {
@@ -48,15 +55,15 @@ async function callRefresh(cookies: Record<string, string> = SESSION) {
 
 beforeEach(() => {
 	refresh.mockReset();
-	config.auth.refresh.enabled = true;
+	refreshFlag.enabled = true;
 });
 afterEach(() => {
-	config.auth.refresh.enabled = false;
+	refreshFlag.enabled = false;
 });
 
 describe('POST /refresh', () => {
 	it('does not exist unless refresh is enabled', async () => {
-		config.auth.refresh.enabled = false;
+		refreshFlag.enabled = false;
 
 		expect((await callRefresh()).status).toBe(404);
 		expect(refresh).not.toHaveBeenCalled();
