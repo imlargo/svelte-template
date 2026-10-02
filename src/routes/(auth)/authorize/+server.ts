@@ -23,7 +23,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const state = url.searchParams.get('state');
 
 	if (!code || !state || !stored || stored.nonce !== state) {
-		logger.error('auth', new Error('Rejected Google callback: missing or mismatched OAuth state'));
+		logger.warn('auth', 'Rejected Google callback: missing or mismatched OAuth state');
 		clearSession(cookies);
 		redirect(303, FAILED_SIGN_IN);
 	}
