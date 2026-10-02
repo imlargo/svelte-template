@@ -3,10 +3,12 @@ import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { config } from '$lib/config/app';
 import { HOME_ROUTE } from '$lib/config/routes';
+import { logger } from '$lib/core/logger';
 import { AuthService } from '$lib/features/auth/services/auth';
 import { LoginSchema } from '$lib/features/auth/schemas';
 import { REDIRECT_PARAM, decodeRedirect } from '$lib/features/auth/redirect';
 import { OAUTH_FAILED_PARAM, buildGoogleAuthUrl } from '$lib/features/auth/google';
+import { isCredentialRejection } from '$lib/features/auth/rejection';
 import { getSession, setOAuthState, setSession } from '$lib/features/auth/session.server';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -38,9 +40,15 @@ export const actions = {
 				accessToken: tokens.access_token,
 				refreshToken: tokens.refresh_token
 			});
-		} catch {
-			// Deliberately vague: telling them which half was wrong enumerates accounts.
-			return message(form, 'Invalid email or password.', { status: 401 });
+		} catch (err) {
+			// Deliberately vague: saying which half was wrong enumerates accounts.
+			if (isCredentialRejection(err)) {
+				return message(form, 'Invalid email or password.', { status: 401 });
+			}
+			logger.error('auth', err);
+			return message(form, 'Cannot sign you in right now. Please try again in a moment.', {
+				status: 503
+			});
 		}
 
 		redirect(303, destination(url));

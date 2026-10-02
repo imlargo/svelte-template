@@ -26,6 +26,7 @@ import type { User } from '$lib/types/user';
 import { AuthService } from './services/auth';
 import { createPermissionGuard } from './guard.server';
 import { REDIRECT_PARAM, encodeRedirect } from './redirect';
+import { isCredentialRejection } from './rejection';
 import { renewSession } from './renew.server';
 import { clearSession, getSession, type Session } from './session.server';
 
@@ -96,8 +97,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 		({ user, session } = await resolveSession(event.cookies, stored));
 	} catch (err) {
 		// A backend that is down must not sign everyone out.
-		const { code } = normalizeError(err);
-		if (code !== 'UNAUTHORIZED' && code !== 'FORBIDDEN') {
+		if (!isCredentialRejection(err)) {
 			logger.error('auth', err);
 			error(503, 'Cannot verify your session right now. Please try again in a moment.');
 		}
