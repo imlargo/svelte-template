@@ -16,7 +16,9 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			// Not under Vitest: its dev emulation starts a workerd per test project,
+			// which the tests never use and which keeps the process from exiting.
+			adapter: process.env.VITEST ? undefined : adapter()
 		})
 	],
 	test: {
