@@ -12,3 +12,5 @@ src/lib/components/ui/
 .claude/
 .agents/
 skills-lock.json
+
+worker-configuration.d.ts

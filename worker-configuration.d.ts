@@ -17,7 +17,7 @@ interface __BaseEnv_Env {
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
-		mainModule: typeof import('./.svelte-kit/cloudflare/_worker');
+		mainModule: typeof import("./.svelte-kit/cloudflare/_worker");
 	}
 	interface Env extends __BaseEnv_Env {}
 }
@@ -26,22 +26,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<
-		Pick<
-			Cloudflare.Env,
-			| 'PUBLIC_API_URL'
-			| 'PUBLIC_AUTH_BASE_URL'
-			| 'PUBLIC_AUTH_ENABLED'
-			| 'PUBLIC_AUTH_PASSWORD_ENABLED'
-			| 'PUBLIC_AUTH_GOOGLE_ENABLED'
-			| 'PUBLIC_GOOGLE_CLIENT_ID'
-			| 'PUBLIC_AUTH_REFRESH_ENABLED'
-			| 'AUTH_COOKIE_DOMAIN'
-			| 'AUTH_COOKIE_SECURE'
-			| 'AUTH_COOKIE_MAX_AGE'
-			| 'AUTH_COOKIE_SAMESITE'
-		>
-	> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "PUBLIC_API_URL" | "PUBLIC_AUTH_BASE_URL" | "PUBLIC_AUTH_ENABLED" | "PUBLIC_AUTH_PASSWORD_ENABLED" | "PUBLIC_AUTH_GOOGLE_ENABLED" | "PUBLIC_GOOGLE_CLIENT_ID" | "PUBLIC_AUTH_REFRESH_ENABLED" | "AUTH_COOKIE_DOMAIN" | "AUTH_COOKIE_SECURE" | "AUTH_COOKIE_MAX_AGE" | "AUTH_COOKIE_SAMESITE">> {}
 }
 
 // Begin runtime types
