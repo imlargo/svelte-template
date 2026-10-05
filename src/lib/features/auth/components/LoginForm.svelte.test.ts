@@ -35,7 +35,7 @@ describe('LoginForm', () => {
 
 	it('validates a field when the user leaves it', async () => {
 		// Submitting is not covered here: `use:enhance` goes through SvelteKit's
-		// router, which only exists in a real app (e2e/).
+		// router, which only exists in a real app.
 		const screen = await render(LoginForm);
 
 		await screen.getByLabelText('Email').fill('not-an-email');

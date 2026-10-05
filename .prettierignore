@@ -9,7 +9,6 @@ bun.lockb
 /static/
 src/lib/components/ui/
 
-# Agent tooling — written by the tools, not by us
 .claude/
 .agents/
 skills-lock.json

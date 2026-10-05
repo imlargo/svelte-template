@@ -156,7 +156,6 @@ en `#lib/config/permissions.ts` — no hay un valor "sin restricción" que pueda
 pnpm run lint       # sin errores
 pnpm run check      # cero errores Y cero warnings
 pnpm run test       # verde (servidor + componentes)
-pnpm run test:e2e   # verde, si tocaste rutas, layout o flujos
 ```
 
 Ejecútalos de verdad y lee la salida — no asumas que compiló. Los warnings de `svelte-check` como

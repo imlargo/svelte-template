@@ -23,7 +23,3 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 # Playwright
 test-results
-
-# Husky
-.husky/_
-worker-configuration.d.ts

@@ -1,14 +1,17 @@
 import type { User } from '#lib/types/user.js';
 import type { RequirePermission } from '#lib/features/auth/guard.server.js';
-
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
 	namespace App {
-		interface Error {
-			/** Set by `handleError` for unexpected errors, and logged alongside them. */
-			errorId?: string;
+		interface Platform {
+			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf?: IncomingRequestCfProperties;
 		}
+
+		// interface Error {}
 		interface Locals {
 			/** Set by the auth hook. Absent on public routes and when auth is disabled. */
 			user?: User | null;
