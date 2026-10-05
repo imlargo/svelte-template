@@ -8,8 +8,8 @@ obligatorias.
 Template de SvelteKit 3 + Svelte 5 para proyectos de consultoría. Consume una API externa (no
 tiene base de datos) y trae resuelto lo aburrido: autenticación con cookies, permisos, layout con
 sidebar, formularios, componentes. No es un framework y no debería convertirse en uno: el objetivo
-es que se clone y se construya sin fricción ni sorpresas. Ver [`README.md`](./README.md) para el
-stack, la estructura de carpetas y cómo arrancar.
+es que se clone y se construya sin fricción ni sorpresas. Ver [`README.md`](./README.md) para
+cómo arrancar.
 
 ## Documentación de arquitectura
 
