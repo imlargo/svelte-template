@@ -11,7 +11,11 @@ declare global {
 			cf?: IncomingRequestCfProperties;
 		}
 
-		// interface Error {}
+		interface Error {
+			/** Set by `handleError` for unexpected errors, and logged alongside them. */
+			errorId?: string;
+		}
+
 		interface Locals {
 			/** Set by the auth hook. Absent on public routes and when auth is disabled. */
 			user?: User | null;
