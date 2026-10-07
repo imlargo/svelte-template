@@ -16,9 +16,10 @@ core/              api (HTTP client) · service (BaseService) · errors · logge
 config/            app · routes · navigation · permissions · errors   ← what changes per project
 ```
 
-`core/` knows nothing about the project: it receives data as parameters or imports it from
-`config/`. A new project changes `config/` and adds slices under `features/`; `core/` should stay
-the same.
+`core/` imports nothing outside itself. What the project decides reaches it through parameters
+(`baseUrl` on a service) or setters (`setErrorBodyParser`, `setLogger`) called from the `init`
+hooks in `hooks.server.ts` and `hooks.client.ts`. A new project changes `config/` and adds slices
+under `features/`; `core/` stays the same.
 
 ## Request lifecycle
 
@@ -78,9 +79,9 @@ The template does not impose a backend. Three places isolate it:
   the mapper into `Session` (`features/auth/types.ts`). Nothing outside
   `AuthService` sees the backend's shape. If your API returns `{ jwt, refresh }`, you change
   `TokenPairWire` and `toSession`, and the hook, the actions and the cookies stay the same.
-- **`config/errors.ts`**: how your API describes a failure. `normalizeError` hands it the body and
-  gets back `{ code?, message?, status?, payload? }`. The default reads `{ status, message,
-payload }` and translates statuses with `STATUS_ALIASES`. The codes and their messages live in
+- **`config/errors.ts`**: how your API describes a failure. It builds on core's default reader of
+  `{ status, message, payload }` and adds the statuses your backend spells its own way; the `init`
+  hooks install it with `setErrorBodyParser`. The codes and their messages live in
   `core/errors.ts`.
 - **Domain vs wire types**: `#lib/types/` and `features/<slice>/types.ts` are what components see.
   A backend response type lives next to the service that consumes it and is mapped there. In

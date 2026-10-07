@@ -47,6 +47,10 @@ equivalent area before inventing a new one.
 - **Services** are the only place that calls the API. No direct `fetch`/HTTP in components or
   hooks. A service extends `BaseService` (`#lib/core/service.ts`) and lives in
   `features/<slice>/services/` — see `features/users/services/users.ts` as the reference.
+- **`core/` depends on nothing outside `core/`.** It is the base: it receives what the project
+  decides through parameters or setters (`baseUrl` on a service, `setErrorBodyParser`,
+  `setLogger`), never by importing `config/` or `features/`. The `init` hooks are where that
+  wiring happens.
 - **Composition over inheritance** in components and hooks: small, composable pieces. The
   deliberate exception is the service hierarchy (`extends BaseService`), which exists to share
   token and API client resolution across all services.
@@ -65,7 +69,7 @@ equivalent area before inventing a new one.
   route ID. `navigation.ts` and the permission tables use route IDs (`/(app)/admin`, typed from
   `$app/types`), and those do go through `resolve()`.
 - **Backend contract:** the shape of the auth responses and their mappers live in
-  `features/auth/contract.ts`; the shape of the error body in `#lib/config/errors.ts`. A _wire_
+  `features/auth/contract.ts`; the shape of the error body in `#lib/config/errors.ts`, installed by the `init` hooks. A _wire_
   type (what the API returns) lives next to the service that consumes it and is mapped there;
   components only see domain types (`#lib/types/`, `features/<slice>/types.ts`).
 
