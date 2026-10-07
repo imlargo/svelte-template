@@ -148,6 +148,8 @@ endpoint declares `'session'` and asks for its own permission per method with
 - Follow the existing naming and folder structure (check before creating files).
 - **Zero barrels:** no `index.ts` of our own that re-exports. Import by the real path, always from
   `#lib/...` (the `index.js` files in `ui/` are shadcn's convention, not an exception to copy).
+  The empty `src/lib/index.ts` and the `#lib` alias in `package.json` come from `sv create` and
+  stay as they are: what the scaffolder generates is changed as little as possible.
 - **Idiomatic over clever:** if SvelteKit already solves it (`afterNavigate`, `load`, form actions,
   `page.url`), use that. `$effect` is for syncing with something outside Svelte, never for
   communicating between components or deriving values.
