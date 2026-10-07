@@ -38,6 +38,10 @@ export function listUsers(search?: string): User[] {
 	return [...found].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 }
 
+export function countUsers(): number {
+	return users.length;
+}
+
 export function findUser(id: string): User | undefined {
 	return users.find((u) => u.id === id);
 }

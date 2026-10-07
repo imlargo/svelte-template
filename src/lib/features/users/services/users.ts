@@ -1,4 +1,5 @@
 import type { User } from '#lib/types/user.js';
+import type { ListResponse } from '#lib/types/list.js';
 import type { UserFormData } from '#lib/features/users/schemas.js';
 import { SAME_ORIGIN, type ApiAuth } from '#lib/core/api.js';
 import { BaseService } from '#lib/core/service.js';
@@ -11,7 +12,7 @@ export class UsersService extends BaseService {
 
 	list(search?: string) {
 		return this.expectBody(
-			this.api.get<User[]>('/api/users', { query: { q: search || undefined } })
+			this.api.get<ListResponse<User>>('/api/users', { query: { q: search || undefined } })
 		);
 	}
 

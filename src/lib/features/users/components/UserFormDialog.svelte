@@ -4,6 +4,7 @@
 	import * as Select from '#lib/components/ui/select/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
+	import LoadingButton from '#lib/components/blocks/LoadingButton.svelte';
 	import { untrack } from 'svelte';
 	import { UserFormSchema, type UserFormData } from '#lib/features/users/schemas.js';
 	import { ROLE_LABELS } from '#lib/config/permissions.js';
@@ -113,9 +114,9 @@
 
 				<Dialog.Footer>
 					<Button type="button" variant="outline" onclick={() => (open = false)}>Cancel</Button>
-					<Button type="submit" disabled={submitting}>
+					<LoadingButton type="submit" loading={submitting}>
 						{user ? 'Save changes' : 'Create user'}
-					</Button>
+					</LoadingButton>
 				</Dialog.Footer>
 			</Field.Group>
 		</form>
