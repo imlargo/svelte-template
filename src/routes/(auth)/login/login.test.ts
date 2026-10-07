@@ -16,7 +16,6 @@ vi.mock('#lib/core/logger.js', () => ({
 	logger: { error: logError, warn: vi.fn(), info: vi.fn() }
 }));
 
-// The service answers in the app's own types; the wire shape is contract.test.ts's business.
 const SESSION = { accessToken: 'access', refreshToken: 'refresh' };
 
 async function submitLogin(
@@ -54,7 +53,7 @@ beforeEach(() => {
 
 describe('login action', () => {
 	it('signs in and returns the user to where they were headed', async () => {
-		login.mockResolvedValue({ session: SESSION });
+		login.mockResolvedValue(SESSION);
 
 		const { location, set } = await submitLogin(`&redirect=${encodeRedirect('/admin')}`);
 
@@ -63,7 +62,7 @@ describe('login action', () => {
 	});
 
 	it('lands on home without a redirect', async () => {
-		login.mockResolvedValue({ session: SESSION });
+		login.mockResolvedValue(SESSION);
 
 		expect((await submitLogin()).location).toBe('/');
 	});

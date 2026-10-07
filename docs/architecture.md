@@ -75,7 +75,7 @@ the visibility from `ROUTE_ACCESS[route]`, so the menu and the hook read the sam
 The template does not impose a backend. Three places isolate it:
 
 - **`features/auth/contract.ts`**: auth routes, _wire_ types (`access_token`, `tokens`…) and the
-  mappers into the domain types in `features/auth/types.ts` (`Session`, `SignIn`). Nothing outside
+  the mapper into `Session` (`features/auth/types.ts`). Nothing outside
   `AuthService` sees the backend's shape. If your API returns `{ jwt, refresh }`, you change
   `TokenPairWire` and `toSession`, and the hook, the actions and the cookies stay the same.
 - **`config/errors.ts`**: how your API describes a failure. `normalizeError` hands it the body and

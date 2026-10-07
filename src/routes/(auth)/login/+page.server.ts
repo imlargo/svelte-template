@@ -39,8 +39,7 @@ export const actions = {
 		if (errors) return fail(400, { email, errors } satisfies LoginFailure);
 
 		try {
-			const { session } = await new AuthService().login(data);
-			setSession(cookies, session);
+			setSession(cookies, await new AuthService().login(data));
 		} catch (err) {
 			// Deliberately vague: saying which half was wrong enumerates accounts.
 			if (isCredentialRejection(err)) {
