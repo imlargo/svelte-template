@@ -31,10 +31,10 @@ describe('LoginForm', () => {
 	});
 
 	it('posts to an action that keeps where the user was headed', async () => {
-		const screen = await render(LoginForm, { redirect: 'L2FkbWlu' });
+		const screen = await render(LoginForm, { redirect: '/admin?page=2' });
 
 		const form = screen.container.querySelector('form');
-		expect(form?.getAttribute('action')).toBe('?/login&redirect=L2FkbWlu');
+		expect(form?.getAttribute('action')).toBe('?/login&redirect=%2Fadmin%3Fpage%3D2');
 	});
 
 	it('validates a field when the user leaves it', async () => {

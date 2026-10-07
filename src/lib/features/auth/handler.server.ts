@@ -17,14 +17,14 @@ import type { User } from '#lib/types/user.js';
 import type { Session } from '#lib/features/auth/types.js';
 import { AuthService } from './services/auth';
 import { createPermissionGuard } from './guard.server';
-import { REDIRECT_PARAM, encodeRedirect } from './redirect';
+import { REDIRECT_PARAM } from './redirect';
 import { isCredentialRejection } from './rejection';
 import { renewSession } from './renew.server';
 import { clearSession, getSession } from './session.server';
 
 function loginUrl(pathname: string, search: string): string {
 	if (pathname === HOME_ROUTE && !search) return AUTH_ROUTES.login;
-	const params = new URLSearchParams({ [REDIRECT_PARAM]: encodeRedirect(pathname + search) });
+	const params = new URLSearchParams({ [REDIRECT_PARAM]: pathname + search });
 	return `${AUTH_ROUTES.login}?${params}`;
 }
 

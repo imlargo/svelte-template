@@ -4,7 +4,7 @@ import { HOME_ROUTE } from '#lib/config/routes.js';
 import { logger } from '#lib/core/logger.js';
 import { AuthService } from '#lib/features/auth/services/auth.js';
 import { LoginSchema, type LoginFailure } from '#lib/features/auth/schemas.js';
-import { REDIRECT_PARAM, decodeRedirect } from '#lib/features/auth/redirect.js';
+import { REDIRECT_PARAM, sanitizeRedirect } from '#lib/features/auth/redirect.js';
 import {
 	GOOGLE_AUTH_ORIGIN,
 	OAUTH_FAILED_PARAM,
@@ -17,7 +17,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 /** Where to land after signing in, honouring the `?redirect=` the auth hook set. */
 function destination(url: URL): string {
-	return decodeRedirect(url.searchParams.get(REDIRECT_PARAM)) ?? HOME_ROUTE;
+	return sanitizeRedirect(url.searchParams.get(REDIRECT_PARAM)) ?? HOME_ROUTE;
 }
 
 export const load: PageServerLoad = async ({ cookies, url }) => {

@@ -19,7 +19,7 @@
 		form?: LoginFailure | null;
 		/** Set when the user comes back from a failed OAuth round trip. */
 		signInError?: string | null;
-		/** The encoded `?redirect=` value, carried to both actions. */
+		/** The `?redirect=` value, carried to both actions. */
 		redirect?: string | null;
 		class?: string;
 	} = $props();

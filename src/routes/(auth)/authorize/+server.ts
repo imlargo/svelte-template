@@ -8,7 +8,7 @@ import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
 import { logger } from '#lib/core/logger.js';
 import { AuthService } from '#lib/features/auth/services/auth.js';
 import { OAUTH_FAILED_PARAM } from '#lib/features/auth/google.js';
-import { decodeRedirect } from '#lib/features/auth/redirect.js';
+import { sanitizeRedirect } from '#lib/features/auth/redirect.js';
 import { clearSession, setSession, takeOAuthState } from '#lib/features/auth/session.server.js';
 import type { RequestHandler } from './$types';
 
@@ -36,5 +36,5 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		redirect(303, FAILED_SIGN_IN);
 	}
 
-	redirect(303, decodeRedirect(stored.redirectTo) ?? HOME_ROUTE);
+	redirect(303, sanitizeRedirect(stored.redirectTo) ?? HOME_ROUTE);
 };

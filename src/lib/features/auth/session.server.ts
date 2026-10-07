@@ -58,7 +58,7 @@ export function clearSession(cookies: Cookies): void {
 const OAuthStateSchema = z.object({
 	/** Echoed by the provider and compared on the way back. Defeats login CSRF. */
 	nonce: z.string(),
-	/** Encoded `?redirect=` value the user was heading to, if any. */
+	/** The `?redirect=` value the user was heading to, if any. */
 	redirectTo: z.string().nullable()
 });
 
