@@ -1,7 +1,14 @@
-import type { Handle, HandleServerError } from '@sveltejs/kit/hooks';
+import type { Handle, HandleServerError, ServerInit } from '@sveltejs/kit/hooks';
 import { config } from '#lib/config/app.js';
+import { parseErrorBody } from '#lib/config/errors.js';
+import { setErrorBodyParser } from '#lib/core/errors.js';
 import { logger } from '#lib/core/logger.js';
 import { handleAuth } from '#lib/features/auth/handler.server.js';
+
+// Where core learns the project's choices: the error parser here, a logger if you add one.
+export const init: ServerInit = () => {
+	setErrorBodyParser(parseErrorBody);
+};
 
 // Auth off: `locals.requirePermission` is declared as always present, so it must still exist.
 const handleWithoutAuth: Handle = ({ event, resolve }) => {

@@ -1,5 +1,11 @@
-import type { HandleClientError } from '@sveltejs/kit/hooks';
+import type { ClientInit, HandleClientError } from '@sveltejs/kit/hooks';
+import { parseErrorBody } from '#lib/config/errors.js';
+import { setErrorBodyParser } from '#lib/core/errors.js';
 import { logger } from '#lib/core/logger.js';
+
+export const init: ClientInit = () => {
+	setErrorBodyParser(parseErrorBody);
+};
 
 // Same contract as the server's handleError, so a browser report matches its console line.
 export const handleError: HandleClientError = ({ kind, error }) => {

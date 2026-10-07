@@ -1,10 +1,10 @@
 /**
  * One error type, one entry point. `message` is always safe to render: the
  * backend's own or the default for the code. Log-only detail goes on `context`
- * and `cause`. The error body's shape is `#lib/config/errors`'s business.
+ * and `cause`. How a backend spells an error body is injected with
+ * `setErrorBodyParser`; the default reads `{ status, message, payload }`.
  */
 import { isAirError, type AirError } from '@imlargo/air';
-import { parseErrorBody } from '#lib/config/errors.js';
 
 export type ErrorCode =
 	| 'NETWORK'
@@ -27,7 +27,7 @@ const MESSAGES: Record<ErrorCode, string> = {
 	UNKNOWN: 'An unexpected error occurred.'
 };
 
-/** What `#lib/config/errors` reads out of an error body; all optional. */
+/** What a parser reads out of an error body; all optional. */
 export interface ParsedErrorBody {
 	/** When the status is not already one of ours. */
 	code?: ErrorCode;
@@ -37,6 +37,29 @@ export interface ParsedErrorBody {
 	status?: string;
 	/** Field errors and the like. Never rendered. */
 	payload?: Record<string, unknown>;
+}
+
+export type ErrorBodyParser = (body: unknown) => ParsedErrorBody;
+
+/** The default parser: `{ status, message, payload }`, a status spelled like an `ErrorCode` being that code. */
+export const readErrorBody: ErrorBodyParser = (body) => {
+	if (!isRecord(body)) return {};
+
+	const status = typeof body.status === 'string' ? body.status : undefined;
+
+	return {
+		status,
+		code: status && Object.hasOwn(MESSAGES, status) ? (status as ErrorCode) : undefined,
+		message: typeof body.message === 'string' ? body.message : undefined,
+		payload: isRecord(body.payload) ? body.payload : undefined
+	};
+};
+
+let parseErrorBody: ErrorBodyParser = readErrorBody;
+
+/** Installs the project's parser (`#lib/config/errors`); called from the `init` hooks. */
+export function setErrorBodyParser(parser: ErrorBodyParser): void {
+	parseErrorBody = parser;
 }
 
 /** Log-only detail about a failed call. No headers: they carry the token. */
@@ -78,9 +101,7 @@ function fromAirError(err: AirError): AppError {
 	const httpStatus = err.status ?? 0;
 
 	// The body's own verdict wins: a backend may answer 400 for a conflict.
-	const code = body.code ?? codeFromStatus(body.status) ?? codeFromHttpStatus(httpStatus);
-
-	return new AppError(code, body.message, {
+	return new AppError(body.code ?? codeFromHttpStatus(httpStatus), body.message, {
 		// Not the AirError itself: its request headers carry the token.
 		cause: err.cause,
 		context: {
@@ -91,10 +112,6 @@ function fromAirError(err: AirError): AppError {
 			payload: body.payload
 		}
 	});
-}
-
-function codeFromStatus(status: string | undefined): ErrorCode | undefined {
-	return status && Object.hasOwn(MESSAGES, status) ? (status as ErrorCode) : undefined;
 }
 
 function codeFromHttpStatus(status: number): ErrorCode {
@@ -115,4 +132,8 @@ function codeFromHttpStatus(status: number): ErrorCode {
 		default:
 			return status >= 500 ? 'SERVER_ERROR' : 'UNKNOWN';
 	}
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
 }
