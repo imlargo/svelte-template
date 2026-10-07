@@ -70,15 +70,15 @@ src/
   hooks.client.ts        Client-side handleError
   lib/
     config/              What changes per project: app, routes, navigation, permissions, errors
-    core/                What does not: API client, BaseService, AppError, logger, Query, permissions
+    core/                What does not: API client, BaseService, AppError, logger, permissions
     features/<slice>/    auth, users… each with services/, components/, schemas, types
     components/
       ui/                shadcn — do not edit
       coral/             Vendored kit on top of shadcn — do not edit
       blocks/            Our own pieces: AsyncView, Boundary, EmptyState, ErrorState, PageHeader…
       layout/            Sidebar and header
-    hooks/               Reusable state with runes (Disclosure, Filters, Pagination…)
-    utils/               Pure functions (forms, date, paths, string, env, object)
+    hooks/               Reactive state classes with runes (Query, Disclosure, Filters, Pagination…)
+    utils/               Pure functions (forms, date, paths, string, env)
     types/               Types shared across slices
     server/              Demo only: in-memory store for /api/users
   routes/
@@ -95,7 +95,7 @@ Marked with `DEMO SCAFFOLDING` in the files. When you connect a real backend, de
 - `src/lib/features/users/services/users.ts` — drop the `''` in the constructor so it targets
   `PUBLIC_API_URL`, or keep it if your project is fullstack (see `docs/architecture.md`).
 - `src/routes/(app)/+page.server.ts` — the dashboard's fake stats.
-- The `/api/users` entries in `ENDPOINT_ACCESS` (`src/lib/config/permissions.ts`), if you delete
+- The `/api/users` entries in `ROUTE_ACCESS` (`src/lib/config/permissions.ts`), if you delete
   the endpoints.
 
 ## Deployment

@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import type { NavigationSection } from '#lib/config/navigation.js';
-	import { isPrefixOf } from '#lib/core/permissions.js';
+	import { isPrefixOf } from '#lib/utils/paths.js';
 
 	let { sections }: { sections: NavigationSection[] } = $props();
 </script>

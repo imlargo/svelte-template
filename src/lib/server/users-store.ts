@@ -2,33 +2,27 @@
  * DEMO SCAFFOLDING — delete this file when you point the app at a real backend.
  *
  * An in-memory stand-in for the users endpoint of your API, so the admin CRUD
- * works on a fresh clone with no setup. State lives in a module-level array,
- * which is a per-process singleton: fine here because this is shared seed data,
- * never per-user state. Do not copy this pattern for anything user-scoped —
- * module-level $state with user data leaks across requests under SSR.
- *
- * Restarting the dev server resets it.
+ * works on a fresh clone with no setup. The module-level array is fine here
+ * because it is shared seed data, never per-user state. Restarting the dev
+ * server resets it.
  */
 import { UserRole } from '#lib/types/user.js';
 import type { User } from '#lib/types/user.js';
 
 const SEED: User[] = [
-	['Ada Lovelace', 'ada@example.com', UserRole.ADMIN],
-	['Grace Hopper', 'grace@example.com', UserRole.ADMIN],
-	['Alan Turing', 'alan@example.com', UserRole.MEMBER],
-	['Katherine Johnson', 'katherine@example.com', UserRole.MEMBER],
-	['Margaret Hamilton', 'margaret@example.com', UserRole.MEMBER],
-	['Barbara Liskov', 'barbara@example.com', UserRole.MEMBER],
-	['Radia Perlman', 'radia@example.com', UserRole.MEMBER]
-].map(([name, email, role], i) => ({
-	id: String(i + 1),
-	name: name as string,
-	email: email as string,
-	role: role as UserRole,
-	avatar: null,
-	created_at: new Date(Date.UTC(2024, 0, i + 1)).toISOString(),
-	updated_at: new Date(Date.UTC(2024, 0, i + 1)).toISOString()
-}));
+	seed('1', 'Ada Lovelace', 'ada@example.com', UserRole.ADMIN),
+	seed('2', 'Grace Hopper', 'grace@example.com', UserRole.ADMIN),
+	seed('3', 'Alan Turing', 'alan@example.com', UserRole.MEMBER),
+	seed('4', 'Katherine Johnson', 'katherine@example.com', UserRole.MEMBER),
+	seed('5', 'Margaret Hamilton', 'margaret@example.com', UserRole.MEMBER),
+	seed('6', 'Barbara Liskov', 'barbara@example.com', UserRole.MEMBER),
+	seed('7', 'Radia Perlman', 'radia@example.com', UserRole.MEMBER)
+];
+
+function seed(id: string, name: string, email: string, role: UserRole): User {
+	const at = new Date(Date.UTC(2024, 0, Number(id))).toISOString();
+	return { id, name, email, role, avatar: null, created_at: at, updated_at: at };
+}
 
 let users: User[] = [...SEED];
 let nextId = users.length + 1;

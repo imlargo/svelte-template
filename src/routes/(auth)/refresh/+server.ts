@@ -1,15 +1,13 @@
-/**
- * Renews the session for the browser when an API call comes back 401
- * (`features/auth/client-session.svelte.ts`): the refresh token is httpOnly,
- * so only the server can spend it. Public to the hook because it
- * authenticates itself with that cookie.
- */
+// Renews the session for the browser after a 401: only the server can spend the httpOnly refresh token.
 import { error } from '@sveltejs/kit';
 import { config } from '#lib/config/app.js';
 import { logger } from '#lib/core/logger.js';
-import { isCredentialRejection } from '#lib/features/auth/rejection.js';
-import { renewSession } from '#lib/features/auth/renew.server.js';
-import { clearSession, getSession } from '#lib/features/auth/session.server.js';
+import {
+	clearSession,
+	getSession,
+	isCredentialRejection,
+	renewSession
+} from '#lib/features/auth/session.server.js';
 import type { RefreshedSession, Session } from '#lib/features/auth/types.js';
 import type { RequestHandler } from './$types';
 

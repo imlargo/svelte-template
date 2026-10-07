@@ -3,21 +3,26 @@ import { config } from '#lib/config/app.js';
 import { HOME_ROUTE } from '#lib/config/routes.js';
 import { logger } from '#lib/core/logger.js';
 import { AuthService } from '#lib/features/auth/services/auth.js';
-import { LoginSchema, type LoginFailure } from '#lib/features/auth/schemas.js';
-import { REDIRECT_PARAM, decodeRedirect } from '#lib/features/auth/redirect.js';
+import { LoginSchema } from '#lib/features/auth/schemas.js';
+import type { LoginFailure } from '#lib/features/auth/types.js';
+import { REDIRECT_PARAM, sanitizeRedirect } from '#lib/features/auth/redirect.js';
 import {
 	GOOGLE_AUTH_ORIGIN,
 	OAUTH_FAILED_PARAM,
 	buildGoogleAuthUrl
 } from '#lib/features/auth/google.js';
-import { isCredentialRejection } from '#lib/features/auth/rejection.js';
-import { getSession, setOAuthState, setSession } from '#lib/features/auth/session.server.js';
+import {
+	getSession,
+	isCredentialRejection,
+	setOAuthState,
+	setSession
+} from '#lib/features/auth/session.server.js';
 import { parseForm } from '#lib/utils/forms.js';
 import type { Actions, PageServerLoad } from './$types';
 
 /** Where to land after signing in, honouring the `?redirect=` the auth hook set. */
 function destination(url: URL): string {
-	return decodeRedirect(url.searchParams.get(REDIRECT_PARAM)) ?? HOME_ROUTE;
+	return sanitizeRedirect(url.searchParams.get(REDIRECT_PARAM)) ?? HOME_ROUTE;
 }
 
 export const load: PageServerLoad = async ({ cookies, url }) => {
@@ -39,8 +44,7 @@ export const actions = {
 		if (errors) return fail(400, { email, errors } satisfies LoginFailure);
 
 		try {
-			const { session } = await new AuthService().login(data);
-			setSession(cookies, session);
+			setSession(cookies, await new AuthService().login(data));
 		} catch (err) {
 			// Deliberately vague: saying which half was wrong enumerates accounts.
 			if (isCredentialRejection(err)) {

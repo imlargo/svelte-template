@@ -1,13 +1,9 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit/hooks';
-import { handleAuth } from './handler.server';
+import { handleAuth } from './hook.server';
 import { AppError } from '#lib/core/errors.js';
 import { UserRole, type User } from '#lib/types/user.js';
-
-// The hook is the only thing standing between an anonymous request and the app,
-// so what it does on a missing, rejected or unverifiable session is asserted
-// here rather than discovered in production.
 
 const { getMe, refresh } = vi.hoisted(() => ({ getMe: vi.fn(), refresh: vi.fn() }));
 
@@ -167,8 +163,6 @@ describe('handleAuth', () => {
 	});
 
 	it('fails the request but keeps the session when the backend is unreachable', async () => {
-		// An outage must not sign everyone out: that turns downtime into a
-		// stampede of logins and throws away whatever the user was doing.
 		getMe.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
 
 		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
@@ -187,12 +181,8 @@ describe('handleAuth', () => {
 	});
 });
 
-// The two halves of the app authorize differently on purpose. These are the
-// assertions that keep one of them from quietly deciding for the other.
-
 describe('handleAuth on page routes', () => {
 	it('denies a signed-in role that lacks the permission', async () => {
-		// A member typing /admin in the address bar.
 		getMe.mockResolvedValue(userWith(UserRole.MEMBER));
 
 		const { outcome } = await callAuth(ADMIN, SESSION);
@@ -217,8 +207,6 @@ describe('handleAuth on page routes', () => {
 	});
 
 	it('leaves a path with no route behind it alone, so SvelteKit can 404 it', async () => {
-		// A mistyped URL is not a permission problem. Answering 403 here would
-		// also mean a round trip to /auth/me for every bad path a crawler tries.
 		const { outcome } = await callAuth(UNMATCHED, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
@@ -228,8 +216,7 @@ describe('handleAuth on page routes', () => {
 
 describe('handleAuth on endpoints', () => {
 	it('does not enforce a permission on an endpoint', async () => {
-		// /api/users is listed as needing a session, nothing more: a permission
-		// in the table would 403 every call, admins included.
+		// /api/users is 'session' in ROUTE_ACCESS: the handler decides per method.
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
 		const { outcome } = await callAuth(USERS_API, SESSION);
@@ -242,9 +229,7 @@ describe('handleAuth on endpoints', () => {
 
 		const { outcome, locals } = await callAuth(USERS_API, SESSION);
 
-		// The hook passes it through...
 		expect(outcome).toEqual({ kind: 'resolved' });
-		// ...and the handler's own call is what refuses a member.
 		expect(() => locals.requirePermission('users:delete')).toThrow();
 	});
 });

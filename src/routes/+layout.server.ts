@@ -1,7 +1,6 @@
 import type { LayoutServerLoad } from './$types';
 
-// Serialized into the page: the access token for client-side services, never
-// the refresh token, which only the server spends.
+// The access token reaches the client for its services; the refresh token never does.
 export const load: LayoutServerLoad = async ({ locals }) => {
 	return {
 		user: locals.user ?? null,

@@ -5,7 +5,7 @@ import { isHttpError } from '@sveltejs/kit';
  * Pages and endpoints fail in opposite directions, and this test covers the
  * dangerous one.
  *
- * A page carries its permission in PAGE_ACCESS, and the hook enforces it. An
+ * A page carries its permission in ROUTE_ACCESS, and the hook enforces it. An
  * endpoint is only listed there as needing a session: it authorizes itself per
  * method, so a handler that forgets `locals.requirePermission` is open to any
  * signed-in user, and nothing in lint, types or the hook can notice.

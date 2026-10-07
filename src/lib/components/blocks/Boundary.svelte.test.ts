@@ -4,9 +4,6 @@ import { createRawSnippet } from 'svelte';
 import Boundary from './Boundary.svelte';
 import { AppError } from '#lib/core/errors.js';
 
-// What a crashing section shows is what the app's error rules allow: an
-// expected error's own message, and never the text of a bug.
-
 const { logError } = vi.hoisted(() => ({ logError: vi.fn(() => 'logged') }));
 
 vi.mock('#lib/core/logger.js', () => ({

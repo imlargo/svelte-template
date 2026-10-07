@@ -13,7 +13,7 @@
 	} from '#lib/config/navigation.js';
 	import { config } from '#lib/config/app.js';
 	import { HOME_ROUTE } from '#lib/config/routes.js';
-	import { PAGE_ACCESS, ROLE_LABELS, ROLE_PERMISSIONS } from '#lib/config/permissions.js';
+	import { ROLE_LABELS, ROLE_PERMISSIONS, ROUTE_ACCESS } from '#lib/config/permissions.js';
 	import { hasPermission } from '#lib/core/permissions.js';
 	import NavMain from './NavMain.svelte';
 	import NavUser from './NavUser.svelte';
@@ -27,11 +27,10 @@
 
 	const sidebar = Sidebar.useSidebar();
 
-	// Presentation only: the hook enforces the same table. With auth off there
-	// is no role to check, so every item shows.
+	// Presentation only: the hook enforces the same table.
 	function canOpen(item: NavigationItem): boolean {
 		if (!config.auth.enabled) return true;
-		const access = PAGE_ACCESS[item.route];
+		const access = ROUTE_ACCESS[item.route];
 		return access === 'public' || hasPermission(ROLE_PERMISSIONS, user?.role, access);
 	}
 
@@ -52,7 +51,6 @@
 	});
 
 	afterNavigate(({ shallow }) => {
-		// A shallow navigation (`goto` with `shallow: true`) only updates history state.
 		if (shallow) return;
 		if (sidebar.isMobile && sidebar.openMobile) sidebar.setOpenMobile(false);
 	});

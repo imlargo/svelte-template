@@ -1,5 +1,5 @@
 import type { RefreshedSession } from '#lib/features/auth/types.js';
-import type { ApiAuth } from '#lib/core/api.js';
+import { SAME_ORIGIN, type ApiAuth } from '#lib/core/api.js';
 import { AUTH_ROUTES } from '#lib/config/routes.js';
 import { BaseService } from '#lib/core/service.js';
 
@@ -8,9 +8,8 @@ import { BaseService } from '#lib/core/service.js';
  * an httpOnly cookie, so the browser asks the server to spend it.
  */
 export class SessionService extends BaseService {
-	// Empty base URL: same-origin routes of this app.
 	constructor(auth: ApiAuth = {}) {
-		super(auth, '');
+		super(SAME_ORIGIN, auth);
 	}
 
 	refresh() {

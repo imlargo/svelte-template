@@ -3,11 +3,7 @@ import { defineEnvVars } from '@sveltejs/kit/env';
 import { z } from 'zod';
 import { flag, unset } from '#lib/utils/env.js';
 
-/**
- * `vite build` runs the app to analyse it, but the variables belong to the
- * deploy (on Workers they are set on the worker, not on the build machine). So
- * the build gets a placeholder, and the running app is the one held to account.
- */
+// The build gets a placeholder: on Workers the variables are set on the worker, not the build machine.
 const apiUrl = z
 	.string()
 	.optional()

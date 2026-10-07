@@ -1,8 +1,7 @@
 /**
- * The session cookies, and the only place that knows their names and options.
- *
- * The cookie lifetime is not the token lifetime: the backend decides when an
- * access token expires, and the hook finds out on the next `/auth/me`.
+ * The session on the server: the cookies, and the only place that knows their
+ * names and options, plus renewing and ending it. The cookie lifetime is not
+ * the token lifetime: the backend decides when a token expires.
  */
 import {
 	AUTH_COOKIE_DOMAIN,
@@ -12,13 +11,15 @@ import {
 } from '$app/env/private';
 import type { Cookies } from '@sveltejs/kit';
 import { z } from 'zod';
+import { normalizeError } from '#lib/core/errors.js';
 import type { Session } from '#lib/features/auth/types.js';
+import { AuthService } from './services/auth';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
 const OAUTH_STATE_COOKIE = 'oauth_state';
 
-/** Long enough for the round trip to the provider, short enough to be useless later. */
+/** Enough for the round trip to the provider. */
 const OAUTH_STATE_MAX_AGE = 60 * 10;
 
 function cookieOptions(maxAge: number) {
@@ -36,7 +37,7 @@ function deleteCookie(cookies: Cookies, name: string): void {
 	cookies.delete(name, { path: '/', domain: AUTH_COOKIE_DOMAIN });
 }
 
-/** Null unless both tokens are present — a half session is no session. */
+/** A half session is no session. */
 export function getSession(cookies: Cookies): Session | null {
 	const accessToken = cookies.get(ACCESS_TOKEN_COOKIE);
 	const refreshToken = cookies.get(REFRESH_TOKEN_COOKIE);
@@ -56,9 +57,9 @@ export function clearSession(cookies: Cookies): void {
 }
 
 const OAuthStateSchema = z.object({
-	/** Echoed by the provider and compared on the way back. Defeats login CSRF. */
+	/** Echoed by the provider and compared on the way back. */
 	nonce: z.string(),
-	/** Encoded `?redirect=` value the user was heading to, if any. */
+	/** The `?redirect=` value the user was heading to, if any. */
 	redirectTo: z.string().nullable()
 });
 
@@ -68,7 +69,7 @@ export function setOAuthState(cookies: Cookies, state: OAuthState): void {
 	cookies.set(OAUTH_STATE_COOKIE, JSON.stringify(state), cookieOptions(OAUTH_STATE_MAX_AGE));
 }
 
-/** Reads the OAuth state and deletes it: it is valid for exactly one callback. */
+/** Reads and deletes: valid for one callback. */
 export function takeOAuthState(cookies: Cookies): OAuthState | null {
 	const raw = cookies.get(OAUTH_STATE_COOKIE);
 	deleteCookie(cookies, OAUTH_STATE_COOKIE);
@@ -80,4 +81,17 @@ export function takeOAuthState(cookies: Cookies): OAuthState | null {
 	} catch {
 		return null;
 	}
+}
+
+/** Spends the refresh token and rotates both cookies. Throws what the backend throws. */
+export async function renewSession(cookies: Cookies, refreshToken: string): Promise<Session> {
+	const session = await new AuthService().refresh(refreshToken);
+	setSession(cookies, session);
+	return session;
+}
+
+/** A refusal, as opposed to an outage: only a refusal ends a session or reads as "wrong password". */
+export function isCredentialRejection(err: unknown): boolean {
+	const { code } = normalizeError(err);
+	return code === 'UNAUTHORIZED' || code === 'FORBIDDEN';
 }

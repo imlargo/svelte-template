@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { inspect } from 'node:util';
 import { AirError } from '@imlargo/air';
-import { AppError, normalizeError } from './errors';
+import { AppError, normalizeError, setErrorBodyParser, readErrorBody } from './errors';
 
 /** An AirError as air builds it: `status` comes from the response, not the init. */
 function airError(body: unknown, httpStatus?: number): AirError {
@@ -38,8 +38,6 @@ describe('normalizeError', () => {
 	});
 
 	it('wraps a plain Error without rendering its message, keeping it as cause', () => {
-		// A bug's message ("Cannot read properties of undefined") is for the log,
-		// not for the screen.
 		const cause = new TypeError('Cannot read properties of undefined');
 		const err = normalizeError(cause);
 
@@ -62,15 +60,6 @@ describe('normalizeError (air responses)', () => {
 
 		expect(err.code).toBe('CONFLICT');
 		expect(err.message).toBe('Taken');
-	});
-
-	it('maps backend statuses that are not codes through the alias table', () => {
-		expect(normalizeError(airError({ status: 'UNPROCESSABLE_ENTITY' }, 500)).code).toBe(
-			'BAD_REQUEST'
-		);
-		expect(normalizeError(airError({ status: 'INTERNAL_SERVER_ERROR' }, 400)).code).toBe(
-			'SERVER_ERROR'
-		);
 	});
 
 	it.each([
@@ -147,8 +136,6 @@ describe('normalizeError (air responses)', () => {
 	it('keeps a status it cannot map, which is where it matters most', () => {
 		const err = normalizeError(airError({ status: 'INSUFFICIENT_FUNDS' }, 402));
 
-		// The code says nothing useful, so the raw status is all that names what
-		// actually happened.
 		expect(err.code).toBe('UNKNOWN');
 		expect(err.context?.status).toBe('INSUFFICIENT_FUNDS');
 	});
@@ -161,5 +148,16 @@ describe('normalizeError (air responses)', () => {
 		expect(err.code).toBe('BAD_REQUEST');
 		expect(err.message).toBe('The data provided is invalid.');
 		expect(err.context?.payload).toBeUndefined();
+	});
+});
+
+describe('setErrorBodyParser', () => {
+	it('lets the project decide what a body means', () => {
+		setErrorBodyParser((body) => ({ ...readErrorBody(body), code: 'CONFLICT' }));
+		try {
+			expect(normalizeError(airError({ status: 'TEAPOT' }, 404)).code).toBe('CONFLICT');
+		} finally {
+			setErrorBodyParser(readErrorBody);
+		}
 	});
 });

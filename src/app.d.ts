@@ -21,11 +21,7 @@ declare global {
 			user?: User | null;
 			/** The refresh token stays in its cookie and never reaches locals or the client. */
 			accessToken?: string | null;
-			/**
-			 * Throws 401 without a session, 403 without the permission. Always
-			 * installed by the hook; call it at the top of every `+server.ts` handler
-			 * and destructive form action.
-			 */
+			/** 401 without a session, 403 without the permission. Call it in every endpoint handler and destructive action. */
 			requirePermission: RequirePermission;
 		}
 		// interface PageData {}

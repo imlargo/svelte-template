@@ -2,10 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Fetch } from '@imlargo/air';
 import { createAuthTransport } from './transport';
 
-// The browser's whole reaction to a 401 lives in this transport, so what it
-// does with one, with a burst of them, and with a renewal that fails is pinned
-// here against a fake network.
-
 /** A backend that accepts only `valid`, and counts what it was sent. */
 function backend(valid: string) {
 	const sent: Array<string | null> = [];

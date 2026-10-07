@@ -1,6 +1,4 @@
-/**
- * DEMO SCAFFOLDING — see `#lib/server/users-store.js`.
- */
+// DEMO SCAFFOLDING — see `#lib/server/users-store.js`.
 import { deleteUser, emailTaken, findUser, updateUser } from '#lib/server/users-store.js';
 import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
@@ -8,8 +6,7 @@ import type { RequestHandler } from './$types';
 const notFound = (id: string) =>
 	Response.json({ status: 'NOT_FOUND', message: `No user with id ${id}.` }, { status: 404 });
 
-// Endpoints get no layout, so each handler guards itself. Three methods, three
-// permissions: this is the granularity a path-keyed table cannot express.
+// Three methods, three permissions: the granularity a route table cannot express.
 export const GET: RequestHandler = async ({ params, locals }) => {
 	locals.requirePermission('users:read');
 

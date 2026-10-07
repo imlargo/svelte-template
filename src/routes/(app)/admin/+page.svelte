@@ -11,9 +11,9 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
-	import { createQuery } from '#lib/core/query.svelte.js';
+	import { Query } from '#lib/hooks/query.svelte.js';
 	import { normalizeError } from '#lib/core/errors.js';
-	import { getAuth } from '#lib/features/auth/context.js';
+	import { getAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { UsersService } from '#lib/features/users/services/users.js';
 	import UserFormDialog from '#lib/features/users/components/UserFormDialog.svelte';
 	import { ROLE_LABELS } from '#lib/config/permissions.js';
@@ -25,10 +25,9 @@
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
-	// Loaded by the page, not by `load`: the list is searched and edited in
-	// place, and a refetch should update the table rather than replace it.
+	// Loaded by the page, not by `load`: the list is searched and edited in place.
 	const users = new UsersService(getAuth().api);
-	const list = createQuery<User[]>();
+	const list = new Query<User[]>();
 
 	let search = $state('');
 
@@ -38,8 +37,7 @@
 
 	async function load() {
 		await list.run(() => users.list(search));
-		// A first load that fails is AsyncView's error panel; a later one keeps
-		// the table on screen, so it is reported here instead.
+		// A later failure keeps the table on screen, so it is reported here.
 		if (list.error && list.data !== null) toast.error(list.error.message);
 	}
 
@@ -48,8 +46,6 @@
 		load();
 	}
 
-	// The relative /api/users URL is only requested from the browser; the
-	// server renders the skeleton.
 	onMount(load);
 
 	function openCreate() {

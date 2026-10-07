@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { encodeRedirect, decodeRedirect, sanitizeRedirect } from './redirect';
+import { sanitizeRedirect } from './redirect';
 
 describe('sanitizeRedirect', () => {
 	it('accepts same-origin paths', () => {
@@ -24,26 +24,10 @@ describe('sanitizeRedirect', () => {
 		expect(sanitizeRedirect('javascript:alert(1)')).toBeNull();
 	});
 
-	it('rejects paths that do not start with a slash', () => {
+	it('rejects paths that do not start with a slash, and nothing at all', () => {
 		expect(sanitizeRedirect('settings')).toBeNull();
 		expect(sanitizeRedirect('')).toBeNull();
-	});
-});
-
-describe('decodeRedirect', () => {
-	it('round-trips an encoded path', () => {
-		expect(decodeRedirect(encodeRedirect('/admin/users?page=2'))).toBe('/admin/users?page=2');
-	});
-
-	it('returns null for missing or malformed values', () => {
-		expect(decodeRedirect(null)).toBeNull();
-		expect(decodeRedirect(undefined)).toBeNull();
-		expect(decodeRedirect('')).toBeNull();
-		expect(decodeRedirect('not-base64!!')).toBeNull();
-	});
-
-	it('rejects an off-origin path even when correctly encoded', () => {
-		expect(decodeRedirect(encodeRedirect('//evil.com'))).toBeNull();
-		expect(decodeRedirect(encodeRedirect('https://evil.com'))).toBeNull();
+		expect(sanitizeRedirect(null)).toBeNull();
+		expect(sanitizeRedirect(undefined)).toBeNull();
 	});
 });

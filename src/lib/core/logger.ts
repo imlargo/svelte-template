@@ -1,19 +1,13 @@
-/**
- * The single exit point for logs. To ship Sentry or structured logging, write a
- * class that implements `Logger` and reassign `logger` — nothing else in the
- * codebase changes.
- */
+/** The single exit point for logs. For Sentry or JSON, implement `Logger` and call `setLogger`. */
 import { normalizeError } from '#lib/core/errors.js';
 
-/** Searchable detail attached to a log line — an `errorId`, a pathname. Never a token. */
+/** Searchable detail for a log line. Never a token. */
 type LogContext = Record<string, unknown>;
 
 export interface Logger {
-	/** Something worth knowing happened, and nothing is wrong. */
 	info(scope: string, message: string, context?: LogContext): void;
-	/** Something is off, but the request was handled: a misconfiguration, a rejected input. */
 	warn(scope: string, message: string, context?: LogContext): void;
-	/** Logs `error` under `scope` and returns the message that is safe to show a user. */
+	/** Logs the error and returns the message that is safe to show. */
 	error(scope: string, error: unknown, context?: LogContext): string;
 }
 
@@ -35,7 +29,6 @@ class ConsoleLogger implements Logger {
 
 export let logger: Logger = new ConsoleLogger();
 
-/** Swaps the active implementation — e.g. for a SentryLogger, or a no-op one in tests. */
 export function setLogger(impl: Logger): void {
 	logger = impl;
 }

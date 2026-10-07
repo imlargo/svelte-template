@@ -1,15 +1,11 @@
-import { normalizeError, type AppError } from './errors';
+import { normalizeError, type AppError } from '#lib/core/errors.js';
 
 /**
- * Async-call state for data the page loads itself (see `AsyncView`). Data from
- * `load` does not need this.
- *
- * Only the latest `run()` writes its outcome: a slower, older call that
- * settles afterwards is dropped, so a fast search cannot be overwritten by a
- * stale one. A failed run keeps the previous `data`.
+ * State of data the page loads itself (see `AsyncView`). Only the latest
+ * `run()` writes its outcome, and a failed run keeps the previous `data`.
  */
 export class Query<T> {
-	// `$state.raw` because API responses are reassigned wholesale, never mutated.
+	// Raw: responses are replaced wholesale, never mutated.
 	data = $state.raw<T | null>(null);
 	error = $state.raw<AppError | null>(null);
 	isLoading = $state(false);
@@ -30,8 +26,4 @@ export class Query<T> {
 			if (run === this.#latest) this.isLoading = false;
 		}
 	}
-}
-
-export function createQuery<T>(): Query<T> {
-	return new Query<T>();
 }

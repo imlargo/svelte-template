@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { isActionFailure, isRedirect } from '@sveltejs/kit';
 import { actions } from './+page.server';
 import { AppError } from '#lib/core/errors.js';
-import { encodeRedirect } from '#lib/features/auth/redirect.js';
 
 const { login, logError } = vi.hoisted(() => ({ login: vi.fn(), logError: vi.fn() }));
 
@@ -16,7 +15,6 @@ vi.mock('#lib/core/logger.js', () => ({
 	logger: { error: logError, warn: vi.fn(), info: vi.fn() }
 }));
 
-// The service answers in the app's own types; the wire shape is contract.test.ts's business.
 const SESSION = { accessToken: 'access', refreshToken: 'refresh' };
 
 async function submitLogin(
@@ -54,16 +52,16 @@ beforeEach(() => {
 
 describe('login action', () => {
 	it('signs in and returns the user to where they were headed', async () => {
-		login.mockResolvedValue({ session: SESSION });
+		login.mockResolvedValue(SESSION);
 
-		const { location, set } = await submitLogin(`&redirect=${encodeRedirect('/admin')}`);
+		const { location, set } = await submitLogin('&redirect=%2Fadmin');
 
 		expect(location).toBe('/admin');
 		expect(set).toMatchObject({ access_token: 'access', refresh_token: 'refresh' });
 	});
 
 	it('lands on home without a redirect', async () => {
-		login.mockResolvedValue({ session: SESSION });
+		login.mockResolvedValue(SESSION);
 
 		expect((await submitLogin()).location).toBe('/');
 	});

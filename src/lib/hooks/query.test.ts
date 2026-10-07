@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createQuery } from './query.svelte';
-import { AppError } from './errors';
+import { Query } from './query.svelte';
+import { AppError } from '#lib/core/errors.js';
 
 describe('Query', () => {
 	it('starts empty and idle', () => {
-		const query = createQuery<string[]>();
+		const query = new Query<string[]>();
 
 		expect(query.data).toBe(null);
 		expect(query.error).toBe(null);
@@ -12,7 +12,7 @@ describe('Query', () => {
 	});
 
 	it('holds the resolved data', async () => {
-		const query = createQuery<string[]>();
+		const query = new Query<string[]>();
 
 		await query.run(async () => ['a', 'b']);
 
@@ -22,7 +22,7 @@ describe('Query', () => {
 	});
 
 	it('exposes the normalized error object, not a string', async () => {
-		const query = createQuery<string[]>();
+		const query = new Query<string[]>();
 
 		await query.run(async () => {
 			throw new AppError('NOT_FOUND', 'No existe');
@@ -35,7 +35,7 @@ describe('Query', () => {
 	});
 
 	it('clears a previous error on the next run', async () => {
-		const query = createQuery<string>();
+		const query = new Query<string>();
 		await query.run(async () => {
 			throw new Error('boom');
 		});
@@ -48,7 +48,7 @@ describe('Query', () => {
 	});
 
 	it('keeps the previous data when a run fails', async () => {
-		const query = createQuery<string>();
+		const query = new Query<string>();
 		await query.run(async () => 'first');
 
 		await query.run(async () => {
@@ -60,7 +60,7 @@ describe('Query', () => {
 	});
 
 	it('ignores an older run that settles after a newer one', async () => {
-		const query = createQuery<string>();
+		const query = new Query<string>();
 		let settleSlow!: (value: string) => void;
 
 		const slow = query.run(() => new Promise<string>((resolve) => (settleSlow = resolve)));
@@ -73,7 +73,7 @@ describe('Query', () => {
 	});
 
 	it('is loading until the latest run settles', async () => {
-		const query = createQuery<string>();
+		const query = new Query<string>();
 		let settleSlow!: (value: string) => void;
 
 		await query.run(async () => 'first');
@@ -86,7 +86,7 @@ describe('Query', () => {
 	});
 
 	it('is loading while the call is in flight', async () => {
-		const query = createQuery<string>();
+		const query = new Query<string>();
 
 		const pending = query.run(async () => 'value');
 		expect(query.isLoading).toBe(true);

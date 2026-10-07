@@ -5,9 +5,10 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
 	import { config } from '#lib/config/app.js';
-	import { LoginSchema, type LoginFailure, type LoginInput } from '#lib/features/auth/schemas.js';
+	import { LoginSchema, type LoginInput } from '#lib/features/auth/schemas.js';
+	import type { LoginFailure } from '#lib/features/auth/types.js';
 	import { REDIRECT_PARAM } from '#lib/features/auth/redirect.js';
-	import { toFieldErrors, validateField, type FieldErrors } from '#lib/utils/forms.js';
+	import { toErrorItems, validateField, type FieldErrors } from '#lib/utils/forms.js';
 
 	let {
 		form = null,
@@ -19,18 +20,16 @@
 		form?: LoginFailure | null;
 		/** Set when the user comes back from a failed OAuth round trip. */
 		signInError?: string | null;
-		/** The encoded `?redirect=` value, carried to both actions. */
+		/** The `?redirect=` value, carried to both actions. */
 		redirect?: string | null;
 		class?: string;
 	} = $props();
 
-	// `action="?/login"` would replace the page's query string, dropping where
-	// the user was headed; the action name tolerates extra parameters.
+	// `action="?/login"` alone would drop the page's query string, and with it the redirect.
 	const actionQuery = $derived(
 		redirect ? `&${new URLSearchParams({ [REDIRECT_PARAM]: redirect })}` : ''
 	);
 
-	// The server's verdict, until the user edits a field and gets a fresh one.
 	let errors = $derived<FieldErrors<LoginInput>>(form?.errors ?? {});
 
 	function validate(event: Event & { currentTarget: HTMLInputElement }) {
@@ -63,7 +62,6 @@
 	{/if}
 
 	{#if showGoogle}
-		<!-- Its own form: the server mints the OAuth state cookie before redirecting. -->
 		<form method="POST" action="?/google{actionQuery}">
 			<Button type="submit" variant="outline" class="w-full">
 				<svg
@@ -107,7 +105,7 @@
 						aria-invalid={errors.email ? true : undefined}
 						onchange={validate}
 					/>
-					<Field.Error errors={toFieldErrors(errors.email)} />
+					<Field.Error errors={toErrorItems(errors.email)} />
 				</Field.Field>
 
 				<Field.Field data-invalid={errors.password ? true : undefined}>
@@ -120,7 +118,7 @@
 						aria-invalid={errors.password ? true : undefined}
 						onchange={validate}
 					/>
-					<Field.Error errors={toFieldErrors(errors.password)} />
+					<Field.Error errors={toErrorItems(errors.password)} />
 				</Field.Field>
 
 				<Button type="submit" class="w-full">Sign in</Button>

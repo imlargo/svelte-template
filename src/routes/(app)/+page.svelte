@@ -8,7 +8,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { AppError } from '#lib/core/errors.js';
-	import { createQuery } from '#lib/core/query.svelte.js';
+	import { Query } from '#lib/hooks/query.svelte.js';
 	import { toast } from 'svelte-sonner';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
@@ -22,7 +22,7 @@
 	// Explicit, like `formatDate`: the runtime's default locale is not the page's.
 	const numbers = new Intl.NumberFormat('en');
 
-	const items = createQuery<string[]>();
+	const items = new Query<string[]>();
 
 	async function load(fail = false) {
 		await items.run(async () => {
@@ -31,13 +31,11 @@
 			return ['Item A', 'Item B', 'Item C'];
 		});
 
-		// A first load that fails is AsyncView's error panel; a later one keeps
-		// the list on screen, so it is reported here instead.
+		// A later failure keeps the list on screen, so it is reported here.
 		if (items.error && items.data !== null) toast.error(items.error.message);
 	}
 
-	// Starts as an empty list, so the empty state, the data and a failure are
-	// each a click away.
+	// Starts empty, so the empty state, the data and a failure are each a click away.
 	onMount(() => items.run(async () => []));
 </script>
 
@@ -78,7 +76,7 @@
 		{/snippet}
 	</AsyncView>
 
-	<!-- Run by the page itself: for loads the user triggers, not the navigation. -->
+	<!-- Loaded by the page itself, for data the user triggers. -->
 	<section>
 		<h2 class="mb-3 text-sm font-medium text-muted-foreground">Client-side Query demo</h2>
 		<AsyncView source={items}>
