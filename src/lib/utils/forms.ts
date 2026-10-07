@@ -24,6 +24,6 @@ export function validateField<S extends z.ZodObject>(
 }
 
 /** `Field.Error` takes `{ message }` objects. */
-export function toFieldErrors(messages: string[] | undefined) {
+export function toErrorItems(messages: string[] | undefined) {
 	return messages?.map((message) => ({ message }));
 }

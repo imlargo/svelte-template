@@ -3,7 +3,8 @@ import { config } from '#lib/config/app.js';
 import { HOME_ROUTE } from '#lib/config/routes.js';
 import { logger } from '#lib/core/logger.js';
 import { AuthService } from '#lib/features/auth/services/auth.js';
-import { LoginSchema, type LoginFailure } from '#lib/features/auth/schemas.js';
+import { LoginSchema } from '#lib/features/auth/schemas.js';
+import type { LoginFailure } from '#lib/features/auth/types.js';
 import { REDIRECT_PARAM, sanitizeRedirect } from '#lib/features/auth/redirect.js';
 import {
 	GOOGLE_AUTH_ORIGIN,

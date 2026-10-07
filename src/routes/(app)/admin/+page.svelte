@@ -11,7 +11,7 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
-	import { Query } from '#lib/core/query.svelte.js';
+	import { Query } from '#lib/hooks/query.svelte.js';
 	import { normalizeError } from '#lib/core/errors.js';
 	import { getAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { UsersService } from '#lib/features/users/services/users.js';

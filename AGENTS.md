@@ -88,8 +88,9 @@ equivalent area before inventing a new one.
 
 ## State
 
-- Shared state with runes lives in classes under `#lib/hooks/` (`Disclosure`, `Filters`,
-  `Pagination`, `IsMobile`, in `#lib/hooks/*.svelte.ts`). Before creating a new one, consider
+- Shared state with runes lives in classes under `#lib/hooks/` (`Query`, `Disclosure`, `Filters`,
+  `Pagination`, `IsMobile`, in `#lib/hooks/*.svelte.ts`). `#lib/core/` is plain TypeScript with no
+  Svelte in it. Before creating a new one, consider
   whether the state is really shared or local to a component — in that case, a `$state` inside
   the component itself is enough.
 - **Module-level `$state` is forbidden for user-dependent data.** Under SSR, modules are

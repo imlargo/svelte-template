@@ -70,14 +70,14 @@ src/
   hooks.client.ts        Client-side handleError
   lib/
     config/              What changes per project: app, routes, navigation, permissions, errors
-    core/                What does not: API client, BaseService, AppError, logger, Query, permissions
+    core/                What does not: API client, BaseService, AppError, logger, permissions
     features/<slice>/    auth, users… each with services/, components/, schemas, types
     components/
       ui/                shadcn — do not edit
       coral/             Vendored kit on top of shadcn — do not edit
       blocks/            Our own pieces: AsyncView, Boundary, EmptyState, ErrorState, PageHeader…
       layout/            Sidebar and header
-    hooks/               Reusable state with runes (Disclosure, Filters, Pagination…)
+    hooks/               Reactive state classes with runes (Query, Disclosure, Filters, Pagination…)
     utils/               Pure functions (forms, date, paths, string, env)
     types/               Types shared across slices
     server/              Demo only: in-memory store for /api/users

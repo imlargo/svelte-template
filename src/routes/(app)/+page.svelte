@@ -8,7 +8,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { AppError } from '#lib/core/errors.js';
-	import { Query } from '#lib/core/query.svelte.js';
+	import { Query } from '#lib/hooks/query.svelte.js';
 	import { toast } from 'svelte-sonner';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';

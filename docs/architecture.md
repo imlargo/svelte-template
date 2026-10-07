@@ -12,7 +12,8 @@ routes/            pages, layouts, form actions, endpoints
 components/        ui (shadcn) · coral (kit) · blocks (our own) · layout
 features/<slice>/  services (the only callers of the API) · components · schemas · types · contract
   │  use
-core/              api (HTTP client) · service (BaseService) · errors · logger · query · permissions
+core/              api (HTTP client) · service (BaseService) · errors · logger · permissions
+hooks/             reactive state classes: Query, Disclosure, Filters, Pagination
 config/            app · routes · navigation · permissions · errors   ← what changes per project
 ```
 
@@ -25,7 +26,7 @@ under `features/`; `core/` stays the same.
 
 1. **`hooks.server.ts`** picks the hook based on `PUBLIC_AUTH_ENABLED`. With auth off it installs
    an empty `locals.requirePermission` and resolves. With auth on it runs `handleAuth`
-   (`features/auth/handler.server.ts`).
+   (`features/auth/hook.server.ts`).
 2. **`handleAuth`** looks up `event.route.id` in `ROUTE_ACCESS`
    (`config/permissions.ts`). A `'public'` route passes. Anything else needs a session: it reads
    both cookies, asks the backend who the user is (`AuthService.getMe`) and, if refresh is enabled

@@ -5,9 +5,10 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
 	import { config } from '#lib/config/app.js';
-	import { LoginSchema, type LoginFailure, type LoginInput } from '#lib/features/auth/schemas.js';
+	import { LoginSchema, type LoginInput } from '#lib/features/auth/schemas.js';
+	import type { LoginFailure } from '#lib/features/auth/types.js';
 	import { REDIRECT_PARAM } from '#lib/features/auth/redirect.js';
-	import { toFieldErrors, validateField, type FieldErrors } from '#lib/utils/forms.js';
+	import { toErrorItems, validateField, type FieldErrors } from '#lib/utils/forms.js';
 
 	let {
 		form = null,
@@ -104,7 +105,7 @@
 						aria-invalid={errors.email ? true : undefined}
 						onchange={validate}
 					/>
-					<Field.Error errors={toFieldErrors(errors.email)} />
+					<Field.Error errors={toErrorItems(errors.email)} />
 				</Field.Field>
 
 				<Field.Field data-invalid={errors.password ? true : undefined}>
@@ -117,7 +118,7 @@
 						aria-invalid={errors.password ? true : undefined}
 						onchange={validate}
 					/>
-					<Field.Error errors={toFieldErrors(errors.password)} />
+					<Field.Error errors={toErrorItems(errors.password)} />
 				</Field.Field>
 
 				<Button type="submit" class="w-full">Sign in</Button>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Query } from './query.svelte';
-import { AppError } from './errors';
+import { AppError } from '#lib/core/errors.js';
 
 describe('Query', () => {
 	it('starts empty and idle', () => {

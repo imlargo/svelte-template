@@ -65,7 +65,6 @@
 		"wrangler": "^4.97.0"
 	},
 	"imports": {
-		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {

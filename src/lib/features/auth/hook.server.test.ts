@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit/hooks';
-import { handleAuth } from './handler.server';
+import { handleAuth } from './hook.server';
 import { AppError } from '#lib/core/errors.js';
 import { UserRole, type User } from '#lib/types/user.js';
 

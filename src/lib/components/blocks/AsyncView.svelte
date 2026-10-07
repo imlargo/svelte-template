@@ -1,6 +1,6 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from 'svelte';
-	import type { Query } from '#lib/core/query.svelte.js';
+	import type { Query } from '#lib/hooks/query.svelte.js';
 	import { normalizeError, type AppError } from '#lib/core/errors.js';
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import EmptyState from '#lib/components/blocks/EmptyState.svelte';

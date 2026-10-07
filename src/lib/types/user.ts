@@ -1,12 +1,8 @@
+import type { BaseEntity } from '#lib/types/entity.js';
+
 export enum UserRole {
 	ADMIN = 'admin',
 	MEMBER = 'member'
-}
-
-export interface BaseEntity {
-	id: string;
-	created_at: string;
-	updated_at: string;
 }
 
 export interface User extends BaseEntity {

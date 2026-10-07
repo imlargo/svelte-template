@@ -1,4 +1,4 @@
-import { normalizeError, type AppError } from './errors';
+import { normalizeError, type AppError } from '#lib/core/errors.js';
 
 /**
  * State of data the page loads itself (see `AsyncView`). Only the latest

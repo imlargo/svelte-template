@@ -9,7 +9,7 @@
 	import { ROLE_LABELS } from '#lib/config/permissions.js';
 	import { UserRole } from '#lib/types/user.js';
 	import type { User } from '#lib/types/user.js';
-	import { parseForm, toFieldErrors, validateField, type FieldErrors } from '#lib/utils/forms.js';
+	import { parseForm, toErrorItems, validateField, type FieldErrors } from '#lib/utils/forms.js';
 
 	let {
 		open = $bindable(),
@@ -80,7 +80,7 @@
 						aria-invalid={errors.name ? true : undefined}
 						onchange={validate}
 					/>
-					<Field.Error errors={toFieldErrors(errors.name)} />
+					<Field.Error errors={toErrorItems(errors.name)} />
 				</Field.Field>
 
 				<Field.Field data-invalid={errors.email ? true : undefined}>
@@ -94,7 +94,7 @@
 						aria-invalid={errors.email ? true : undefined}
 						onchange={validate}
 					/>
-					<Field.Error errors={toFieldErrors(errors.email)} />
+					<Field.Error errors={toErrorItems(errors.email)} />
 				</Field.Field>
 
 				<Field.Field data-invalid={errors.role ? true : undefined}>
@@ -108,7 +108,7 @@
 							{/each}
 						</Select.Content>
 					</Select.Root>
-					<Field.Error errors={toFieldErrors(errors.role)} />
+					<Field.Error errors={toErrorItems(errors.role)} />
 				</Field.Field>
 
 				<Dialog.Footer>
