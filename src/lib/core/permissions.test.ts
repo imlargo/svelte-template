@@ -1,31 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { hasPermission } from './permissions';
-import { ROLE_PERMISSIONS, type Permission } from '#lib/config/permissions.js';
-import { UserRole } from '#lib/types/user.js';
+
+const GRANTS = { editor: ['posts:write'], viewer: [] } as const;
 
 describe('hasPermission', () => {
-	const matrix: Array<[UserRole, Permission, boolean]> = [
-		[UserRole.ADMIN, 'dashboard:read', true],
-		[UserRole.ADMIN, 'users:read', true],
-		[UserRole.ADMIN, 'users:write', true],
-		[UserRole.ADMIN, 'users:delete', true],
-		[UserRole.MEMBER, 'dashboard:read', true],
-		[UserRole.MEMBER, 'users:read', false],
-		[UserRole.MEMBER, 'users:write', false],
-		[UserRole.MEMBER, 'users:delete', false]
-	];
-
-	it.each(matrix)('%s %s the permission %s', (role, permission, expected) => {
-		expect(hasPermission(ROLE_PERMISSIONS, role, permission)).toBe(expected);
+	it('grants what is listed for the role', () => {
+		expect(hasPermission(GRANTS, 'editor', 'posts:write')).toBe(true);
+		expect(hasPermission(GRANTS, 'viewer', 'posts:write')).toBe(false);
 	});
 
-	it('grants nothing to a role the frontend has never heard of', () => {
-		expect(hasPermission(ROLE_PERMISSIONS, 'viewer', 'dashboard:read')).toBe(false);
-		expect(hasPermission(ROLE_PERMISSIONS, 'viewer', 'users:delete')).toBe(false);
+	it('grants nothing to a role it has never heard of', () => {
+		expect(hasPermission(GRANTS, 'owner', 'posts:write')).toBe(false);
+		expect(hasPermission(GRANTS, 'constructor', 'posts:write')).toBe(false);
 	});
 
 	it('grants nothing without a role', () => {
-		expect(hasPermission(ROLE_PERMISSIONS, null, 'dashboard:read')).toBe(false);
-		expect(hasPermission(ROLE_PERMISSIONS, undefined, 'dashboard:read')).toBe(false);
+		expect(hasPermission(GRANTS, null, 'posts:write')).toBe(false);
+		expect(hasPermission(GRANTS, undefined, 'posts:write')).toBe(false);
 	});
 });
