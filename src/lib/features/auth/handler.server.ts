@@ -18,9 +18,7 @@ import type { Session } from '#lib/features/auth/types.js';
 import { AuthService } from './services/auth';
 import { createPermissionGuard } from './guard.server';
 import { REDIRECT_PARAM } from './redirect';
-import { isCredentialRejection } from './rejection';
-import { renewSession } from './renew.server';
-import { clearSession, getSession } from './session.server';
+import { clearSession, getSession, isCredentialRejection, renewSession } from './session.server';
 
 function loginUrl(pathname: string, search: string): string {
 	if (pathname === HOME_ROUTE && !search) return AUTH_ROUTES.login;

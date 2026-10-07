@@ -8,7 +8,6 @@
  * ones that mean a code without being spelled like it.
  */
 import type { ErrorCode, ParsedErrorBody } from '#lib/core/errors.js';
-import { isRecord } from '#lib/utils/object.js';
 
 const STATUS_ALIASES: Record<string, ErrorCode> = {
 	NETWORK_ERROR: 'NETWORK',
@@ -16,6 +15,10 @@ const STATUS_ALIASES: Record<string, ErrorCode> = {
 	UNPROCESSABLE_ENTITY: 'BAD_REQUEST',
 	INTERNAL_SERVER_ERROR: 'SERVER_ERROR'
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
 
 export function parseErrorBody(body: unknown): ParsedErrorBody {
 	if (!isRecord(body)) return {};

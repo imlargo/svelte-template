@@ -2,8 +2,7 @@
 	import './layout.css';
 	import { Toaster } from '#lib/components/ui/sonner/index.js';
 	import { ModeWatcher } from 'mode-watcher';
-	import { setAuth } from '#lib/features/auth/context.js';
-	import { ClientSession } from '#lib/features/auth/client-session.svelte.js';
+	import { ClientSession, setAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { config } from '#lib/config/app.js';
 	import type { LayoutProps } from './$types';
 

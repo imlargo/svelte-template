@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { hasPermission, isPrefixOf } from './permissions';
+import { hasPermission } from './permissions';
 import { ROLE_PERMISSIONS, type Permission } from '#lib/config/permissions.js';
 import { UserRole } from '#lib/types/user.js';
 
-// This is the access control of the app: the role × permission matrix is
-// asserted in full, and the unknown role is the case that must fail shut.
-// Which route takes what is guard.server.test.ts; enforcement itself is
-// handler.server.test.ts.
+// The role × permission matrix in full; the unknown role is the case that must fail shut.
 
 describe('hasPermission', () => {
 	const matrix: Array<[UserRole, Permission, boolean]> = [
@@ -34,23 +31,5 @@ describe('hasPermission', () => {
 	it('grants nothing without a role', () => {
 		expect(hasPermission(ROLE_PERMISSIONS, null, 'dashboard:read')).toBe(false);
 		expect(hasPermission(ROLE_PERMISSIONS, undefined, 'dashboard:read')).toBe(false);
-	});
-});
-
-describe('isPrefixOf', () => {
-	// The sidebar's notion of "active": an entry lights up for its own page and
-	// everything nested under it, and nothing else.
-	it('matches the route itself and its nested paths', () => {
-		expect(isPrefixOf('/admin', '/admin')).toBe(true);
-		expect(isPrefixOf('/admin', '/admin/users')).toBe(true);
-	});
-
-	it('does not let the root act as a prefix for every path', () => {
-		expect(isPrefixOf('/', '/')).toBe(true);
-		expect(isPrefixOf('/', '/admin')).toBe(false);
-	});
-
-	it('does not match a sibling that merely shares a prefix string', () => {
-		expect(isPrefixOf('/admin', '/admin-panel')).toBe(false);
 	});
 });

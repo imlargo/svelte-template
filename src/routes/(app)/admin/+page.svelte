@@ -13,7 +13,7 @@
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { createQuery } from '#lib/core/query.svelte.js';
 	import { normalizeError } from '#lib/core/errors.js';
-	import { getAuth } from '#lib/features/auth/context.js';
+	import { getAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { UsersService } from '#lib/features/users/services/users.js';
 	import UserFormDialog from '#lib/features/users/components/UserFormDialog.svelte';
 	import { ROLE_LABELS } from '#lib/config/permissions.js';

@@ -1,8 +1,6 @@
 /**
- * Role-based access checks, project-agnostic: the data is always passed in
- * (see `#lib/config/permissions`). These answer questions; enforcement is
- * `locals.requirePermission` and the route tables the hook reads
- * (`features/auth/guard.server.ts`).
+ * Role checks, project-agnostic: the grants are passed in (`#lib/config/permissions`).
+ * Enforcement is `locals.requirePermission` (`features/auth/guard.server.ts`).
  */
 
 /** Maps a role to everything it may do. */
@@ -17,12 +15,4 @@ export function hasPermission<R extends string, P extends string>(
 	if (!role) return false;
 	const granted: readonly P[] | undefined = (grants as Record<string, readonly P[]>)[role];
 	return granted?.includes(permission) ?? false;
-}
-
-/**
- * Whether `pathname` is `route` or sits under it, by whole segments: '/admin'
- * covers '/admin/users' but not '/admin-panel', and '/' matches only itself.
- */
-export function isPrefixOf(route: string, pathname: string): boolean {
-	return pathname === route || pathname.startsWith(`${route}/`);
 }

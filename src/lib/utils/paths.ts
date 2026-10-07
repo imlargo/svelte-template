@@ -10,3 +10,11 @@ import type { Path, ResolvedPathname } from '$app/types';
 export function resolvePathname(pathname: ResolvedPathname): ResolvedPathname {
 	return resolve(pathname.slice(1) as Path);
 }
+
+/**
+ * Whether `pathname` is `route` or sits under it, by whole segments: '/admin'
+ * covers '/admin/users' but not '/admin-panel', and '/' matches only itself.
+ */
+export function isPrefixOf(route: string, pathname: string): boolean {
+	return pathname === route || pathname.startsWith(`${route}/`);
+}

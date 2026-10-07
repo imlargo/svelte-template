@@ -1,8 +1,7 @@
 /**
- * The session cookies, and the only place that knows their names and options.
- *
- * The cookie lifetime is not the token lifetime: the backend decides when an
- * access token expires, and the hook finds out on the next `/auth/me`.
+ * The session on the server: the cookies, and the only place that knows their
+ * names and options, plus renewing and ending it. The cookie lifetime is not
+ * the token lifetime: the backend decides when a token expires.
  */
 import {
 	AUTH_COOKIE_DOMAIN,
@@ -12,7 +11,9 @@ import {
 } from '$app/env/private';
 import type { Cookies } from '@sveltejs/kit';
 import { z } from 'zod';
+import { normalizeError } from '#lib/core/errors.js';
 import type { Session } from '#lib/features/auth/types.js';
+import { AuthService } from './services/auth';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
@@ -80,4 +81,25 @@ export function takeOAuthState(cookies: Cookies): OAuthState | null {
 	} catch {
 		return null;
 	}
+}
+
+/**
+ * Spends the refresh token and rotates both cookies. Used by the hook before a
+ * page loads and by `/refresh` between navigations. Throws what the backend
+ * throws; see `isCredentialRejection` for which failures end the session.
+ */
+export async function renewSession(cookies: Cookies, refreshToken: string): Promise<Session> {
+	const session = await new AuthService().refresh(refreshToken);
+	setSession(cookies, session);
+	return session;
+}
+
+/**
+ * Whether the backend refused the credentials, as opposed to failing to
+ * answer. Only a refusal ends a session or reads as "wrong password": an
+ * outage must not sign anyone out.
+ */
+export function isCredentialRejection(err: unknown): boolean {
+	const { code } = normalizeError(err);
+	return code === 'UNAUTHORIZED' || code === 'FORBIDDEN';
 }

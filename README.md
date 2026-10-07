@@ -78,7 +78,7 @@ src/
       blocks/            Our own pieces: AsyncView, Boundary, EmptyState, ErrorState, PageHeader…
       layout/            Sidebar and header
     hooks/               Reusable state with runes (Disclosure, Filters, Pagination…)
-    utils/               Pure functions (forms, date, paths, string, env, object)
+    utils/               Pure functions (forms, date, paths, string, env)
     types/               Types shared across slices
     server/              Demo only: in-memory store for /api/users
   routes/

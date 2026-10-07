@@ -1,10 +1,10 @@
+import { createContext } from 'svelte';
 import { refreshAll } from '$app/navigation';
 import type { Fetch } from '@imlargo/air';
 import type { ApiAuth } from '#lib/core/api.js';
 import { config } from '#lib/config/app.js';
 import { logger } from '#lib/core/logger.js';
 import type { User } from '#lib/types/user.js';
-import type { AuthState } from './context';
 import { SessionService } from './services/session';
 import { createAuthTransport } from './transport';
 
@@ -15,10 +15,10 @@ interface SessionData {
 
 /**
  * The browser's side of the session. Built in the root layout from its data
- * and shared through context — never a module-level singleton, since on the
- * server that would be one session for every user.
+ * and shared through context, never a module-level singleton: on the server
+ * that would be one session for every user.
  */
-export class ClientSession implements AuthState {
+export class ClientSession {
 	readonly #data: () => SessionData;
 
 	/**
@@ -28,6 +28,7 @@ export class ClientSession implements AuthState {
 	 */
 	accessToken = $derived.by(() => this.#data().accessToken);
 
+	/** Credentials for a client-side service: `new UsersService(getAuth().api)`. */
 	readonly api: ApiAuth;
 
 	constructor(data: () => SessionData) {
@@ -59,3 +60,6 @@ export class ClientSession implements AuthState {
 		}
 	}
 }
+
+/** Set once in the root layout; read by any component that needs the user or `api`. */
+export const [getAuth, setAuth] = createContext<ClientSession>();

@@ -10,8 +10,12 @@ import {
 	OAUTH_FAILED_PARAM,
 	buildGoogleAuthUrl
 } from '#lib/features/auth/google.js';
-import { isCredentialRejection } from '#lib/features/auth/rejection.js';
-import { getSession, setOAuthState, setSession } from '#lib/features/auth/session.server.js';
+import {
+	getSession,
+	isCredentialRejection,
+	setOAuthState,
+	setSession
+} from '#lib/features/auth/session.server.js';
 import { parseForm } from '#lib/utils/forms.js';
 import type { Actions, PageServerLoad } from './$types';
 

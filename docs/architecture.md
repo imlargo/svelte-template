@@ -39,7 +39,7 @@ the same.
    reacts to a 401.
 
 If the backend does not answer, the hook responds 503 and keeps the session: an outage does not
-sign everyone out. Only a 401/403 from the backend ends it (`rejection.ts`).
+sign everyone out. Only a 401/403 from the backend ends it (`isCredentialRejection` in `session.server.ts`).
 
 ## A 401 on the client
 
