@@ -4,46 +4,36 @@
  * Authentication is central: a route that forgets to ask must not open.
  * Authorization is split, because pages and endpoints are different shapes:
  *
- * - **Pages** are declared in `AUTH_ROUTE_PERMISSIONS` and enforced here,
- *   before any load runs. Undeclared means denied.
+ * - **Pages** carry their permission in `PAGE_ACCESS` and are checked here,
+ *   before any load runs.
  * - **Endpoints** call `locals.requirePermission` themselves, per method, so
  *   one path can ask for `users:read` on GET and `users:delete` on DELETE.
+ *   The hook only makes sure there is a session.
+ *
+ * Both tables are exhaustive over the route ids SvelteKit generates, so a
+ * route left out does not compile; one that still reaches here is denied.
  *
  * Form actions ride on their page's permission; a destructive one needs its
  * own `locals.requirePermission` call, exactly like an endpoint.
  *
  * The token is never inspected here: the backend that issued it is the
- * authority, and asking it (`/auth/me`) also yields the user's current role.
+ * authority, and asking it (`AuthService.getMe`) also yields the user's
+ * current role.
  */
 import { error, redirect, type Cookies } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit/hooks';
 import { config } from '#lib/config/app.js';
-import { AUTH_ROUTE_PERMISSIONS, PUBLIC_ROUTE_PREFIXES } from '#lib/config/permissions.js';
-import { API_ROUTE_PREFIX, AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
-import { isPrefixOf, permissionForRoute } from '#lib/core/permissions.js';
+import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
 import { normalizeError } from '#lib/core/errors.js';
 import { logger } from '#lib/core/logger.js';
 import type { User } from '#lib/types/user.js';
+import type { Session } from '#lib/features/auth/types.js';
 import { AuthService } from './services/auth';
-import { createPermissionGuard } from './guard.server';
+import { createPermissionGuard, routeAccess } from './guard.server';
 import { REDIRECT_PARAM, encodeRedirect } from './redirect';
 import { isCredentialRejection } from './rejection';
 import { renewSession } from './renew.server';
-import type { Session } from '#lib/features/auth/types.js';
 import { clearSession, getSession } from './session.server';
-
-function isPublicRoute(pathname: string): boolean {
-	return PUBLIC_ROUTE_PREFIXES.some((prefix) => isPrefixOf(prefix, pathname));
-}
-
-/**
- * Endpoints get a status, pages a redirect: a `fetch()` follows a 303 in
- * silence and then fails parsing the login HTML. Not SvelteKit's
- * `isDataRequest`, which marks client-side navigations — those are pages.
- */
-function isEndpointRequest(pathname: string): boolean {
-	return isPrefixOf(API_ROUTE_PREFIX, pathname);
-}
 
 function loginUrl(pathname: string, search: string): string {
 	// Landing on home carries nothing worth coming back to.
@@ -78,15 +68,23 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	// is never bound to the wrong user. Until then it answers 401.
 	event.locals.requirePermission = createPermissionGuard(() => event.locals.user);
 
-	// No route matched: let SvelteKit answer its 404 without a trip to /auth/me.
+	// No route matched: let SvelteKit answer its 404 without a trip to the backend.
 	if (!event.route.id) return resolve(event);
 
-	if (isPublicRoute(pathname)) return resolve(event);
+	const route = routeAccess(event.route.id);
+	if (!route) {
+		// A build whose tables lag behind its routes. Not the user's doing: log it, deny it.
+		logger.warn('auth', 'Undeclared route', { routeId: event.route.id });
+		error(403, 'You do not have access to this page.');
+	}
+
+	if (route.isPublic) return resolve(event);
 
 	// `() => never` keeps `stored` narrowed to non-null after the call.
 	const endSession: () => never = () => {
 		clearSession(event.cookies);
-		if (isEndpointRequest(pathname)) error(401, 'Your session has expired. Sign in again.');
+		// A `fetch()` follows a 303 in silence and then fails parsing the login HTML.
+		if (route.kind === 'endpoint') error(401, 'Your session has expired. Sign in again.');
 		redirect(303, loginUrl(pathname, search));
 	};
 
@@ -109,15 +107,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 	event.locals.user = user;
 	event.locals.accessToken = session.accessToken;
 
-	if (!isEndpointRequest(pathname)) {
-		const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, pathname);
-		if (!required) {
-			// A developer's omission, not the user's: log it, answer like any refusal.
-			logger.warn('auth', 'Undeclared page route', { pathname });
-			error(403, 'You do not have access to this page.');
-		}
-		event.locals.requirePermission(required);
-	}
+	if (route.permission) event.locals.requirePermission(route.permission);
 
 	return resolve(event);
 };

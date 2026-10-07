@@ -13,12 +13,8 @@
 	} from '#lib/config/navigation.js';
 	import { config } from '#lib/config/app.js';
 	import { HOME_ROUTE } from '#lib/config/routes.js';
-	import {
-		AUTH_ROUTE_PERMISSIONS,
-		ROLE_LABELS,
-		ROLE_PERMISSIONS
-	} from '#lib/config/permissions.js';
-	import { hasPermission, permissionForRoute } from '#lib/core/permissions.js';
+	import { PAGE_ACCESS, ROLE_LABELS, ROLE_PERMISSIONS } from '#lib/config/permissions.js';
+	import { hasPermission } from '#lib/core/permissions.js';
 	import NavMain from './NavMain.svelte';
 	import NavUser from './NavUser.svelte';
 
@@ -35,8 +31,8 @@
 	// is no role to check, so every item shows.
 	function canOpen(item: NavigationItem): boolean {
 		if (!config.auth.enabled) return true;
-		const required = permissionForRoute(AUTH_ROUTE_PERMISSIONS, item.to);
-		return required !== null && hasPermission(ROLE_PERMISSIONS, user?.role, required);
+		const access = PAGE_ACCESS[item.route];
+		return access === 'public' || hasPermission(ROLE_PERMISSIONS, user?.role, access);
 	}
 
 	const sections: NavigationSection[] = $derived(

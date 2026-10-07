@@ -52,18 +52,27 @@ function userWith(role: UserRole): User {
 type Outcome =
 	{ kind: 'resolved' } | { kind: 'redirect'; location: string } | { kind: 'error'; status: number };
 
-async function callAuth(
-	pathname: string,
-	cookies: Record<string, string> = {},
-	routeId: string | null = pathname
-) {
+/** A request as the hook sees it: SvelteKit resolves the route before handle() runs. */
+interface Route {
+	/** Null only for a path that matched nothing. */
+	id: string | null;
+	path: string;
+}
+
+const HOME: Route = { id: '/(app)', path: '/' };
+const ADMIN: Route = { id: '/(app)/admin', path: '/admin' };
+const LOGIN: Route = { id: '/(auth)/login', path: '/login' };
+const USERS_API: Route = { id: '/api/users', path: '/api/users' };
+/** A page that exists but that nobody declared — impossible by type, so a stale build. */
+const UNDECLARED: Route = { id: '/(app)/reports', path: '/reports' };
+const UNMATCHED: Route = { id: null, path: '/nope' };
+
+async function callAuth(route: Route, cookies: Record<string, string> = {}) {
 	const clearedCookies: string[] = [];
 	const setCookies: Record<string, string> = {};
 	const event = {
-		url: new URL(`http://localhost${pathname}`),
-		// Non-null unless the caller is testing an unmatched path: SvelteKit
-		// resolves the route before handle() runs.
-		route: { id: routeId },
+		url: new URL(`http://localhost${route.path}`),
+		route: { id: route.id },
 		locals: {} as App.Locals,
 		cookies: {
 			get: (name: string) => cookies[name],
@@ -97,20 +106,20 @@ beforeEach(() => {
 
 describe('handleAuth', () => {
 	it('lets a public route through without a session', async () => {
-		const { outcome } = await callAuth('/login');
+		const { outcome } = await callAuth(LOGIN);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 		expect(getMe).not.toHaveBeenCalled();
 	});
 
 	it('sends a page request without a session to the login page', async () => {
-		const { outcome } = await callAuth('/');
+		const { outcome } = await callAuth(HOME);
 
 		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
 	});
 
 	it('keeps the route it was headed to in the redirect', async () => {
-		const { outcome } = await callAuth('/admin');
+		const { outcome } = await callAuth(ADMIN);
 
 		expect(outcome).toMatchObject({ kind: 'redirect' });
 		expect((outcome as { location: string }).location).toMatch(/^\/login\?redirect=/);
@@ -118,13 +127,13 @@ describe('handleAuth', () => {
 
 	it('answers a data request without a session with 401 instead of redirecting', async () => {
 		// A fetch() follows a 303 in silence and then fails parsing login HTML.
-		const { outcome } = await callAuth('/api/users');
+		const { outcome } = await callAuth(USERS_API);
 
 		expect(outcome).toEqual({ kind: 'error', status: 401 });
 	});
 
 	it('treats half a session as no session', async () => {
-		const { outcome } = await callAuth('/', { access_token: 'access-abc' });
+		const { outcome } = await callAuth(HOME, { access_token: 'access-abc' });
 
 		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
 	});
@@ -132,7 +141,7 @@ describe('handleAuth', () => {
 	it('resolves the user and exposes the access token on a valid session', async () => {
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
-		const { outcome, locals } = await callAuth('/', SESSION);
+		const { outcome, locals } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 		expect(locals.user?.role).toBe(UserRole.ADMIN);
@@ -142,7 +151,7 @@ describe('handleAuth', () => {
 	it('installs a guard bound to the resolved user', async () => {
 		getMe.mockResolvedValue(userWith(UserRole.MEMBER));
 
-		const { locals } = await callAuth('/', SESSION);
+		const { locals } = await callAuth(HOME, SESSION);
 
 		expect(() => locals.requirePermission('users:delete')).toThrow();
 		expect(() => locals.requirePermission('dashboard:read')).not.toThrow();
@@ -151,7 +160,7 @@ describe('handleAuth', () => {
 	it('ends the session when the backend rejects the token', async () => {
 		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
 
-		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
 		expect(clearedCookies).toContain('access_token');
@@ -162,7 +171,7 @@ describe('handleAuth', () => {
 		// stampede of logins and throws away whatever the user was doing.
 		getMe.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
 
-		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'error', status: 503 });
 		expect(clearedCookies).toEqual([]);
@@ -171,7 +180,7 @@ describe('handleAuth', () => {
 	it('keeps the session when the backend answers 500', async () => {
 		getMe.mockRejectedValue(new AppError('SERVER_ERROR', 'Boom.'));
 
-		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'error', status: 503 });
 		expect(clearedCookies).toEqual([]);
@@ -186,7 +195,7 @@ describe('handleAuth on page routes', () => {
 		// A member typing /admin in the address bar.
 		getMe.mockResolvedValue(userWith(UserRole.MEMBER));
 
-		const { outcome } = await callAuth('/admin', SESSION);
+		const { outcome } = await callAuth(ADMIN, SESSION);
 
 		expect(outcome).toEqual({ kind: 'error', status: 403 });
 	});
@@ -194,7 +203,7 @@ describe('handleAuth on page routes', () => {
 	it('lets the role that holds the permission in', async () => {
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
-		const { outcome } = await callAuth('/admin', SESSION);
+		const { outcome } = await callAuth(ADMIN, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 	});
@@ -202,7 +211,7 @@ describe('handleAuth on page routes', () => {
 	it('denies a page nobody declared, whatever the role', async () => {
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
-		const { outcome } = await callAuth('/reports', SESSION);
+		const { outcome } = await callAuth(UNDECLARED, SESSION);
 
 		expect(outcome).toEqual({ kind: 'error', status: 403 });
 	});
@@ -210,7 +219,7 @@ describe('handleAuth on page routes', () => {
 	it('leaves a path with no route behind it alone, so SvelteKit can 404 it', async () => {
 		// A mistyped URL is not a permission problem. Answering 403 here would
 		// also mean a round trip to /auth/me for every bad path a crawler tries.
-		const { outcome } = await callAuth('/nope', SESSION, null);
+		const { outcome } = await callAuth(UNMATCHED, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 		expect(getMe).not.toHaveBeenCalled();
@@ -218,12 +227,12 @@ describe('handleAuth on page routes', () => {
 });
 
 describe('handleAuth on endpoints', () => {
-	it('does not apply the page table to /api', async () => {
-		// /api/users is absent from AUTH_ROUTE_PERMISSIONS by design: judging it
-		// as a page would 403 every call, admins included.
+	it('does not enforce a permission on an endpoint', async () => {
+		// /api/users is listed as needing a session, nothing more: a permission
+		// in the table would 403 every call, admins included.
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
-		const { outcome } = await callAuth('/api/users', SESSION);
+		const { outcome } = await callAuth(USERS_API, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 	});
@@ -231,7 +240,7 @@ describe('handleAuth on endpoints', () => {
 	it('leaves the decision to the handler, which gets a guard bound to the user', async () => {
 		getMe.mockResolvedValue(userWith(UserRole.MEMBER));
 
-		const { outcome, locals } = await callAuth('/api/users', SESSION);
+		const { outcome, locals } = await callAuth(USERS_API, SESSION);
 
 		// The hook passes it through...
 		expect(outcome).toEqual({ kind: 'resolved' });
@@ -257,7 +266,7 @@ describe('handleAuth with refresh enabled', () => {
 		});
 		refresh.mockResolvedValue(RENEWED);
 
-		const { outcome, locals, setCookies, clearedCookies } = await callAuth('/', SESSION);
+		const { outcome, locals, setCookies, clearedCookies } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 		expect(refresh).toHaveBeenCalledWith(SESSION.refresh_token);
@@ -274,7 +283,7 @@ describe('handleAuth with refresh enabled', () => {
 		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
 		refresh.mockRejectedValue(new AppError('UNAUTHORIZED', 'Refresh token revoked.'));
 
-		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
 		expect(clearedCookies).toContain('refresh_token');
@@ -284,7 +293,7 @@ describe('handleAuth with refresh enabled', () => {
 		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
 		refresh.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
 
-		const { outcome, clearedCookies } = await callAuth('/', SESSION);
+		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'error', status: 503 });
 		expect(clearedCookies).toEqual([]);
@@ -294,7 +303,7 @@ describe('handleAuth with refresh enabled', () => {
 		// A 403 from /auth/me is a verdict on the user, not on the token's age.
 		getMe.mockRejectedValue(new AppError('FORBIDDEN', 'Account disabled.'));
 
-		const { outcome } = await callAuth('/', SESSION);
+		const { outcome } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
 		expect(refresh).not.toHaveBeenCalled();
@@ -305,7 +314,7 @@ describe('handleAuth with refresh disabled', () => {
 	it('never spends the refresh token', async () => {
 		getMe.mockRejectedValue(new AppError('UNAUTHORIZED', 'Token expired.'));
 
-		const { outcome } = await callAuth('/', SESSION);
+		const { outcome } = await callAuth(HOME, SESSION);
 
 		expect(outcome).toEqual({ kind: 'redirect', location: '/login' });
 		expect(refresh).not.toHaveBeenCalled();

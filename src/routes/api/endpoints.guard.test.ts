@@ -5,10 +5,10 @@ import { isHttpError } from '@sveltejs/kit';
  * Pages and endpoints fail in opposite directions, and this test covers the
  * dangerous one.
  *
- * A page left out of AUTH_ROUTE_PERMISSIONS is denied — the hook has a table to
- * miss it in. An endpoint has no such table by design: it authorizes itself, so
- * a handler that forgets `locals.requirePermission` is open to any signed-in
- * user, and nothing in lint, types or the hook can notice.
+ * A page carries its permission in PAGE_ACCESS, and the hook enforces it. An
+ * endpoint is only listed there as needing a session: it authorizes itself per
+ * method, so a handler that forgets `locals.requirePermission` is open to any
+ * signed-in user, and nothing in lint, types or the hook can notice.
  *
  * So the check lives here: every HTTP method every endpoint exports must refuse
  * a request whose guard refuses. Adding an unguarded handler turns this red.

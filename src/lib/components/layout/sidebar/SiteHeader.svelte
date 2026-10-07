@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { config } from '#lib/config/app.js';
@@ -7,10 +8,13 @@
 	import { isPrefixOf } from '#lib/core/permissions.js';
 
 	// Deepest route first, so a nested page takes its closest entry's title.
-	const byDepth = [...NAVIGATION_ITEMS].sort((a, b) => b.to.length - a.to.length);
+	const byDepth = NAVIGATION_ITEMS.map((item) => ({
+		title: item.title,
+		href: resolve(item.route)
+	})).sort((a, b) => b.href.length - a.href.length);
 
 	const section = $derived(
-		byDepth.find((item) => isPrefixOf(item.to, page.url.pathname))?.title ?? config.branding.name
+		byDepth.find((item) => isPrefixOf(item.href, page.url.pathname))?.title ?? config.branding.name
 	);
 </script>
 

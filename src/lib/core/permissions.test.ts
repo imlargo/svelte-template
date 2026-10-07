@@ -1,16 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { hasPermission, permissionForRoute } from './permissions';
-import {
-	AUTH_ROUTE_PERMISSIONS,
-	ROLE_PERMISSIONS,
-	type Permission
-} from '#lib/config/permissions.js';
-import { NAVIGATION_ITEMS } from '#lib/config/navigation.js';
+import { hasPermission, isPrefixOf } from './permissions';
+import { ROLE_PERMISSIONS, type Permission } from '#lib/config/permissions.js';
 import { UserRole } from '#lib/types/user.js';
 
 // This is the access control of the app: the role × permission matrix is
-// asserted in full, and the unknown role and the undeclared page are the cases
-// that must fail shut. Enforcement itself is guard.server.test.ts and
+// asserted in full, and the unknown role is the case that must fail shut.
+// Which route takes what is guard.server.test.ts; enforcement itself is
 // handler.server.test.ts.
 
 describe('hasPermission', () => {
@@ -42,45 +37,20 @@ describe('hasPermission', () => {
 	});
 });
 
-describe('permissionForRoute', () => {
-	it('resolves each declared page to its permission', () => {
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/')).toBe('dashboard:read');
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin')).toBe('users:read');
+describe('isPrefixOf', () => {
+	// The sidebar's notion of "active": an entry lights up for its own page and
+	// everything nested under it, and nothing else.
+	it('matches the route itself and its nested paths', () => {
+		expect(isPrefixOf('/admin', '/admin')).toBe(true);
+		expect(isPrefixOf('/admin', '/admin/users')).toBe(true);
 	});
 
-	it('applies a declared page to everything nested under it', () => {
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin/users')).toBe('users:read');
-	});
-
-	it('returns null for a page that is not declared', () => {
-		// Null is the deny case: callers must not read it as "unrestricted".
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/reports')).toBeNull();
-	});
-
-	it('does not let the root entry act as a prefix for every path', () => {
-		// Every role holds 'dashboard:read'; '/admin' must not inherit it.
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, '/admin')).not.toBe('dashboard:read');
-	});
-
-	it('resolves with the longest matching prefix, not the first one', () => {
-		const routes = { '/admin': 'users:read', '/admin/danger': 'users:delete' } as const;
-
-		expect(permissionForRoute(routes, '/admin/danger')).toBe('users:delete');
-		expect(permissionForRoute(routes, '/admin/danger/nested')).toBe('users:delete');
-		expect(permissionForRoute(routes, '/admin/other')).toBe('users:read');
+	it('does not let the root act as a prefix for every path', () => {
+		expect(isPrefixOf('/', '/')).toBe(true);
+		expect(isPrefixOf('/', '/admin')).toBe(false);
 	});
 
 	it('does not match a sibling that merely shares a prefix string', () => {
-		const routes = { '/admin': 'users:read' } as const;
-
-		expect(permissionForRoute(routes, '/admin-panel')).toBeNull();
-	});
-});
-
-describe('navigation', () => {
-	// The sidebar shows an item only to roles that may open its route, so an
-	// item whose route is undeclared would silently vanish for everyone.
-	it.each(NAVIGATION_ITEMS)('declares the route of "$title"', (item) => {
-		expect(permissionForRoute(AUTH_ROUTE_PERMISSIONS, item.to)).not.toBeNull();
+		expect(isPrefixOf('/admin', '/admin-panel')).toBe(false);
 	});
 });

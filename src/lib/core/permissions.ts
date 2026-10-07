@@ -1,14 +1,12 @@
 /**
  * Role-based access checks, project-agnostic: the data is always passed in
  * (see `#lib/config/permissions`). These answer questions; enforcement is
- * `locals.requirePermission` (`features/auth/guard.server.ts`).
+ * `locals.requirePermission` and the route tables the hook reads
+ * (`features/auth/guard.server.ts`).
  */
 
 /** Maps a role to everything it may do. */
 export type RolePermissions<R extends string, P extends string> = Record<R, readonly P[]>;
-
-/** Maps a page route prefix to the permission needed to open it. */
-export type RoutePermissions<P extends string> = Record<string, P>;
 
 /** Deny by default: an unknown or missing role holds nothing. */
 export function hasPermission<R extends string, P extends string>(
@@ -27,25 +25,4 @@ export function hasPermission<R extends string, P extends string>(
  */
 export function isPrefixOf(route: string, pathname: string): boolean {
 	return pathname === route || pathname.startsWith(`${route}/`);
-}
-
-/**
- * The permission a page needs, by longest matching prefix, or null when the
- * page is not declared — which callers must treat as denied.
- */
-export function permissionForRoute<P extends string>(
-	routes: RoutePermissions<P>,
-	pathname: string
-): P | null {
-	let best: P | null = null;
-	let bestLength = -1;
-
-	for (const [route, permission] of Object.entries(routes) as [string, P][]) {
-		if (isPrefixOf(route, pathname) && route.length > bestLength) {
-			best = permission;
-			bestLength = route.length;
-		}
-	}
-
-	return best;
 }
