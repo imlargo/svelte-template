@@ -228,8 +228,7 @@ describe('handleAuth on page routes', () => {
 
 describe('handleAuth on endpoints', () => {
 	it('does not enforce a permission on an endpoint', async () => {
-		// /api/users is listed as needing a session, nothing more: a permission
-		// in the table would 403 every call, admins included.
+		// /api/users is 'session' in ROUTE_ACCESS: the handler decides per method.
 		getMe.mockResolvedValue(userWith(UserRole.ADMIN));
 
 		const { outcome } = await callAuth(USERS_API, SESSION);

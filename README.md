@@ -95,7 +95,7 @@ Marked with `DEMO SCAFFOLDING` in the files. When you connect a real backend, de
 - `src/lib/features/users/services/users.ts` — drop the `''` in the constructor so it targets
   `PUBLIC_API_URL`, or keep it if your project is fullstack (see `docs/architecture.md`).
 - `src/routes/(app)/+page.server.ts` — the dashboard's fake stats.
-- The `/api/users` entries in `ENDPOINT_ACCESS` (`src/lib/config/permissions.ts`), if you delete
+- The `/api/users` entries in `ROUTE_ACCESS` (`src/lib/config/permissions.ts`), if you delete
   the endpoints.
 
 ## Deployment

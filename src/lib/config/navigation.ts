@@ -8,11 +8,7 @@ export enum NavigationGroup {
 	ADMIN = 'admin'
 }
 
-/**
- * A sidebar entry. Its href is `resolve(route)`, and it shows only to users
- * who may open `route` according to `PAGE_ACCESS` — the menu and the hook read
- * the same table.
- */
+/** A sidebar entry: `resolve(route)` is its href, `ROUTE_ACCESS[route]` decides who sees it. */
 export interface NavigationItem {
 	title: string;
 	icon: LucideIcon;
