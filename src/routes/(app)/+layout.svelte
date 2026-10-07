@@ -2,6 +2,7 @@
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import AppSidebar from '#lib/components/layout/sidebar/AppSidebar.svelte';
 	import SiteHeader from '#lib/components/layout/sidebar/SiteHeader.svelte';
+	import MobileBottomNav from '#lib/components/layout/bottom-nav/MobileBottomNav.svelte';
 	import Boundary from '#lib/components/blocks/Boundary.svelte';
 	import type { LayoutProps } from './$types';
 
@@ -30,5 +31,6 @@
 				</Boundary>
 			</div>
 		</div>
+		<MobileBottomNav user={data.user} />
 	</Sidebar.Inset>
 </Sidebar.Provider>

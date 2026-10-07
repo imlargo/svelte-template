@@ -5,17 +5,17 @@
 	import Avatar from '#lib/components/coral/kit/avatar/avatar.svelte';
 	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
-	import { toggleMode, mode } from 'mode-watcher';
+	import {
+		selectTheme,
+		THEME_OPTIONS,
+		type DisplayUser,
+		type ThemePreference
+	} from '#lib/components/layout/navigation.js';
+	import { userPrefersMode } from 'mode-watcher';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
-	import SunIcon from '@lucide/svelte/icons/sun';
-	import MoonIcon from '@lucide/svelte/icons/moon';
 
-	let {
-		user
-	}: {
-		user: { name: string; email: string; roleLabel: string; avatar?: string | null };
-	} = $props();
+	let { user }: { user: DisplayUser } = $props();
 
 	const sidebar = Sidebar.useSidebar();
 </script>
@@ -55,15 +55,17 @@
 					</div>
 				</DropdownMenu.Label>
 				<DropdownMenu.Separator />
-				<DropdownMenu.Item onclick={toggleMode}>
-					{#if mode.current === 'dark'}
-						<SunIcon class="size-4" />
-						Light mode
-					{:else}
-						<MoonIcon class="size-4" />
-						Dark mode
-					{/if}
-				</DropdownMenu.Item>
+				<DropdownMenu.RadioGroup
+					value={userPrefersMode.current}
+					onValueChange={(value) => selectTheme(value as ThemePreference)}
+				>
+					{#each THEME_OPTIONS as option (option.value)}
+						<DropdownMenu.RadioItem value={option.value}>
+							<option.icon class="size-4" />
+							{option.label}
+						</DropdownMenu.RadioItem>
+					{/each}
+				</DropdownMenu.RadioGroup>
 				<DropdownMenu.Separator />
 				<form method="POST" action={resolvePathname(AUTH_ROUTES.logout)} use:enhance>
 					<DropdownMenu.Item>
