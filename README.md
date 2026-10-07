@@ -28,8 +28,8 @@ cp .env.example .env
 The template ships no backend. There are two paths:
 
 **1. See the demo without a backend.** In `.env`, set `PUBLIC_AUTH_ENABLED=false`. With auth off
-the hook lets everything through, the sidebar shows every entry, and the users CRUD under `/admin`
-works against an in-memory store that lives in the app itself. It is the fastest way to see every
+the hook signs every request in as a local stand-in admin, the sidebar shows every entry, and the
+users CRUD under `/admin` works against an in-memory store that lives in the app itself. It is the fastest way to see every
 piece (streaming, `Query` + `AsyncView`, dialogs, toasts, empty and error states).
 
 ```sh
@@ -75,12 +75,12 @@ src/
     components/
       ui/                shadcn — do not edit
       coral/             Vendored kit on top of shadcn — do not edit
-      blocks/            Our own pieces: AsyncView, Boundary, EmptyState, ErrorState, PageHeader…
-      layout/            Sidebar and header
-    hooks/               Reactive state classes with runes (Query, Disclosure, Filters, Pagination…)
-    utils/               Pure functions (forms, date, paths, string, env)
-    types/               Types shared across slices
-    server/              Demo only: in-memory store for /api/users
+      blocks/            Our own pieces: AsyncView, Boundary, TableSkeleton, LoadingButton, TruncatedText…
+      layout/            Sidebar, header, and the bottom bar for phones
+    hooks/               Reactive state classes with runes (Query, ListQuery, Disclosure, Pagination…)
+    utils/               Pure functions (forms, date, paths, string, env, tone)
+    types/               Types shared across slices (User, ListResponse…)
+    server/              api.ts: how endpoints answer. users-store.ts is demo only
   routes/
     (app)/               Pages with the sidebar, protected
     (auth)/              login, logout, authorize (Google), refresh
