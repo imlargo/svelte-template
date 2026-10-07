@@ -11,7 +11,7 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
-	import { createQuery } from '#lib/core/query.svelte.js';
+	import { Query } from '#lib/core/query.svelte.js';
 	import { normalizeError } from '#lib/core/errors.js';
 	import { getAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { UsersService } from '#lib/features/users/services/users.js';
@@ -27,7 +27,7 @@
 
 	// Loaded by the page, not by `load`: the list is searched and edited in place.
 	const users = new UsersService(getAuth().api);
-	const list = createQuery<User[]>();
+	const list = new Query<User[]>();
 
 	let search = $state('');
 

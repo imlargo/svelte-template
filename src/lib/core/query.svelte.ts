@@ -27,7 +27,3 @@ export class Query<T> {
 		}
 	}
 }
-
-export function createQuery<T>(): Query<T> {
-	return new Query<T>();
-}

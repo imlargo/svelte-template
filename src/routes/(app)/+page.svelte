@@ -8,7 +8,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { AppError } from '#lib/core/errors.js';
-	import { createQuery } from '#lib/core/query.svelte.js';
+	import { Query } from '#lib/core/query.svelte.js';
 	import { toast } from 'svelte-sonner';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
@@ -22,7 +22,7 @@
 	// Explicit, like `formatDate`: the runtime's default locale is not the page's.
 	const numbers = new Intl.NumberFormat('en');
 
-	const items = createQuery<string[]>();
+	const items = new Query<string[]>();
 
 	async function load(fail = false) {
 		await items.run(async () => {
