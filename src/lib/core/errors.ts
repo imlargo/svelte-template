@@ -6,8 +6,12 @@
  * backend's own message or the default for its `code`. Anything that is only
  * useful in a log — the failed request, the backend payload, the original
  * stack — hangs off `context` and `cause`, never off the message.
+ *
+ * What an error body looks like is the backend's business, read in
+ * `#lib/config/errors`; this file only knows the codes and their messages.
  */
 import { isAirError, type AirError } from '@imlargo/air';
+import { parseErrorBody } from '#lib/config/errors.js';
 
 /** Extend as your API grows. Every code needs a default message below. */
 export type ErrorCode =
@@ -31,6 +35,21 @@ const MESSAGES: Record<ErrorCode, string> = {
 	SERVER_ERROR: 'Server error. Please try again later.',
 	UNKNOWN: 'An unexpected error occurred.'
 };
+
+/**
+ * What `#lib/config/errors` reads out of an error body. Every field is
+ * optional: a body may be empty, or say nothing this app understands.
+ */
+export interface ParsedErrorBody {
+	/** The code the body maps to, when its status is not already one of ours. */
+	code?: ErrorCode;
+	/** The backend's message, shown as is — so it must be fit for a user to read. */
+	message?: string;
+	/** The backend's own status string, kept verbatim for the log. */
+	status?: string;
+	/** Anything else worth logging, such as field errors. Never rendered. */
+	payload?: Record<string, unknown>;
+}
 
 /**
  * Diagnostic detail about a failed API call. Log-only, never rendered.
@@ -85,11 +104,11 @@ export function normalizeError(err: unknown): AppError {
 // air throws `AirError` for network failures and non-2xx responses alike.
 
 function fromAirError(err: AirError): AppError {
-	const body = readErrorBody(err.data);
+	const body = parseErrorBody(err.data);
 	const httpStatus = err.status ?? 0;
 
-	// The body's own status wins: a backend may answer 400 for a conflict.
-	const code = (body.status && codeFromStatus(body.status)) || codeFromHttpStatus(httpStatus);
+	// The body's own verdict wins: a backend may answer 400 for a conflict.
+	const code = body.code ?? codeFromStatus(body.status) ?? codeFromHttpStatus(httpStatus);
 
 	return new AppError(code, body.message, {
 		// Not the AirError itself: it carries `request.headers` as sent, the
@@ -107,36 +126,10 @@ function fromAirError(err: AirError): AppError {
 	});
 }
 
-/** Reads the `{ status, message, payload }` convention out of an unknown body. */
-function readErrorBody(data: unknown): {
-	status?: string;
-	message?: string;
-	payload?: Record<string, unknown>;
-} {
-	if (!isRecord(data)) return {};
-
-	return {
-		status: typeof data.status === 'string' ? data.status : undefined,
-		message: typeof data.message === 'string' ? data.message : undefined,
-		payload: isRecord(data.payload) ? data.payload : undefined
-	};
-}
-
-/**
- * Backend status string → code. Codes pass through by name; map anything else
- * your API uses here.
- */
-const STATUS_ALIASES: Record<string, ErrorCode> = {
-	NETWORK_ERROR: 'NETWORK',
-	BIND_JSON: 'BAD_REQUEST',
-	UNPROCESSABLE_ENTITY: 'BAD_REQUEST',
-	INTERNAL_SERVER_ERROR: 'SERVER_ERROR'
-};
-
-function codeFromStatus(status: string): ErrorCode | undefined {
+/** A status string that is spelled exactly like one of our codes is that code. */
+function codeFromStatus(status: string | undefined): ErrorCode | undefined {
 	// `hasOwn`, not `in`: 'constructor' and friends are on every object.
-	if (Object.hasOwn(MESSAGES, status)) return status as ErrorCode;
-	return STATUS_ALIASES[status];
+	return status && Object.hasOwn(MESSAGES, status) ? (status as ErrorCode) : undefined;
 }
 
 /** Fallback when the body carries no status we recognize. */
@@ -158,8 +151,4 @@ function codeFromHttpStatus(status: number): ErrorCode {
 		default:
 			return status >= 500 ? 'SERVER_ERROR' : 'UNKNOWN';
 	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null;
 }

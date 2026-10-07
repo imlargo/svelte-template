@@ -1,5 +1,5 @@
+import type { EndpointRouteId, PageRouteId } from '$app/types';
 import { UserRole } from '#lib/types/user.js';
-import { AUTH_ROUTES } from '#lib/config/routes.js';
 
 /**
  * What can be done, as `resource:action`: a capability, not a place in the UI,
@@ -22,19 +22,38 @@ export const ROLE_PERMISSIONS = {
 	[UserRole.MEMBER]: ['dashboard:read']
 } as const satisfies Record<UserRole, readonly Permission[]>;
 
-/**
- * Reachable without a session, matched by prefix. Everything else requires
- * one. `/refresh` is here because it authenticates itself with the refresh
- * cookie: the hook would reject the expired access token it exists to replace.
- */
-export const PUBLIC_ROUTE_PREFIXES: readonly string[] = Object.values(AUTH_ROUTES);
+/** What opening a page takes: a permission, or nothing. */
+export type PageAccess = Permission | 'public';
 
 /**
- * The permission each **page** needs, enforced by the hook before any load
- * runs. A page missing from here is denied. Endpoints under `/api` are absent
- * on purpose: each handler asks for its own permission, per method.
+ * `'session'`: any signed-in user reaches the handler, which asks for its own
+ * permission per method with `locals.requirePermission`.
  */
-export const AUTH_ROUTE_PERMISSIONS = {
-	'/': 'dashboard:read',
-	'/admin': 'users:read'
-} as const satisfies Record<string, Permission>;
+export type EndpointAccess = 'public' | 'session';
+
+/**
+ * Every page by route id, enforced by the hook before any load runs.
+ * Exhaustive over `PageRouteId`: a new page without an entry fails
+ * `svelte-check`, so an omission is a build error rather than an open door.
+ * Should one reach the hook anyway, it is denied.
+ */
+export const PAGE_ACCESS = {
+	'/(app)': 'dashboard:read',
+	'/(app)/admin': 'users:read',
+	'/(auth)/login': 'public',
+	'/(auth)/logout': 'public'
+} as const satisfies Record<PageRouteId, PageAccess>;
+
+/**
+ * Every endpoint by route id, same rule. The hook only checks for a session:
+ * one path can need `users:read` on GET and `users:delete` on DELETE, which a
+ * table cannot say, so each handler decides for itself. `/authorize` and
+ * `/refresh` are public because they authenticate themselves — with Google's
+ * code and with the refresh cookie the hook would otherwise reject.
+ */
+export const ENDPOINT_ACCESS = {
+	'/(auth)/authorize': 'public',
+	'/(auth)/refresh': 'public',
+	'/api/users': 'session',
+	'/api/users/[id]': 'session'
+} as const satisfies Record<EndpointRouteId, EndpointAccess>;

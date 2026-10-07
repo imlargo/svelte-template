@@ -29,11 +29,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	try {
-		const { tokens } = await new AuthService().loginWithGoogle(code);
-		setSession(cookies, {
-			accessToken: tokens.access_token,
-			refreshToken: tokens.refresh_token
-		});
+		const { session } = await new AuthService().loginWithGoogle(code);
+		setSession(cookies, session);
 	} catch (err) {
 		logger.error('auth', err);
 		clearSession(cookies);

@@ -1,20 +1,18 @@
 import type { User } from '#lib/types/user.js';
 
-/** Token pair as the API returns it. */
-export interface AuthTokensResponse {
-	access_token: string;
-	refresh_token: string;
-	expires_at: number;
+/**
+ * The two tokens of a signed-in session, as the app handles them. How the
+ * backend spells them is `contract.ts`'s business.
+ */
+export interface Session {
+	accessToken: string;
+	refreshToken: string;
 }
 
-export interface SignInRequest {
-	email: string;
-	password: string;
-}
-
-export interface SignInResponse {
+/** A completed sign-in, by password or by Google. */
+export interface SignIn {
 	user: User;
-	tokens: AuthTokensResponse;
+	session: Session;
 }
 
 /**

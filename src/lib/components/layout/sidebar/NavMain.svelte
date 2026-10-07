@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { resolvePathname } from '#lib/utils/paths.js';
+	import { resolve } from '$app/paths';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import type { NavigationSection } from '#lib/config/navigation.js';
 	import { isPrefixOf } from '#lib/core/permissions.js';
@@ -13,16 +13,13 @@
 		<Sidebar.GroupLabel>{section.label}</Sidebar.GroupLabel>
 		<Sidebar.GroupContent>
 			<Sidebar.Menu>
-				{#each section.items as item (item.to)}
-					{@const active = isPrefixOf(item.to, page.url.pathname)}
+				{#each section.items as item (item.route)}
+					{@const href = resolve(item.route)}
+					{@const active = isPrefixOf(href, page.url.pathname)}
 					<Sidebar.MenuItem>
 						<Sidebar.MenuButton isActive={active} tooltipContent={item.title}>
 							{#snippet child({ props })}
-								<a
-									href={resolvePathname(item.to)}
-									{...props}
-									aria-current={active ? 'page' : undefined}
-								>
+								<a {href} {...props} aria-current={active ? 'page' : undefined}>
 									<item.icon />
 									<span>{item.title}</span>
 								</a>

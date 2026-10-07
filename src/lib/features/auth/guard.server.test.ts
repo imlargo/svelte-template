@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isHttpError } from '@sveltejs/kit';
-import { createPermissionGuard } from './guard.server';
+import { createPermissionGuard, routeAccess } from './guard.server';
 import type { Permission } from '#lib/config/permissions.js';
 import { UserRole, type User } from '#lib/types/user.js';
 
@@ -57,5 +57,43 @@ describe('createPermissionGuard', () => {
 		// by falling through to some default.
 		expect(statusFor(userWith(UserRole.MEMBER), 'dashboard:read')).toBeNull();
 		expect(statusFor(userWith('viewer'), 'dashboard:read')).toBe(403);
+	});
+});
+
+describe('routeAccess', () => {
+	// The tables are exhaustive by type; these pin what each kind of entry
+	// means to the hook.
+	it('gives a page its permission', () => {
+		expect(routeAccess('/(app)/admin')).toEqual({
+			kind: 'page',
+			isPublic: false,
+			permission: 'users:read'
+		});
+	});
+
+	it('lets a public page through with nothing to enforce', () => {
+		expect(routeAccess('/(auth)/login')).toEqual({
+			kind: 'page',
+			isPublic: true,
+			permission: null
+		});
+	});
+
+	it('asks an endpoint only for a session, and leaves the permission to the handler', () => {
+		expect(routeAccess('/api/users')).toEqual({
+			kind: 'endpoint',
+			isPublic: false,
+			permission: null
+		});
+	});
+
+	it("lets the auth flow's own endpoints through without a session", () => {
+		expect(routeAccess('/(auth)/refresh')).toMatchObject({ kind: 'endpoint', isPublic: true });
+	});
+
+	it('answers null for a route in neither table, which the hook denies', () => {
+		expect(routeAccess('/(app)/reports')).toBeNull();
+		// Prototype names are not routes.
+		expect(routeAccess('constructor')).toBeNull();
 	});
 });

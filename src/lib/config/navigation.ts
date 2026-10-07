@@ -1,7 +1,7 @@
 import HomeIcon from '@lucide/svelte/icons/house';
 import ShieldIcon from '@lucide/svelte/icons/shield';
 import type { LucideIcon } from '@lucide/svelte';
-import type { ResolvedPathname } from '$app/types';
+import type { PageRouteId } from '$app/types';
 
 export enum NavigationGroup {
 	MAIN = 'main',
@@ -9,13 +9,14 @@ export enum NavigationGroup {
 }
 
 /**
- * A sidebar entry. It shows only to users who may open `to`, which is looked
- * up in `AUTH_ROUTE_PERMISSIONS` — the menu and the hook read the same table.
+ * A sidebar entry. Its href is `resolve(route)`, and it shows only to users
+ * who may open `route` according to `PAGE_ACCESS` — the menu and the hook read
+ * the same table.
  */
 export interface NavigationItem {
 	title: string;
 	icon: LucideIcon;
-	to: ResolvedPathname;
+	route: PageRouteId;
 	group: NavigationGroup;
 }
 
@@ -25,8 +26,8 @@ export interface NavigationSection {
 }
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
-	{ title: 'Dashboard', icon: HomeIcon, to: '/', group: NavigationGroup.MAIN },
-	{ title: 'Admin', icon: ShieldIcon, to: '/admin', group: NavigationGroup.ADMIN }
+	{ title: 'Dashboard', icon: HomeIcon, route: '/(app)', group: NavigationGroup.MAIN },
+	{ title: 'Admin', icon: ShieldIcon, route: '/(app)/admin', group: NavigationGroup.ADMIN }
 ];
 
 export const NAVIGATION_GROUP_LABELS: Record<NavigationGroup, string> = {
