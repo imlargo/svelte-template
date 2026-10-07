@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { BaseService } from './service';
 import { AppError } from './errors';
 
-/** `expectBody` is protected, so a subclass is the only way in — as for a real service. */
 class Probe extends BaseService {
+	constructor() {
+		super('https://api.test');
+	}
+
 	call<T>(request: Promise<T | null>) {
 		return this.expectBody(request);
 	}

@@ -14,7 +14,7 @@ import {
 /** Talks to the backend's auth endpoints and answers in the app's own types. */
 export class AuthService extends BaseService {
 	constructor(auth: ApiAuth = {}) {
-		super(auth, config.auth.baseUrl);
+		super(config.auth.baseUrl, auth);
 	}
 
 	async login(body: LoginInput): Promise<Session> {

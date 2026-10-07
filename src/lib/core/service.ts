@@ -3,15 +3,15 @@ import { AppError } from '#lib/core/errors.js';
 import type { AirClient } from '@imlargo/air';
 
 /**
- * Base of every service, the only classes that talk to the API. Credentials
- * come from the caller: `{ token: locals.accessToken, fetch }` on the server,
- * `getAuth().api` on the client. `baseUrl` defaults to `config.api.baseUrl`.
+ * Base of every service, the only classes that talk to the API. The subclass
+ * names the host; the caller supplies the credentials: `{ token:
+ * locals.accessToken, fetch }` on the server, `getAuth().api` on the client.
  */
-export class BaseService {
-	protected api: AirClient;
+export abstract class BaseService {
+	protected readonly api: AirClient;
 
-	constructor(auth: ApiAuth = {}, baseUrl?: string) {
-		this.api = createApiClient({ ...auth, baseUrl });
+	constructor(baseUrl: string, auth: ApiAuth = {}) {
+		this.api = createApiClient(baseUrl, auth);
 	}
 
 	/** For endpoints that must answer with a body: air resolves a 204 to null. Skip it for a DELETE. */
