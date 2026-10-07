@@ -13,9 +13,10 @@ cómo arrancar.
 
 ## Documentación de arquitectura
 
-No hay un `ARCHITECTURE.md` aparte. La fuente de verdad de la arquitectura es `src/` — ante una
-decisión estructural o una duda sobre un patrón, lee el código del área equivalente antes de
-inventar uno nuevo.
+[`docs/architecture.md`](./docs/architecture.md) explica las capas, el ciclo de un request, los
+permisos y dónde se cambia el contrato con el backend. La fuente de verdad del detalle sigue
+siendo `src/` — ante una decisión estructural o una duda sobre un patrón, lee el código del área
+equivalente antes de inventar uno nuevo.
 
 ## Proceso de trabajo
 
@@ -61,9 +62,15 @@ inventar uno nuevo.
 - **Variables de entorno:** toda variable se declara en `src/env.ts` (`defineEnvVars` + schema de
   zod) y se lee de `$app/env/public` o `$app/env/private`. Nunca `process.env` ni los `$env/*`
   (deprecados en SvelteKit 3).
-- **Links a rutas propias:** las rutas de `#lib/config/routes.ts` y `navigation.ts` llevan `/`
-  inicial porque se comparan con `url.pathname`; para un `href` pásalas por `resolvePathname()`
-  (`#lib/utils/paths.ts`), no por `resolve()`, que lee la `/` como route ID.
+- **Links a rutas propias:** `#lib/config/routes.ts` guarda pathnames (`/login`) porque son
+  destinos de redirect y se comparan con `url.pathname`; para un `href` pásalos por
+  `resolvePathname()` (`#lib/utils/paths.ts`), no por `resolve()`, que lee la `/` como route ID.
+  `navigation.ts` y las tablas de permisos usan route IDs (`/(app)/admin`, tipados desde
+  `$app/types`), y esos sí van por `resolve()`.
+- **Contrato con el backend:** la forma de las respuestas de auth y sus mappers viven en
+  `features/auth/contract.ts`; la forma del body de error en `#lib/config/errors.ts`. Un tipo
+  _wire_ (lo que devuelve el API) vive junto al service que lo consume y se mapea ahí; los
+  componentes solo ven tipos de dominio (`#lib/types/`, `features/<slice>/types.ts`).
 
 ## Tipos
 
@@ -125,9 +132,12 @@ inventar uno nuevo.
 
 ## Permisos
 
-Deny by default: rol desconocido → sin permisos, ruta no declarada → denegada. Un olvido debe
-producir un 403, no un acceso. Al agregar una página o un permiso nuevo, decláralo explícitamente
-en `#lib/config/permissions.ts` — no hay un valor "sin restricción" que puedas usar por descuido.
+Deny by default: rol desconocido → sin permisos, ruta no declarada → denegada. `PAGE_ACCESS` y
+`ENDPOINT_ACCESS` (`#lib/config/permissions.ts`) son exhaustivos sobre los route IDs que genera
+`svelte-kit sync`: una página o endpoint nuevo sin entrada no compila, y si llegara al hook se
+deniega con 403. Una página declara su permission (o `'public'`); un endpoint declara `'session'`
+y pide su propia permission por método con `locals.requirePermission` — no hay un valor "sin
+restricción" que puedas usar por descuido.
 
 ## Convenciones de código
 
