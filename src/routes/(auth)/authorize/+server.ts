@@ -4,12 +4,12 @@ import { config } from '#lib/config/app.js';
 import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
 import { logger } from '#lib/core/logger.js';
 import { AuthService } from '#lib/features/auth/services/auth.js';
-import { OAUTH_FAILED_PARAM } from '#lib/features/auth/google.js';
+import { SIGN_IN_ERROR_PARAM, SIGN_IN_ERRORS } from '#lib/features/auth/sign-in-errors.js';
 import { sanitizeRedirect } from '#lib/features/auth/redirect.js';
 import { clearSession, setSession, takeOAuthState } from '#lib/features/auth/session.server.js';
 import type { RequestHandler } from './$types';
 
-const FAILED_SIGN_IN = `${AUTH_ROUTES.login}?${new URLSearchParams({ [OAUTH_FAILED_PARAM]: 'oauth' })}`;
+const FAILED_SIGN_IN = `${AUTH_ROUTES.login}?${new URLSearchParams({ [SIGN_IN_ERROR_PARAM]: SIGN_IN_ERRORS.failed })}`;
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	if (!config.auth.methods.google.enabled) error(404, 'Google sign-in is not enabled.');
