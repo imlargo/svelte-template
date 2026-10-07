@@ -22,6 +22,7 @@
 	import type { ListResponse } from '#lib/types/list.js';
 	import type { UserFormData } from '#lib/features/users/schemas.js';
 	import { formatDate } from '#lib/utils/date.js';
+	import { toneBadgeClass } from '#lib/utils/tone.js';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
@@ -154,7 +155,10 @@
 											<TruncatedText text={user.email} class="max-w-56" />
 										</Table.Cell>
 										<Table.Cell>
-											<Badge variant={user.role === UserRole.ADMIN ? 'default' : 'secondary'}>
+											<Badge
+												variant="outline"
+												class={toneBadgeClass(user.role === UserRole.ADMIN ? 'action' : 'default')}
+											>
 												{ROLE_LABELS[user.role]}
 											</Badge>
 										</Table.Cell>
