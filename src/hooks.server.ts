@@ -3,9 +3,7 @@ import { config } from '#lib/config/app.js';
 import { logger } from '#lib/core/logger.js';
 import { handleAuth } from '#lib/features/auth/handler.server.js';
 
-// With auth off there is no user to check against, so every permission passes.
-// Installed anyway: `locals.requirePermission` is declared as always present,
-// and a route guard must not be the thing that crashes when auth is disabled.
+// Auth off: `locals.requirePermission` is declared as always present, so it must still exist.
 const handleWithoutAuth: Handle = ({ event, resolve }) => {
 	event.locals.requirePermission = () => {};
 	return resolve(event);
@@ -13,11 +11,8 @@ const handleWithoutAuth: Handle = ({ event, resolve }) => {
 
 export const handle: Handle = config.auth.enabled ? handleAuth : handleWithoutAuth;
 
-// Every error passes through here, but only an unknown one needs handling: an
-// `error(403, ...)` already carries a message meant for the visitor, and a 404
-// from SvelteKit says more about crawlers than about the app. The visitor gets
-// a message that is safe to show and an id to quote; the log gets the same id
-// next to everything the message leaves out.
+// Only unknown errors need handling: `error(403, ...)` already carries its message.
+// The visitor gets a safe message and an id; the log gets the same id with the rest.
 export const handleError: HandleServerError = ({ kind, error }) => {
 	if (kind !== 'unknown') return;
 

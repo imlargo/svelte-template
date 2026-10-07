@@ -38,8 +38,6 @@ describe('normalizeError', () => {
 	});
 
 	it('wraps a plain Error without rendering its message, keeping it as cause', () => {
-		// A bug's message ("Cannot read properties of undefined") is for the log,
-		// not for the screen.
 		const cause = new TypeError('Cannot read properties of undefined');
 		const err = normalizeError(cause);
 
@@ -147,8 +145,6 @@ describe('normalizeError (air responses)', () => {
 	it('keeps a status it cannot map, which is where it matters most', () => {
 		const err = normalizeError(airError({ status: 'INSUFFICIENT_FUNDS' }, 402));
 
-		// The code says nothing useful, so the raw status is all that names what
-		// actually happened.
 		expect(err.code).toBe('UNKNOWN');
 		expect(err.context?.status).toBe('INSUFFICIENT_FUNDS');
 	});

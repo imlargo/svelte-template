@@ -65,7 +65,6 @@
 					{/if}
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
-				<!-- A POST, so link prefetching can never sign the user out on its own. -->
 				<form method="POST" action={resolvePathname(AUTH_ROUTES.logout)} use:enhance>
 					<DropdownMenu.Item>
 						{#snippet child({ props }: { props: Record<string, unknown> })}

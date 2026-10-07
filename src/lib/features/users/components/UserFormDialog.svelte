@@ -22,8 +22,7 @@
 		onsubmit: (data: UserFormData) => Promise<boolean>;
 	} = $props();
 
-	// Read once on purpose: the parent mounts this only while open, so `user`
-	// never changes during its lifetime and these defaults are always fresh.
+	// Read once: the parent mounts this only while open, so `user` never changes.
 	const initial = untrack(() => ({
 		name: user?.name ?? '',
 		email: user?.email ?? '',
@@ -44,7 +43,6 @@
 		};
 	}
 
-	// No form action to post to: the parent calls the API.
 	async function submit(event: SubmitEvent & { currentTarget: HTMLFormElement }) {
 		event.preventDefault();
 

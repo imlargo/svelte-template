@@ -24,13 +24,11 @@
 		class?: string;
 	} = $props();
 
-	// `action="?/login"` would replace the page's query string, dropping where
-	// the user was headed; the action name tolerates extra parameters.
+	// `action="?/login"` alone would drop the page's query string, and with it the redirect.
 	const actionQuery = $derived(
 		redirect ? `&${new URLSearchParams({ [REDIRECT_PARAM]: redirect })}` : ''
 	);
 
-	// The server's verdict, until the user edits a field and gets a fresh one.
 	let errors = $derived<FieldErrors<LoginInput>>(form?.errors ?? {});
 
 	function validate(event: Event & { currentTarget: HTMLInputElement }) {
@@ -63,7 +61,6 @@
 	{/if}
 
 	{#if showGoogle}
-		<!-- Its own form: the server mints the OAuth state cookie before redirecting. -->
 		<form method="POST" action="?/google{actionQuery}">
 			<Button type="submit" variant="outline" class="w-full">
 				<svg

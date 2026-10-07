@@ -11,15 +11,12 @@
 		failed: failedSnippet
 	}: {
 		children: Snippet;
-		/** Replaces the default panel. Gets a message that is safe to show, and a retry. */
+		/** Replaces the default panel: a safe message and a retry. */
 		failed?: Snippet<[message: string, reset: () => void]>;
 	} = $props();
 </script>
 
-<!-- A `<svelte:boundary>` with the app's error rules applied: a crash while
-     rendering or in an effect is logged once, and the panel only ever shows a
-     message `normalizeError` vouches for. Errors in event handlers are not
-     rendering errors and do not reach here: those are the caller's try/catch. -->
+<!-- Catches render and effect errors, not event handlers. Logged once; the panel shows a safe message. -->
 <svelte:boundary onerror={(error) => logger.error('ui', error)}>
 	{@render children()}
 

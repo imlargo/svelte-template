@@ -24,8 +24,7 @@
 		<SiteHeader />
 		<div class="@container/main flex min-h-0 flex-1 flex-col overflow-auto">
 			<div id="main-content" class="flex min-h-full flex-1 flex-col px-4 pt-4 pb-8 md:px-8 md:pt-6">
-				<!-- `+error.svelte` catches what `load` throws; this catches what a page
-				     throws while rendering, so the shell and the way out of it stay. -->
+				<!-- `+error.svelte` catches load errors; this catches render errors, keeping the shell. -->
 				<Boundary>
 					{@render children()}
 				</Boundary>

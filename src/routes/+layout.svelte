@@ -8,13 +8,12 @@
 
 	let { data, children }: LayoutProps = $props();
 
-	// A getter, not a value: this way the session follows `data` across navigations.
+	// A getter, so the session follows `data` across navigations.
 	setAuth(new ClientSession(() => data));
 </script>
 
 <svelte:head>
 	<link rel="icon" href={config.branding.favicon} />
-	<!-- Fallback title/description: a page's <DocumentTitle> overrides the title. -->
 	<title>{config.branding.seo.title}</title>
 	<meta name="description" content={config.branding.seo.description} />
 	<meta property="og:title" content={config.branding.seo.title} />

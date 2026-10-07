@@ -2,8 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import LoginForm from './LoginForm.svelte';
 
-// The reference component test: runs in a real Chromium tab (the `client`
-// Vitest project), so what is asserted is what a user would see and do.
 // A component test has no page to serve `$app/env/public`, so the config is
 // mocked whole: password sign-in on, Google off.
 vi.mock('#lib/config/app.js', () => ({

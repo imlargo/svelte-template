@@ -1,11 +1,7 @@
 /**
- * How this app's API describes a failure. The one file to edit when a backend
- * answers errors in another shape: `normalizeError` asks this for what the
- * body says and works the rest out from the HTTP status.
- *
- * The default reads `{ status, message, payload }`. A `status` that already
- * names an `ErrorCode` passes through on its own; `STATUS_ALIASES` covers the
- * ones that mean a code without being spelled like it.
+ * How this app's API describes a failure; the one file to edit when a backend
+ * answers errors in another shape. The default reads `{ status, message,
+ * payload }`. A status spelled like an `ErrorCode` passes through on its own.
  */
 import type { ErrorCode, ParsedErrorBody } from '#lib/core/errors.js';
 

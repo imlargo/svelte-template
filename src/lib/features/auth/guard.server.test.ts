@@ -4,9 +4,6 @@ import { createPermissionGuard } from './guard.server';
 import type { Permission } from '#lib/config/permissions.js';
 import { UserRole, type User } from '#lib/types/user.js';
 
-// The guard is the enforcement point: every protected route calls it, so what
-// it lets through is what the app lets through.
-
 function userWith(role: string): User {
 	return {
 		id: '1',
@@ -36,25 +33,20 @@ describe('createPermissionGuard', () => {
 	});
 
 	it('denies a signed-in role that does not hold it with 403', () => {
-		// A member reaching /admin by typing the URL.
 		expect(statusFor(userWith(UserRole.MEMBER), 'users:delete')).toBe(403);
 	});
 
 	it('denies a role the frontend has never heard of', () => {
-		// A restrictive role added to the backend must not widen access here.
 		expect(statusFor(userWith('viewer'), 'users:delete')).toBe(403);
 		expect(statusFor(userWith('viewer'), 'dashboard:read')).toBe(403);
 	});
 
 	it('answers 401, not 403, without a session', () => {
-		// The caller can tell "sign in again" from "this is not for you".
 		expect(statusFor(null, 'users:delete')).toBe(401);
 		expect(statusFor(null, 'dashboard:read')).toBe(401);
 	});
 
 	it('lets a lesser role through what it was granted', () => {
-		// A member reaches the dashboard because the grant is written down, not
-		// by falling through to some default.
 		expect(statusFor(userWith(UserRole.MEMBER), 'dashboard:read')).toBeNull();
 		expect(statusFor(userWith('viewer'), 'dashboard:read')).toBe(403);
 	});

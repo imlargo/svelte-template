@@ -3,9 +3,6 @@ import { isHttpError } from '@sveltejs/kit';
 import { POST } from './+server';
 import { AppError } from '#lib/core/errors.js';
 
-// The browser's only way to renew a session. What it does with a dead refresh
-// token and with an outage mirrors the hook, and is asserted the same way.
-
 const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 
 const { refreshFlag } = vi.hoisted(() => ({ refreshFlag: { enabled: false } }));

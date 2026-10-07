@@ -1,16 +1,10 @@
-/**
- * DEMO SCAFFOLDING — stands in for your real users endpoint. See
- * `#lib/server/users-store.js`. Delete both when you point at a real backend.
- *
- * Error bodies use the `{ status, message }` shape that `normalizeError` parses,
- * so failures surface as typed `AppError`s on the client.
- */
+// DEMO SCAFFOLDING — stands in for a real users endpoint; delete with `#lib/server/users-store.js`.
+// Error bodies use the `{ status, message }` shape `#lib/config/errors` parses.
 import { createUser, emailTaken, listUsers } from '#lib/server/users-store.js';
 import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
 
-// Endpoints get no layout, so each handler guards itself, asking for what it
-// actually does: listing is not creating.
+// Each handler asks for what it does: listing is not creating.
 export const GET: RequestHandler = async ({ url, locals }) => {
 	locals.requirePermission('users:read');
 

@@ -1,12 +1,7 @@
-/**
- * DEMO SCAFFOLDING — the streaming pattern, with a fake slow source. Replace
- * `demoStats` with a service call (`new StatsService({ token: locals.accessToken,
- * fetch }).get()`) when there is a real endpoint behind the cards.
- */
+// DEMO SCAFFOLDING — replace `demoStats` with a service call when there is a real endpoint.
 import type { PageServerLoad } from './$types';
 
-// Not awaited: a promise returned from `load` streams, so the page renders now
-// with skeletons instead of holding the navigation for the slowest call.
+// Not awaited: the promise streams and the page renders with skeletons meanwhile.
 export const load: PageServerLoad = () => ({
 	stats: demoStats()
 });

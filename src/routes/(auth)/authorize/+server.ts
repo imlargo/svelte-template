@@ -1,7 +1,4 @@
-/**
- * Google OAuth callback. An endpoint, not a page: it has no UI, it only decides
- * where the browser goes next.
- */
+// Google OAuth callback: no UI, it only decides where the browser goes next.
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '#lib/config/app.js';
 import { AUTH_ROUTES, HOME_ROUTE } from '#lib/config/routes.js';
@@ -17,7 +14,6 @@ const FAILED_SIGN_IN = `${AUTH_ROUTES.login}?${new URLSearchParams({ [OAUTH_FAIL
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	if (!config.auth.methods.google.enabled) error(404, 'Google sign-in is not enabled.');
 
-	// Consumed even on the failure paths below: the nonce is good for one callback.
 	const stored = takeOAuthState(cookies);
 	const code = url.searchParams.get('code');
 	const state = url.searchParams.get('state');

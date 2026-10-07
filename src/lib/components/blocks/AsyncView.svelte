@@ -13,10 +13,7 @@
 		empty: emptySnippet,
 		error: errorSnippet
 	}: {
-		/**
-		 * A promise a `load` returned without awaiting — streamed, so navigation
-		 * does not wait for it — or a `Query` the page runs itself.
-		 */
+		/** A promise streamed from `load`, or a `Query` the page runs itself. */
 		source: Query<T> | Promise<T>;
 		children: Snippet<[T]>;
 		loading?: Snippet;
@@ -24,7 +21,6 @@
 		error?: Snippet<[AppError]>;
 	} = $props();
 
-	// A list that came back with nothing is the only "empty" this knows about.
 	function isEmpty(data: T): boolean {
 		return Array.isArray(data) && data.length === 0;
 	}
@@ -73,14 +69,11 @@
 		{@render failed(normalizeError(err))}
 	{/await}
 {:else if source.data !== null}
-	<!-- Once there is data it stays on screen: a refetch, or a failed one,
-	     updates the list instead of blanking it. Report those failures with a
-	     toast. -->
+	<!-- Data stays on screen through a refetch; report a later failure with a toast. -->
 	{@render settled(source.data)}
 {:else if source.error}
 	{@render failed(source.error)}
 {:else}
-	<!-- Not run yet counts as pending: the server renders the skeleton, and
-	     the page starts the query on mount. -->
+	<!-- Not run yet counts as pending: the page starts the query on mount. -->
 	{@render pending()}
 {/if}

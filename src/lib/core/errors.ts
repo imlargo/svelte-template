@@ -1,19 +1,11 @@
 /**
- * One error type, one entry point.
- *
- * Everything the app throws or catches becomes an `AppError` through
- * `normalizeError`. `error.message` is always safe to render: either the
- * backend's own message or the default for its `code`. Anything that is only
- * useful in a log — the failed request, the backend payload, the original
- * stack — hangs off `context` and `cause`, never off the message.
- *
- * What an error body looks like is the backend's business, read in
- * `#lib/config/errors`; this file only knows the codes and their messages.
+ * One error type, one entry point. `message` is always safe to render: the
+ * backend's own or the default for the code. Log-only detail goes on `context`
+ * and `cause`. The error body's shape is `#lib/config/errors`'s business.
  */
 import { isAirError, type AirError } from '@imlargo/air';
 import { parseErrorBody } from '#lib/config/errors.js';
 
-/** Extend as your API grows. Every code needs a default message below. */
 export type ErrorCode =
 	| 'NETWORK'
 	| 'UNAUTHORIZED'
@@ -24,7 +16,6 @@ export type ErrorCode =
 	| 'SERVER_ERROR'
 	| 'UNKNOWN';
 
-/** Doubles as the registry of valid codes — see `codeFromStatus`. */
 const MESSAGES: Record<ErrorCode, string> = {
 	NETWORK: 'Connection error. Check your internet connection.',
 	UNAUTHORIZED: 'You need to sign in to perform this action.',
@@ -36,36 +27,25 @@ const MESSAGES: Record<ErrorCode, string> = {
 	UNKNOWN: 'An unexpected error occurred.'
 };
 
-/**
- * What `#lib/config/errors` reads out of an error body. Every field is
- * optional: a body may be empty, or say nothing this app understands.
- */
+/** What `#lib/config/errors` reads out of an error body; all optional. */
 export interface ParsedErrorBody {
-	/** The code the body maps to, when its status is not already one of ours. */
+	/** When the status is not already one of ours. */
 	code?: ErrorCode;
-	/** The backend's message, shown as is — so it must be fit for a user to read. */
+	/** Shown as is, so it must be fit for a user. */
 	message?: string;
-	/** The backend's own status string, kept verbatim for the log. */
+	/** The backend's own status string, for the log. */
 	status?: string;
-	/** Anything else worth logging, such as field errors. Never rendered. */
+	/** Field errors and the like. Never rendered. */
 	payload?: Record<string, unknown>;
 }
 
-/**
- * Diagnostic detail about a failed API call. Log-only, never rendered.
- * Method and URL but deliberately no headers: those carry the `Authorization`
- * token and this object ends up in logs.
- */
+/** Log-only detail about a failed call. No headers: they carry the token. */
 type ErrorContext = {
 	method: string;
 	url: string;
 	/** 0 when the request never reached the server. */
 	httpStatus: number;
-	/**
-	 * The backend's own status string, kept verbatim even when it maps to no
-	 * code. A body that says `INSUFFICIENT_FUNDS` becomes an `UNKNOWN` error,
-	 * and this is the only place that still names what actually happened.
-	 */
+	/** Kept even when it maps to no code: it is what names what happened. */
 	status?: string;
 	payload?: Record<string, unknown>;
 };
@@ -86,22 +66,12 @@ export class AppError extends Error {
 	}
 }
 
-/**
- * Converts anything thrown into an `AppError`. The only entry point.
- *
- * Anything that is neither an `AppError` nor an API failure is a bug, not a
- * message: a `TypeError` says "Cannot read properties of undefined" to whoever
- * reads the screen. It becomes `UNKNOWN` with the default message, and the
- * original stays on `cause` for the log.
- */
+/** Anything that is neither an AppError nor an API failure is a bug: default message, original on `cause`. */
 export function normalizeError(err: unknown): AppError {
 	if (err instanceof AppError) return err;
 	if (isAirError(err)) return fromAirError(err);
 	return new AppError('UNKNOWN', undefined, { cause: err });
 }
-
-// ─── air → AppError ──────────────────────────────────────────────────────────
-// air throws `AirError` for network failures and non-2xx responses alike.
 
 function fromAirError(err: AirError): AppError {
 	const body = parseErrorBody(err.data);
@@ -111,10 +81,7 @@ function fromAirError(err: AirError): AppError {
 	const code = body.code ?? codeFromStatus(body.status) ?? codeFromHttpStatus(httpStatus);
 
 	return new AppError(code, body.message, {
-		// Not the AirError itself: it carries `request.headers` as sent, the
-		// `Authorization` token included, and whatever holds this error logs it.
-		// Everything worth keeping from it is in `context`; `err.cause` is the
-		// network failure underneath, when there was one.
+		// Not the AirError itself: its request headers carry the token.
 		cause: err.cause,
 		context: {
 			method: err.request.method,
@@ -126,13 +93,10 @@ function fromAirError(err: AirError): AppError {
 	});
 }
 
-/** A status string that is spelled exactly like one of our codes is that code. */
 function codeFromStatus(status: string | undefined): ErrorCode | undefined {
-	// `hasOwn`, not `in`: 'constructor' and friends are on every object.
 	return status && Object.hasOwn(MESSAGES, status) ? (status as ErrorCode) : undefined;
 }
 
-/** Fallback when the body carries no status we recognize. */
 function codeFromHttpStatus(status: number): ErrorCode {
 	switch (status) {
 		case 0:

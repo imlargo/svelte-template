@@ -5,10 +5,6 @@ import { handleAuth } from './handler.server';
 import { AppError } from '#lib/core/errors.js';
 import { UserRole, type User } from '#lib/types/user.js';
 
-// The hook is the only thing standing between an anonymous request and the app,
-// so what it does on a missing, rejected or unverifiable session is asserted
-// here rather than discovered in production.
-
 const { getMe, refresh } = vi.hoisted(() => ({ getMe: vi.fn(), refresh: vi.fn() }));
 
 // `getMe` is called with whatever token the service was built with, so the
@@ -167,8 +163,6 @@ describe('handleAuth', () => {
 	});
 
 	it('fails the request but keeps the session when the backend is unreachable', async () => {
-		// An outage must not sign everyone out: that turns downtime into a
-		// stampede of logins and throws away whatever the user was doing.
 		getMe.mockRejectedValue(new AppError('NETWORK', 'Connection refused.'));
 
 		const { outcome, clearedCookies } = await callAuth(HOME, SESSION);
@@ -187,12 +181,8 @@ describe('handleAuth', () => {
 	});
 });
 
-// The two halves of the app authorize differently on purpose. These are the
-// assertions that keep one of them from quietly deciding for the other.
-
 describe('handleAuth on page routes', () => {
 	it('denies a signed-in role that lacks the permission', async () => {
-		// A member typing /admin in the address bar.
 		getMe.mockResolvedValue(userWith(UserRole.MEMBER));
 
 		const { outcome } = await callAuth(ADMIN, SESSION);
@@ -217,8 +207,6 @@ describe('handleAuth on page routes', () => {
 	});
 
 	it('leaves a path with no route behind it alone, so SvelteKit can 404 it', async () => {
-		// A mistyped URL is not a permission problem. Answering 403 here would
-		// also mean a round trip to /auth/me for every bad path a crawler tries.
 		const { outcome } = await callAuth(UNMATCHED, SESSION);
 
 		expect(outcome).toEqual({ kind: 'resolved' });
@@ -241,9 +229,7 @@ describe('handleAuth on endpoints', () => {
 
 		const { outcome, locals } = await callAuth(USERS_API, SESSION);
 
-		// The hook passes it through...
 		expect(outcome).toEqual({ kind: 'resolved' });
-		// ...and the handler's own call is what refuses a member.
 		expect(() => locals.requirePermission('users:delete')).toThrow();
 	});
 });

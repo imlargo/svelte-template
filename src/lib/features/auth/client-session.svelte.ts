@@ -21,11 +21,7 @@ interface SessionData {
 export class ClientSession {
 	readonly #data: () => SessionData;
 
-	/**
-	 * Follows the layout data, and is overwritten in place when `/refresh`
-	 * renews the token between navigations; the next navigation brings back
-	 * that same token from the server.
-	 */
+	/** Follows the layout data; overwritten in place when `/refresh` renews it between navigations. */
 	accessToken = $derived.by(() => this.#data().accessToken);
 
 	/** Credentials for a client-side service: `new UsersService(getAuth().api)`. */
@@ -36,8 +32,7 @@ export class ClientSession {
 		this.api = {
 			token: () => this.accessToken,
 			fetch: createAuthTransport({
-				// The server judges a 401: re-running the loads goes through the hook,
-				// which sends the user to sign in if the session really is gone.
+				// Re-running the loads lets the hook judge the session.
 				onUnauthorized: () => refreshAll().catch((err) => logger.error('auth', err)),
 				renew: config.auth.refresh.enabled ? (fetch) => this.#renew(fetch) : undefined
 			})
@@ -54,8 +49,6 @@ export class ClientSession {
 			this.accessToken = accessToken;
 			return accessToken;
 		} catch {
-			// `/refresh` already cleared a dead session or logged an outage; the
-			// transport turns the null into a sign-in if it comes to that.
 			return null;
 		}
 	}
