@@ -2,9 +2,10 @@
 import type { PageServerLoad } from './$types';
 
 // Not awaited: the promise streams and the page renders with skeletons meanwhile.
-export const load: PageServerLoad = () => ({
-	stats: demoStats()
-});
+export const load: PageServerLoad = ({ locals }) => {
+	locals.requirePermission('dashboard:read');
+	return { stats: demoStats() };
+};
 
 async function demoStats() {
 	await new Promise((resolve) => setTimeout(resolve, 1200));

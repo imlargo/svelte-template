@@ -17,11 +17,11 @@ declare global {
 		}
 
 		interface Locals {
-			/** Set by the auth hook. Absent on public routes and when auth is disabled. */
+			/** Set by the auth hook. Absent on public routes; a local stand-in when auth is disabled. */
 			user?: User | null;
 			/** The refresh token stays in its cookie and never reaches locals or the client. */
 			accessToken?: string | null;
-			/** 401 without a session, 403 without the permission. Call it in every endpoint handler and destructive action. */
+			/** 401 without a session, 403 without the permission; answers the actor. Call it in every endpoint handler and destructive action. */
 			requirePermission: RequirePermission;
 		}
 		// interface PageData {}
