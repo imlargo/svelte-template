@@ -31,9 +31,12 @@ const handleWithoutAuth: Handle = ({ event, resolve }) => {
 
 export const handle: Handle = config.auth.enabled ? handleAuth : handleWithoutAuth;
 
-// Only unknown errors need handling: `error(403, ...)` already carries its message.
+const NOT_FOUND_MESSAGE = 'This page does not exist, or it moved.';
+
+// A 404 gets a sentence instead of "Not Found". Only unknown errors need handling: `error(403, ...)` already carries its message.
 // The visitor gets a safe message and an id; the log gets the same id with the rest.
 export const handleError: HandleServerError = ({ kind, error }) => {
+	if (kind === 'framework' && error.status === 404) return { message: NOT_FOUND_MESSAGE };
 	if (kind !== 'unknown') return;
 
 	const errorId = crypto.randomUUID();
