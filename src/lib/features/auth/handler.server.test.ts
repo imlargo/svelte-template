@@ -241,7 +241,7 @@ describe('handleAuth on endpoints', () => {
 });
 
 describe('handleAuth with refresh enabled', () => {
-	const RENEWED = { access_token: 'access-new', refresh_token: 'refresh-new', expires_at: 0 };
+	const RENEWED = { accessToken: 'access-new', refreshToken: 'refresh-new' };
 
 	beforeEach(() => {
 		refreshFlag.enabled = true;
@@ -261,11 +261,11 @@ describe('handleAuth with refresh enabled', () => {
 
 		expect(outcome).toEqual({ kind: 'resolved' });
 		expect(refresh).toHaveBeenCalledWith(SESSION.refresh_token);
-		expect(getMe).toHaveBeenLastCalledWith(RENEWED.access_token);
-		expect(locals.accessToken).toBe(RENEWED.access_token);
+		expect(getMe).toHaveBeenLastCalledWith(RENEWED.accessToken);
+		expect(locals.accessToken).toBe(RENEWED.accessToken);
 		expect(setCookies).toMatchObject({
-			access_token: RENEWED.access_token,
-			refresh_token: RENEWED.refresh_token
+			access_token: RENEWED.accessToken,
+			refresh_token: RENEWED.refreshToken
 		});
 		expect(clearedCookies).toEqual([]);
 	});

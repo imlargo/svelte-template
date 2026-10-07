@@ -29,7 +29,8 @@ import { createPermissionGuard } from './guard.server';
 import { REDIRECT_PARAM, encodeRedirect } from './redirect';
 import { isCredentialRejection } from './rejection';
 import { renewSession } from './renew.server';
-import { clearSession, getSession, type Session } from './session.server';
+import type { Session } from '#lib/features/auth/types.js';
+import { clearSession, getSession } from './session.server';
 
 function isPublicRoute(pathname: string): boolean {
 	return PUBLIC_ROUTE_PREFIXES.some((prefix) => isPrefixOf(prefix, pathname));

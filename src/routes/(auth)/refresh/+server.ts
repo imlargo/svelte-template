@@ -9,8 +9,8 @@ import { config } from '#lib/config/app.js';
 import { logger } from '#lib/core/logger.js';
 import { isCredentialRejection } from '#lib/features/auth/rejection.js';
 import { renewSession } from '#lib/features/auth/renew.server.js';
-import { clearSession, getSession, type Session } from '#lib/features/auth/session.server.js';
-import type { RefreshedSession } from '#lib/features/auth/types.js';
+import { clearSession, getSession } from '#lib/features/auth/session.server.js';
+import type { RefreshedSession, Session } from '#lib/features/auth/types.js';
 import type { RequestHandler } from './$types';
 
 const SESSION_EXPIRED = 'Your session has expired. Sign in again.';

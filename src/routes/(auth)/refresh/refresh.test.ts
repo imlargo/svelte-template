@@ -27,7 +27,7 @@ vi.mock('#lib/core/logger.js', () => ({
 }));
 
 const SESSION = { access_token: 'access-old', refresh_token: 'refresh-old' };
-const RENEWED = { access_token: 'access-new', refresh_token: 'refresh-new', expires_at: 0 };
+const RENEWED = { accessToken: 'access-new', refreshToken: 'refresh-new' };
 
 async function callRefresh(cookies: Record<string, string> = SESSION) {
 	const cleared: string[] = [];
@@ -79,8 +79,8 @@ describe('POST /refresh', () => {
 		const { status, body, set } = await callRefresh();
 
 		expect(status).toBe(200);
-		expect(body).toEqual({ accessToken: RENEWED.access_token });
-		expect(set).toMatchObject({ refresh_token: RENEWED.refresh_token });
+		expect(body).toEqual({ accessToken: RENEWED.accessToken });
+		expect(set).toMatchObject({ refresh_token: RENEWED.refreshToken });
 	});
 
 	it('ends the session when the backend rejects the refresh token', async () => {

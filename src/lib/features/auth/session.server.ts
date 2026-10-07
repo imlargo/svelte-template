@@ -12,6 +12,7 @@ import {
 } from '$app/env/private';
 import type { Cookies } from '@sveltejs/kit';
 import { z } from 'zod';
+import type { Session } from '#lib/features/auth/types.js';
 
 const ACCESS_TOKEN_COOKIE = 'access_token';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
@@ -33,11 +34,6 @@ function cookieOptions(maxAge: number) {
 
 function deleteCookie(cookies: Cookies, name: string): void {
 	cookies.delete(name, { path: '/', domain: AUTH_COOKIE_DOMAIN });
-}
-
-export interface Session {
-	accessToken: string;
-	refreshToken: string;
 }
 
 /** Null unless both tokens are present — a half session is no session. */

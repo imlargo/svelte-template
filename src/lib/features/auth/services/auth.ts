@@ -1,28 +1,46 @@
-import type {
-	AuthTokensResponse,
-	SignInRequest,
-	SignInResponse
-} from '#lib/features/auth/types.js';
-import type { User } from '#lib/types/user.js';
 import type { ApiAuth } from '#lib/core/api.js';
 import { BaseService } from '#lib/core/service.js';
 import { config } from '#lib/config/app.js';
+import type { User } from '#lib/types/user.js';
+import type { Session, SignIn } from '#lib/features/auth/types.js';
+import {
+	AUTH_ENDPOINTS,
+	toSession,
+	toSignIn,
+	toUser,
+	type GoogleLoginBody,
+	type LoginBody,
+	type RefreshBody,
+	type SignInWire,
+	type TokenPairWire,
+	type UserWire
+} from '#lib/features/auth/contract.js';
 
+/**
+ * Talks to the backend's auth endpoints and answers in the app's own types.
+ * The paths and the wire shapes live in `contract.ts`; this class only pairs
+ * each call with its mapper.
+ */
 export class AuthService extends BaseService {
 	constructor(auth: ApiAuth = {}) {
 		super(auth, config.auth.baseUrl);
 	}
 
-	login(data: SignInRequest) {
-		return this.expectBody(this.api.post<SignInResponse>('/auth/login', { body: data }));
+	async login(body: LoginBody): Promise<SignIn> {
+		return toSignIn(
+			await this.expectBody(this.api.post<SignInWire>(AUTH_ENDPOINTS.login, { body }))
+		);
 	}
 
-	loginWithGoogle(code: string) {
-		return this.expectBody(this.api.post<SignInResponse>('/auth/google/login', { body: { code } }));
+	async loginWithGoogle(code: string): Promise<SignIn> {
+		const body: GoogleLoginBody = { code };
+		return toSignIn(
+			await this.expectBody(this.api.post<SignInWire>(AUTH_ENDPOINTS.googleLogin, { body }))
+		);
 	}
 
-	getMe() {
-		return this.expectBody(this.api.get<User>('/auth/me'));
+	async getMe(): Promise<User> {
+		return toUser(await this.expectBody(this.api.get<UserWire>(AUTH_ENDPOINTS.me)));
 	}
 
 	/**
@@ -33,9 +51,10 @@ export class AuthService extends BaseService {
 	 * for a few seconds: two tabs can renew with the same token at once, and
 	 * treating the second as reuse would revoke a session nobody stole.
 	 */
-	refresh(refreshToken: string) {
-		return this.expectBody(
-			this.api.post<AuthTokensResponse>('/auth/refresh', { body: { refresh_token: refreshToken } })
+	async refresh(refreshToken: string): Promise<Session> {
+		const body: RefreshBody = { refresh_token: refreshToken };
+		return toSession(
+			await this.expectBody(this.api.post<TokenPairWire>(AUTH_ENDPOINTS.refresh, { body }))
 		);
 	}
 }

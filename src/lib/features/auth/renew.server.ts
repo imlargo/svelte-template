@@ -1,6 +1,7 @@
 import type { Cookies } from '@sveltejs/kit';
+import type { Session } from '#lib/features/auth/types.js';
 import { AuthService } from './services/auth';
-import { setSession, type Session } from './session.server';
+import { setSession } from './session.server';
 
 /**
  * Spends the refresh token and rotates both cookies. Used by the hook before a
@@ -8,9 +9,7 @@ import { setSession, type Session } from './session.server';
  * throws; see `isCredentialRejection` for which failures end the session.
  */
 export async function renewSession(cookies: Cookies, refreshToken: string): Promise<Session> {
-	const tokens = await new AuthService().refresh(refreshToken);
-	const session = { accessToken: tokens.access_token, refreshToken: tokens.refresh_token };
-
+	const session = await new AuthService().refresh(refreshToken);
 	setSession(cookies, session);
 	return session;
 }
