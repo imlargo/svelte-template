@@ -1,131 +1,136 @@
-# Arquitectura
+# Architecture
 
-Cómo está armado el template y qué tocar para cambiar cada cosa. Las reglas de trabajo están en
-[`AGENTS.md`](../AGENTS.md); esto explica el porqué detrás de ellas. Los comentarios del código
-son la fuente de verdad del detalle: cuando este documento y el código discrepen, manda el código.
+How the template is put together and what to touch to change each part. The working rules are in
+[`AGENTS.md`](../AGENTS.md); this explains the reasoning behind them. Code comments are the source
+of truth for the details: when this document and the code disagree, the code wins.
 
-## Capas
+## Layers
 
 ```
-routes/            páginas, layouts, form actions, endpoints
-  │  usan
-components/        ui (shadcn) · coral (kit) · blocks (propios) · layout
-features/<slice>/  services (únicos que llaman al API) · components · schemas · types · contract
-  │  usan
-core/              api (cliente HTTP) · service (BaseService) · errors · logger · query · permissions
-config/            app · routes · navigation · permissions · errors   ← lo que cambia por proyecto
+routes/            pages, layouts, form actions, endpoints
+  │  use
+components/        ui (shadcn) · coral (kit) · blocks (our own) · layout
+features/<slice>/  services (the only callers of the API) · components · schemas · types · contract
+  │  use
+core/              api (HTTP client) · service (BaseService) · errors · logger · query · permissions
+config/            app · routes · navigation · permissions · errors   ← what changes per project
 ```
 
-`core/` no sabe nada del proyecto: recibe los datos por parámetro o los importa de `config/`. Un
-proyecto nuevo cambia `config/` y añade slices en `features/`; `core/` debería quedar igual.
+`core/` knows nothing about the project: it receives data as parameters or imports it from
+`config/`. A new project changes `config/` and adds slices under `features/`; `core/` should stay
+the same.
 
-## Ciclo de un request
+## Request lifecycle
 
-1. **`hooks.server.ts`** elige el hook según `PUBLIC_AUTH_ENABLED`. Con auth apagada instala un
-   `locals.requirePermission` vacío y resuelve. Con auth encendida corre `handleAuth`
+1. **`hooks.server.ts`** picks the hook based on `PUBLIC_AUTH_ENABLED`. With auth off it installs
+   an empty `locals.requirePermission` and resolves. With auth on it runs `handleAuth`
    (`features/auth/handler.server.ts`).
-2. **`handleAuth`** mira `event.route.id` y lo busca en `PAGE_ACCESS` y `ENDPOINT_ACCESS`
-   (`config/permissions.ts`). Una ruta `'public'` pasa. Cualquier otra necesita sesión: lee las dos
-   cookies, pregunta al backend quién es el usuario (`AuthService.getMe`) y, si refresh está
-   activo y el token caducó, lo renueva una vez. Deja `locals.user` y `locals.accessToken`.
-3. Para una **página**, el hook exige la permission de la tabla antes de que corra ningún `load`.
-   Para un **endpoint**, solo exige sesión: cada handler llama `locals.requirePermission` con lo
-   que necesita por método.
-4. **`+layout.server.ts`** raíz serializa `user` y `accessToken` para el cliente. Nunca el refresh
-   token.
-5. En el cliente, **`+layout.svelte`** crea una `ClientSession` en contexto con un getter sobre
-   `data`. `getAuth().api` da a cualquier service de cliente el token actual y un `fetch` que
-   reacciona a 401.
+2. **`handleAuth`** looks up `event.route.id` in `PAGE_ACCESS` and `ENDPOINT_ACCESS`
+   (`config/permissions.ts`). A `'public'` route passes. Anything else needs a session: it reads
+   both cookies, asks the backend who the user is (`AuthService.getMe`) and, if refresh is enabled
+   and the token expired, renews it once. It sets `locals.user` and `locals.accessToken`.
+3. For a **page**, the hook requires the table's permission before any `load` runs. For an
+   **endpoint**, it only requires a session: each handler calls `locals.requirePermission` with
+   what it needs per method.
+4. The root **`+layout.server.ts`** serializes `user` and `accessToken` for the client. Never the
+   refresh token.
+5. On the client, **`+layout.svelte`** creates a `ClientSession` in context with a getter over
+   `data`. `getAuth().api` gives any client-side service the current token and a `fetch` that
+   reacts to a 401.
 
-Si el backend no responde, el hook contesta 503 y conserva la sesión: una caída no cierra la sesión
-de todos. Solo un 401/403 del backend la termina (`rejection.ts`).
+If the backend does not answer, the hook responds 503 and keeps the session: an outage does not
+sign everyone out. Only a 401/403 from the backend ends it (`rejection.ts`).
 
-## Flujo de un 401 en el cliente
+## A 401 on the client
 
-Un service de cliente envía por el transporte de `ClientSession` (`transport.ts`):
+A client-side service sends through the `ClientSession` transport (`transport.ts`):
 
-- Con `PUBLIC_AUTH_REFRESH_ENABLED=true`, el primer 401 llama a `POST /refresh` de la propia app,
-  que gasta el refresh token de su cookie httpOnly, rota ambas cookies y devuelve solo el access
-  token. Las peticiones concurrentes comparten esa renovación y se reenvían con el token nuevo.
-- Un 401 que sobrevive llama a `refreshAll()`: vuelven a correr los `load`, el hook decide, y si
-  la sesión está muerta redirige a `/login?redirect=…`.
+- With `PUBLIC_AUTH_REFRESH_ENABLED=true`, the first 401 calls the app's own `POST /refresh`,
+  which spends the refresh token from its httpOnly cookie, rotates both cookies and returns only
+  the access token. Concurrent requests share that renewal and are re-sent with the new token.
+- A 401 that survives calls `refreshAll()`: the `load` functions run again, the hook decides, and
+  if the session is dead it redirects to `/login?redirect=…`.
 
-Ningún componente maneja 401.
+No component handles a 401.
 
-## Permisos
+## Permissions
 
-Deny by default en tres sitios:
+Deny by default in three places:
 
-- **`ROLE_PERMISSIONS`**: un rol tiene exactamente lo listado. Un rol que el backend invente
-  mañana no tiene nada hasta que se añada.
-- **`PAGE_ACCESS`**: `Record<PageRouteId, Permission | 'public'>` exhaustivo. Una página nueva sin
-  entrada no compila. Si una llegara al hook en runtime, se deniega con 403 y se loguea.
-- **`ENDPOINT_ACCESS`**: `Record<EndpointRouteId, 'public' | 'session'>`, igual de exhaustivo. El
-  hook solo garantiza sesión; `routes/api/endpoints.guard.test.ts` comprueba que cada handler
-  llama a `locals.requirePermission`.
+- **`ROLE_PERMISSIONS`**: a role holds exactly what is listed. A role the backend invents tomorrow
+  holds nothing until it is added.
+- **`PAGE_ACCESS`**: an exhaustive `Record<PageRouteId, Permission | 'public'>`. A new page without
+  an entry does not compile. If one reached the hook at runtime, it is denied with a 403 and
+  logged.
+- **`ENDPOINT_ACCESS`**: `Record<EndpointRouteId, 'public' | 'session'>`, just as exhaustive. The
+  hook only guarantees a session; `routes/api/endpoints.guard.test.ts` checks that every handler
+  calls `locals.requirePermission`.
 
-Los route ids (`'/(app)/admin'`) vienen de `$app/types` y los genera `svelte-kit sync`. La
-navegación (`config/navigation.ts`) usa esos mismos ids: el href sale de `resolve(route)` y la
-visibilidad de `PAGE_ACCESS[route]`, así que el menú y el hook leen la misma tabla.
+Route IDs (`'/(app)/admin'`) come from `$app/types` and are generated by `svelte-kit sync`.
+Navigation (`config/navigation.ts`) uses the same IDs: the href comes from `resolve(route)` and
+the visibility from `PAGE_ACCESS[route]`, so the menu and the hook read the same table.
 
-## Cambiar el contrato con el backend
+## Changing the backend contract
 
-El template no impone un backend. Tres puntos lo aíslan:
+The template does not impose a backend. Three places isolate it:
 
-- **`features/auth/contract.ts`**: rutas de auth, tipos _wire_ (`access_token`, `tokens`…) y
-  mappers hacia los tipos de dominio de `features/auth/types.ts` (`Session`, `SignIn`). Nada
-  fuera de `AuthService` ve la forma del backend. Si tu API devuelve `{ jwt, refresh }`, cambias
-  `TokenPairWire` y `toSession`, y el hook, las actions y las cookies siguen igual.
-- **`config/errors.ts`**: cómo describe un fallo tu API. `normalizeError` le pasa el body y
-  recibe `{ code?, message?, status?, payload? }`. El default lee `{ status, message, payload }`
-  y traduce estados con `STATUS_ALIASES`. Los códigos y sus mensajes viven en `core/errors.ts`.
-- **Tipos de dominio vs wire**: `#lib/types/` y `features/<slice>/types.ts` son lo que ven los
-  componentes. Un tipo de respuesta del backend vive junto al service que lo consume y se mapea
-  ahí. En `auth` el mapeo es explícito; en `users` el wire y el dominio coinciden porque el demo
-  es fullstack.
+- **`features/auth/contract.ts`**: auth routes, _wire_ types (`access_token`, `tokens`…) and the
+  mappers into the domain types in `features/auth/types.ts` (`Session`, `SignIn`). Nothing outside
+  `AuthService` sees the backend's shape. If your API returns `{ jwt, refresh }`, you change
+  `TokenPairWire` and `toSession`, and the hook, the actions and the cookies stay the same.
+- **`config/errors.ts`**: how your API describes a failure. `normalizeError` hands it the body and
+  gets back `{ code?, message?, status?, payload? }`. The default reads `{ status, message,
+payload }` and translates statuses with `STATUS_ALIASES`. The codes and their messages live in
+  `core/errors.ts`.
+- **Domain vs wire types**: `#lib/types/` and `features/<slice>/types.ts` are what components see.
+  A backend response type lives next to the service that consumes it and is mapped there. In
+  `auth` the mapping is explicit; in `users` wire and domain coincide because the demo is
+  fullstack.
 
-## Transporte: dos topologías
+## Transport: two topologies
 
-El default es **direct-to-API**: el browser llama al API externo con bearer, y el servidor hace lo
-mismo con `{ token: locals.accessToken, fetch }`. El access token viaja al cliente en el HTML de la
-página; el refresh token nunca.
+The default is **direct-to-API**: the browser calls the external API with a bearer token, and the
+server does the same with `{ token: locals.accessToken, fetch }`. The access token reaches the
+client in the page's HTML; the refresh token never does.
 
-El template también funciona **fullstack**: la app expone sus propios endpoints en `routes/api/`
-y los services apuntan a ellos con base URL vacía, como hace el demo `UsersService`. En ese modo
-el hook sigue autenticando contra el backend de auth (`PUBLIC_AUTH_BASE_URL`), los endpoints
-reciben `locals.user` y `locals.accessToken`, y cada handler se guarda con
-`locals.requirePermission`. Los dos modos conviven: un slice puede ir directo y otro por la app.
+The template also works **fullstack**: the app exposes its own endpoints under `routes/api/` and
+services point at them with an empty base URL, as the demo `UsersService` does. In that mode the
+hook still authenticates against the auth backend (`PUBLIC_AUTH_BASE_URL`), endpoints receive
+`locals.user` and `locals.accessToken`, and each handler guards itself with
+`locals.requirePermission`. Both modes coexist: one slice can go direct and another through the
+app.
 
-## Errores
+## Errors
 
-- Todo lo lanzado o capturado pasa por `normalizeError` y es un `AppError` con `code` y un
-  `message` siempre mostrable. Un `Error` genérico es un bug: se muestra el mensaje por defecto y
-  el original queda en `cause` para el log.
-- `handleError` (servidor y cliente) solo actúa sobre `kind === 'unknown'`: genera un `errorId`,
-  lo loguea y devuelve el mensaje seguro. `ErrorState` muestra ese id.
-- `+error.svelte` captura lo que lanza un `load`. `Boundary` (`blocks/Boundary.svelte`, sobre
-  `<svelte:boundary>`) captura lo que una página lanza al renderizar; el layout de `(app)` envuelve
-  sus páginas con él para que la sidebar y la salida sigan ahí.
-- `logger` (`core/logger.ts`) es la única salida de logs. Para Sentry o JSON estructurado se
-  implementa `Logger` y se llama `setLogger`.
+- Everything thrown or caught goes through `normalizeError` and becomes an `AppError` with a
+  `code` and a `message` that is always safe to show. A generic `Error` is a bug: the default
+  message is shown and the original stays on `cause` for the log.
+- `handleError` (server and client) only acts on `kind === 'unknown'`: it generates an `errorId`,
+  logs it and returns the safe message. `ErrorState` displays that id.
+- `+error.svelte` catches what a `load` throws. `Boundary` (`blocks/Boundary.svelte`, over
+  `<svelte:boundary>`) catches what a page throws while rendering; the `(app)` layout wraps its
+  pages with it so the sidebar and the way out stay in place.
+- `logger` (`core/logger.ts`) is the single exit point for logs. For Sentry or structured JSON,
+  implement `Logger` and call `setLogger`.
 
-## Carga de datos
+## Data loading
 
-- Lo que la página no puede pintar sin ello se `await`-ea en `load`. Lo lento se devuelve como
-  promesa (streaming) y se pinta con `AsyncView` + skeleton.
-- Lo que el usuario busca, filtra o edita en sitio lo carga la página con `Query` + `AsyncView` en
-  `onMount`. `Query` se queda con la última ejecución y conserva los datos ante un fallo.
-- Sin remote functions: siguen siendo experimentales en SvelteKit 3.
+- What the page cannot render without is `await`ed in `load`. Slow data is returned as a promise
+  (streaming) and rendered with `AsyncView` + a skeleton.
+- What the user searches, filters or edits in place is loaded by the page with `Query` +
+  `AsyncView` in `onMount`. `Query` keeps the latest run and holds on to its data when a run fails.
+- No remote functions: they are still experimental in SvelteKit 3.
 
-## Estado
+## State
 
-Estado por request va en `locals`, en `data` del `load` o en contexto de Svelte (`ClientSession`
-es el ejemplo). Un `$state` a nivel de módulo con datos de usuario filtra datos entre usuarios en
-SSR: es un incidente de seguridad, no un olvido. Las clases de `#lib/hooks/` son estado genérico y
-se instancian donde se usan.
+Per-request state goes in `locals`, in the `load`'s `data` or in Svelte context (`ClientSession`
+is the example). A module-level `$state` holding user data leaks data between users under SSR: it
+is a security incident, not an oversight. The classes in `#lib/hooks/` are generic state and are
+instantiated where they are used.
 
-## Variables de entorno
+## Environment variables
 
-Todas en `src/env.ts` con `defineEnvVars` y schema zod; se leen de `$app/env/public` y
-`$app/env/private`. `flag()` exige exactamente `true`/`false`; `unset()` trata `VAR=` como no
-definida. En Cloudflare se definen en el worker: el build usa un placeholder para `PUBLIC_API_URL`.
+All of them live in `src/env.ts` with `defineEnvVars` and a zod schema; they are read from
+`$app/env/public` and `$app/env/private`. `flag()` requires exactly `true`/`false`; `unset()`
+treats `VAR=` as unset. On Cloudflare they are set on the worker: the build uses a placeholder for
+`PUBLIC_API_URL`.
