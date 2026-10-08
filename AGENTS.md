@@ -13,7 +13,8 @@ started.
 ## Architecture documentation
 
 [`docs/architecture.md`](./docs/architecture.md) explains the layers, the request lifecycle,
-permissions, and where the backend contract is changed. `src/` remains the source of truth for
+permissions, and where the backend contract is changed. The import rules between layers are
+enforced by `eslint.config.js`: a violation is a lint error, not a review comment. `src/` remains the source of truth for
 the details: when facing a structural decision or unsure about a pattern, read the code of the
 equivalent area before inventing a new one.
 
@@ -147,7 +148,8 @@ role that uses it, not only the one with the most permissions:
   without; return the rest as a promise (streaming) and render it with `AsyncView` + a skeleton.
   Reference: `routes/(app)/+page.server.ts`.
 - Data the user searches, filters or edits in place is loaded by the page itself with `Query` or
-  `ListQuery` + `AsyncView` (in `onMount`, not with `if (browser)`). A filtered list answers as
+  `ListQuery` + `AsyncView` (in `onMount`, not with `if (browser)`). The fetcher receives an
+  `AbortSignal`; pass it to the service, so a superseded request is cancelled. A filtered list answers as
   `ListResponse<T>` and renders `TableSkeleton` while `isStale`. Reference: `routes/(app)/admin/`.
 - Remote functions are not used (they are still experimental in SvelteKit 3).
 - On the client, a service is created with `getAuth().api`, never with a bare token: that way it
@@ -169,7 +171,8 @@ role that uses it, not only the one with the most permissions:
 ## Errors
 
 - Every error is converted with `normalizeError`, and its `message` is always safe to show. Never
-  display `err.message` from an error that has not been normalized.
+  display `err.message` from an error that has not been normalized. A failure the user triggered
+  is reported with `reportError` (`#lib/utils/notify.ts`): toast plus log, in one call.
 - If an error is expected, throw it as an `AppError` with the matching code. A generic `Error` is
   treated as a bug: the default message is shown and the detail goes only to the log.
 - `handleError` receives every error but only acts on unexpected ones (`kind === 'unknown'`): an
@@ -204,7 +207,15 @@ no "unrestricted" value you could use by accident.
   pieces a project may not use yet, on purpose: they are the template's starting point, not dead
   code. Outside them, no "just in case" abstractions — the third repetition justifies an
   abstraction, the first and second do not.
-- Do not leave dead code, debug comments or `console.log` in the final code.
+- **No mock, preview or demo branches in production code paths.** To run without a backend there
+  is `PUBLIC_AUTH_ENABLED=false` and the local stand-in user; a hook or a service never checks a
+  "mock" cookie or a query parameter to change what it does.
+- **No native `confirm()`, `alert()` or `prompt()`:** `ConfirmDialog` from `coral/` exists.
+- **No client-side cache until the third place needs one.** When it comes, it is one module with
+  its own invalidation, never a `sessionStorage` key invented inside a service.
+- `#lib/utils/` is pure functions, with one exception: `notify.ts`, side effects without state.
+- Do not leave dead code, debug comments or `console.log` in the final code; the logger is the
+  only exit for logs and ESLint enforces it.
 - Changes must be minimal and scoped to the task: do not refactor unrelated code unless asked.
 
 ## Before calling something done

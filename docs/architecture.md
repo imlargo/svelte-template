@@ -121,8 +121,8 @@ Both modes coexist: one slice can go direct and another through the app.
 - What the page cannot render without is `await`ed in `load`. Slow data is returned as a promise
   (streaming) and rendered with `AsyncView` + a skeleton.
 - What the user searches, filters or edits in place is loaded by the page with `Query` or
-  `ListQuery` + `AsyncView` in `onMount`. `Query` keeps the latest run and holds on to its data when
-  a run fails. `ListQuery` also remembers which filters produced the rows on screen: a changed
+  `ListQuery` + `AsyncView` in `onMount`. `Query` keeps the latest run, aborts the one it supersedes through the
+  `AbortSignal` it hands the fetcher, and holds on to its data when a run fails. `ListQuery` also remembers which filters produced the rows on screen: a changed
   filter is `isStale` and shows a `TableSkeleton`, a refresh after a write keeps the rows. A list
   answers as `ListResponse<T>`, items plus the unfiltered total, so an empty page can say whether
   nothing exists or nothing matches.
@@ -136,6 +136,11 @@ is a security incident, not an oversight. The classes in `#lib/hooks/` are gener
 instantiated where they are used.
 
 ## Import rules
+
+Enforced by `eslint.config.js` (`no-restricted-imports` per folder, with regexes because a glob
+starting with `#` reads as a gitignore comment). The same file bans `console` outside the logger,
+`process.env`, `import.meta.env`, `$env/*` and the native `confirm()`, requires a `type` on every
+button, and warns past 400 lines.
 
 ```
 routes/              → features/, components/, hooks/, utils/, config/, types/, core/
