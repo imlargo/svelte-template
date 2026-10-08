@@ -6,8 +6,11 @@ import { AuthService } from '#lib/features/auth/services/auth.js';
 import { LoginSchema } from '#lib/features/auth/schemas.js';
 import type { LoginFailure } from '#lib/features/auth/types.js';
 import { REDIRECT_PARAM, sanitizeRedirect } from '#lib/features/auth/redirect.js';
-import { GOOGLE_AUTH_ORIGIN, buildGoogleAuthUrl } from '#lib/features/auth/google.js';
-import { SIGN_IN_ERROR_PARAM, signInErrorMessage } from '#lib/features/auth/sign-in-errors.js';
+import {
+	GOOGLE_AUTH_ORIGIN,
+	OAUTH_FAILED_PARAM,
+	buildGoogleAuthUrl
+} from '#lib/features/auth/google.js';
 import {
 	getSession,
 	isCredentialRejection,
@@ -27,7 +30,9 @@ export const load: PageServerLoad = async ({ cookies, url }) => {
 
 	return {
 		redirect: url.searchParams.get(REDIRECT_PARAM),
-		signInError: signInErrorMessage(url.searchParams.get(SIGN_IN_ERROR_PARAM))
+		signInError: url.searchParams.has(OAUTH_FAILED_PARAM)
+			? 'Could not sign you in. Please try again.'
+			: null
 	};
 };
 

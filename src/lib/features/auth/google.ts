@@ -6,6 +6,9 @@ export const GOOGLE_AUTH_ORIGIN = 'https://accounts.google.com';
 
 const GOOGLE_AUTH_ENDPOINT = `${GOOGLE_AUTH_ORIGIN}/o/oauth2/v2/auth`;
 
+/** Set on the login URL when the OAuth callback could not complete the sign-in. */
+export const OAUTH_FAILED_PARAM = 'error';
+
 /** `state` comes back to the callback and is compared with the nonce cookie: login CSRF. */
 export function buildGoogleAuthUrl(origin: string, state: string): string {
 	const params = new URLSearchParams({
