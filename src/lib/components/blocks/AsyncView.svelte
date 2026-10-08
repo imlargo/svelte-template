@@ -1,6 +1,6 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from 'svelte';
-	import type { AsyncState } from '#lib/hooks/query.svelte.js';
+	import type { Query } from '#lib/hooks/query.svelte.js';
 	import { normalizeError, type AppError } from '#lib/core/errors.js';
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import EmptyState from '#lib/components/blocks/EmptyState.svelte';
@@ -13,8 +13,8 @@
 		empty: emptySnippet,
 		error: errorSnippet
 	}: {
-		/** A promise streamed from `load`, or a `Query`/`ListQuery` the page runs itself. */
-		source: AsyncState<T> | Promise<T>;
+		/** A promise streamed from `load`, or a `Query` the page runs itself. */
+		source: Query<T> | Promise<T>;
 		children: Snippet<[T]>;
 		loading?: Snippet;
 		empty?: Snippet;
@@ -68,7 +68,7 @@
 	{:catch err}
 		{@render failed(normalizeError(err))}
 	{/await}
-{:else if source.data !== null}
+{:else if source.data !== null && !source.isStale}
 	<!-- Data stays on screen through a refetch; report a later failure with a toast. -->
 	{@render settled(source.data)}
 {:else if source.error}

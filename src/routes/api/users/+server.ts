@@ -2,9 +2,7 @@
 import { json } from '@sveltejs/kit';
 import { AppError } from '#lib/core/errors.js';
 import { errorResponse, readBody } from '#lib/server/api.js';
-import { countUsers, createUser, emailTaken, listUsers } from '#lib/server/users-store.js';
-import type { ListResponse } from '#lib/types/list.js';
-import type { User } from '#lib/types/user.js';
+import { createUser, emailTaken, listUsers } from '#lib/server/users-store.js';
 import { UserFormSchema } from '#lib/features/users/schemas.js';
 import type { RequestHandler } from './$types';
 
@@ -12,8 +10,14 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async ({ url, locals }) => {
 	locals.requirePermission('users:read');
 
-	const items = listUsers(url.searchParams.get('q') ?? undefined);
-	return json({ items, total: countUsers() } satisfies ListResponse<User>);
+	const { searchParams } = url;
+	return json(
+		listUsers(
+			searchParams.get('q') ?? undefined,
+			Number(searchParams.get('page')) || 1,
+			Number(searchParams.get('pageSize')) || undefined
+		)
+	);
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {

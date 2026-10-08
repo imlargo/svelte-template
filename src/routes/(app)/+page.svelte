@@ -32,7 +32,7 @@
 		});
 
 		// A later failure keeps the list on screen, so it is reported here.
-		if (items.error && items.data !== null) reportError(items.error);
+		if (items.error && !items.isStale) reportError(items.error);
 	}
 
 	// Starts empty, so the empty state, the data and a failure are each a click away.

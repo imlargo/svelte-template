@@ -109,3 +109,59 @@ describe('Query', () => {
 		expect(query.isLoading).toBe(false);
 	});
 });
+
+function deferred<T>() {
+	let resolve!: (value: T) => void;
+	const promise = new Promise<T>((res) => (resolve = res));
+	return { promise, resolve };
+}
+
+describe('Query.isStale', () => {
+	it('is stale before anything has been asked for', () => {
+		expect(new Query<string>().isStale).toBe(true);
+	});
+
+	it('is no longer stale once its own response lands', async () => {
+		const query = new Query<string>();
+
+		await query.run(async () => 'page 1', { page: 1 });
+
+		expect(query.isStale).toBe(false);
+	});
+
+	it('is stale while different params are on their way', async () => {
+		const query = new Query<string>();
+		await query.run(async () => 'page 1', { page: 1 });
+
+		query.run(() => deferred<string>().promise, { page: 2 });
+
+		expect(query.isStale).toBe(true);
+	});
+
+	it('keeps the rows when the same params are refetched', async () => {
+		const query = new Query<string>();
+		await query.run(async () => 'page 1', { page: 1 });
+
+		query.run(() => deferred<string>().promise, { page: 1 });
+
+		expect(query.isStale).toBe(false);
+		expect(query.isLoading).toBe(true);
+	});
+
+	it('recovers when a superseded response lands last', async () => {
+		const query = new Query<string>();
+		const slow = deferred<string>();
+		const fast = deferred<string>();
+
+		const third = query.run(() => slow.promise, { page: 3 });
+		const fourth = query.run(() => fast.promise, { page: 4 });
+
+		fast.resolve('page 4');
+		await fourth;
+		slow.resolve('page 3');
+		await third;
+
+		expect(query.isStale).toBe(false);
+		expect(query.data).toBe('page 4');
+	});
+});
