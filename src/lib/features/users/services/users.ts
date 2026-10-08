@@ -1,4 +1,5 @@
 import type { User } from '#lib/types/user.js';
+import type { PaginatedResponse } from '#lib/types/pagination.js';
 import type { UserFormData } from '#lib/features/users/schemas.js';
 import { SAME_ORIGIN, type ApiAuth } from '#lib/core/api.js';
 import { BaseService } from '#lib/core/service.js';
@@ -9,9 +10,12 @@ export class UsersService extends BaseService {
 		super(SAME_ORIGIN, auth);
 	}
 
-	list(search?: string) {
+	list(search?: string, signal?: AbortSignal) {
 		return this.expectBody(
-			this.api.get<User[]>('/api/users', { query: { q: search || undefined } })
+			this.api.get<PaginatedResponse<User>>('/api/users', {
+				query: { q: search || undefined },
+				signal
+			})
 		);
 	}
 

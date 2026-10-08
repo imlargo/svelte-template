@@ -19,7 +19,8 @@ function userWith(role: string): User {
 /** Returns the HTTP status the guard threw, or null if it let the call pass. */
 function statusFor(user: User | null, permission: Permission): number | null {
 	try {
-		createPermissionGuard(() => user)(permission);
+		const actor = createPermissionGuard(() => user)(permission);
+		expect(actor).toBe(user);
 		return null;
 	} catch (err) {
 		if (isHttpError(err)) return err.status;

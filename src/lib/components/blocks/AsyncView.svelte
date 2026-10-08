@@ -68,7 +68,7 @@
 	{:catch err}
 		{@render failed(normalizeError(err))}
 	{/await}
-{:else if source.data !== null}
+{:else if source.data !== null && !source.isStale}
 	<!-- Data stays on screen through a refetch; report a later failure with a toast. -->
 	{@render settled(source.data)}
 {:else if source.error}

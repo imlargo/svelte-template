@@ -13,7 +13,8 @@ started.
 ## Architecture documentation
 
 [`docs/architecture.md`](./docs/architecture.md) explains the layers, the request lifecycle,
-permissions, and where the backend contract is changed. `src/` remains the source of truth for
+permissions, and where the backend contract is changed. The import rules between layers are
+listed there; keep them by hand, nothing enforces them. `src/` remains the source of truth for
 the details: when facing a structural decision or unsure about a pattern, read the code of the
 equivalent area before inventing a new one.
 
@@ -41,12 +42,48 @@ equivalent area before inventing a new one.
   composition), never by modifying the source.
 - `src/lib/components/coral/` is a vendored kit on top of shadcn (combobox, data table, date
   picker…): same rule as `ui/`. It is updated by copying in a new version, never by editing it here.
+- **No scale sizes.** Do not use `size="sm"`, `"lg"` or `"xs"`: keep the base size. Two buttons
+  that do the same thing on different screens must look the same, and once a `size` enters one
+  place it has to be remembered everywhere forever. If something looks too big or too small, the
+  problem is the layout around it. The exception is `size="icon"` and its variants: that is a
+  shape, not a scale, for a button with no text.
+- **Semantic colors go through `#lib/utils/tone.ts`** (`toneBadgeClass`, `toneTextClass`): it is
+  the one place `action`, `information`, `success`, `warning` and `destructive` become classes.
+
+## Before calling a view done
+
+A view is not done when the happy path works with sample data. Walk the full journey of every
+role that uses it, not only the one with the most permissions:
+
+- **Every empty state is honest.** "Nothing exists yet" and "nothing matches the active filter"
+  are different things and are said differently; when it is the filter, say which one and offer
+  to clear it.
+- **Every asynchronous action shows that it is happening.** A spinner or a skeleton, never a
+  disabled button alone: disabled says "not now", not "in progress". When a filter changes,
+  replace the old rows with a loading state (`Query.isStale`, which `AsyncView` honours); leaving
+  them on screen, clickable, is worse than showing nothing. A refresh after a write keeps the rows.
+- **The UI hides what the role cannot do**, asking the client side with the same source the server
+  uses (`hasPermission` + `ROLE_PERMISSIONS`). Never show a control the backend will refuse: the
+  server blocks it anyway, but offering it is a UX bug even when it is not a security one.
+- **Walk the cases where the user acts on themselves or causes a non-obvious effect.** Can they
+  remove their own access, or the permission that would let them undo it? Does an action change
+  something the field name does not say? Warn before it happens, never silently.
+- **A record just created or edited must stay visible after the action**, or the action looks like
+  it failed. If the active filters would hide it, adjust them or say so.
+- **Everything built on the server needs a real consumer in the UI.** An endpoint or a service
+  method nothing calls does not fulfil the requirement that motivated it; it only looks like it does.
 
 ## Architecture / Code
 
 - **Services** are the only place that calls the API. No direct `fetch`/HTTP in components or
   hooks. A service extends `BaseService` (`#lib/core/service.ts`) and lives in
   `features/<slice>/services/` — see `features/users/services/users.ts` as the reference.
+- **In fullstack mode, everything that is backend lives in `routes/api/`.** A `load` authorizes
+  the page (`locals.requirePermission`) and streams what the page cannot render without; it does
+  not import `#lib/server/` or reach around the endpoint. Data arrives through a service, reads
+  included, so what sits behind the endpoint, this process today or a separate backend tomorrow, is
+  never the page's business. Endpoints answer failures with `errorResponse` and read bodies with
+  `readBody` (`#lib/server/api.ts`).
 - **`core/` depends on nothing outside `core/`.** It is the base: it receives what the project
   decides through parameters or setters (`baseUrl` on a service, `setErrorBodyParser`,
   `setLogger`), never by importing `config/` or `features/`. The `init` hooks are where that
@@ -85,10 +122,14 @@ equivalent area before inventing a new one.
   merging it.
 - If no suitable type exists, create it where it belongs per the previous point — never inline or
   duplicated in the file that consumes it.
+- **Every closed value set the UI shows gets a complete label record**, `Record<Enum, string>`
+  typed in full (`ROLE_LABELS` is the reference), so a value added without a label fails to compile
+  instead of rendering a raw `ADMIN` to someone. Labels live with the values they name, never
+  inline in a component.
 
 ## State
 
-- Shared state with runes lives in classes under `#lib/hooks/` (`Query`, `Disclosure`, `Filters`,
+- Shared state with runes lives in classes under `#lib/hooks/` (`Query`, `Disclosure`,
   `Pagination`, `IsMobile`, in `#lib/hooks/*.svelte.ts`). `#lib/core/` is plain TypeScript with no
   Svelte in it. Before creating a new one, consider
   whether the state is really shared or local to a component — in that case, a `$state` inside
@@ -107,7 +148,10 @@ equivalent area before inventing a new one.
   without; return the rest as a promise (streaming) and render it with `AsyncView` + a skeleton.
   Reference: `routes/(app)/+page.server.ts`.
 - Data the user searches, filters or edits in place is loaded by the page itself with `Query` +
-  `AsyncView` (in `onMount`, not with `if (browser)`). Reference: `routes/(app)/admin/`.
+  `AsyncView` (in `onMount`, not with `if (browser)`). `run` takes the fetcher and the params it
+  answers: the fetcher receives an `AbortSignal` to pass to the service, and the params let the
+  query tell a new search (stale, skeleton) from a refresh (rows stay). A list endpoint answers a
+  `PaginatedResponse<T>` (`#lib/types/pagination.ts`). Reference: `routes/(app)/admin/`.
 - Remote functions are not used (they are still experimental in SvelteKit 3).
 - On the client, a service is created with `getAuth().api`, never with a bare token: that way it
   inherits session renewal and 401 handling. On the server, with
@@ -128,7 +172,8 @@ equivalent area before inventing a new one.
 ## Errors
 
 - Every error is converted with `normalizeError`, and its `message` is always safe to show. Never
-  display `err.message` from an error that has not been normalized.
+  display `err.message` from an error that has not been normalized. A failure the user triggered
+  is reported with `reportError` (`#lib/utils/notify.ts`): toast plus log, in one call.
 - If an error is expected, throw it as an `AppError` with the matching code. A generic `Error` is
   treated as a bug: the default message is shown and the detail goes only to the log.
 - `handleError` receives every error but only acts on unexpected ones (`kind === 'unknown'`): an
@@ -141,7 +186,8 @@ Deny by default: unknown role → no permissions, undeclared route → denied. `
 `svelte-kit sync`: a new page or endpoint without an entry does not compile, and if one reached
 the hook it would be denied with a 403. A page declares its permission (or `'public'`); an
 endpoint declares `'session'` and asks for its own permission per method with
-`locals.requirePermission` — there is no "unrestricted" value you could use by accident.
+`locals.requirePermission`, which answers the actor so a handler can record who acted — there is
+no "unrestricted" value you could use by accident.
 
 ## Code conventions
 
@@ -162,7 +208,18 @@ endpoint declares `'session'` and asks for its own permission per method with
   pieces a project may not use yet, on purpose: they are the template's starting point, not dead
   code. Outside them, no "just in case" abstractions — the third repetition justifies an
   abstraction, the first and second do not.
-- Do not leave dead code, debug comments or `console.log` in the final code.
+- **No mock, preview or demo branches in production code paths.** To run without a backend there
+  is `PUBLIC_AUTH_ENABLED=false` and the local stand-in user; a hook or a service never checks a
+  "mock" cookie or a query parameter to change what it does.
+- **No native `confirm()`, `alert()` or `prompt()`:** `ConfirmDialog` from `coral/` exists.
+- **No client-side cache until the third place needs one.** When it comes, it is one module with
+  its own invalidation, never a `sessionStorage` key invented inside a service.
+- `#lib/utils/` is pure functions, with one exception: `notify.ts`, side effects without state.
+- Do not leave dead code, debug comments or `console.log` in the final code; the logger is the
+  only exit for logs. Never `import.meta.env` either: `$app/env` is the only way to read the
+  environment.
+- Every native `<button>` carries a `type`. A file past about 400 lines is doing more than one
+  thing: extract a component or a hook.
 - Changes must be minimal and scoped to the task: do not refactor unrelated code unless asked.
 
 ## Before calling something done

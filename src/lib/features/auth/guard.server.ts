@@ -3,7 +3,8 @@ import { ROLE_PERMISSIONS, type Permission } from '#lib/config/permissions.js';
 import { hasPermission } from '#lib/core/permissions.js';
 import type { User } from '#lib/types/user.js';
 
-export type RequirePermission = (permission: Permission) => void;
+/** Returns the user it let through, so a handler can record who acted. */
+export type RequirePermission = (permission: Permission) => User;
 
 /**
  * The check behind `locals.requirePermission`. Throws instead of returning a
@@ -20,5 +21,6 @@ export function createPermissionGuard(getUser: () => User | null | undefined): R
 		if (!hasPermission(ROLE_PERMISSIONS, user.role, permission)) {
 			error(403, 'You do not have access to this resource.');
 		}
+		return user;
 	};
 }

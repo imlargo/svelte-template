@@ -24,8 +24,8 @@ under `features/`; `core/` stays the same.
 
 ## Request lifecycle
 
-1. **`hooks.server.ts`** picks the hook based on `PUBLIC_AUTH_ENABLED`. With auth off it installs
-   an empty `locals.requirePermission` and resolves. With auth on it runs `handleAuth`
+1. **`hooks.server.ts`** picks the hook based on `PUBLIC_AUTH_ENABLED`. With auth off it signs
+   the request in as a local stand-in admin, so handlers and the sidebar never branch on the mode. With auth on it runs `handleAuth`
    (`features/auth/hook.server.ts`).
 2. **`handleAuth`** looks up `event.route.id` in `ROUTE_ACCESS`
    (`config/permissions.ts`). A `'public'` route passes. Anything else needs a session: it reads
@@ -33,7 +33,7 @@ under `features/`; `core/` stays the same.
    and the token expired, renews it once. It sets `locals.user` and `locals.accessToken`.
 3. For a **page**, the hook requires the table's permission before any `load` runs. For an
    **endpoint**, it only requires a session: each handler calls `locals.requirePermission` with
-   what it needs per method.
+   what it needs per method, and gets the actor back.
 4. The root **`+layout.server.ts`** serializes `user` and `accessToken` for the client. Never the
    refresh token.
 5. On the client, **`+layout.svelte`** creates a `ClientSession` in context with a getter over
@@ -96,11 +96,12 @@ server does the same with `{ token: locals.accessToken, fetch }`. The access tok
 client in the page's HTML; the refresh token never does.
 
 The template also works **fullstack**: the app exposes its own endpoints under `routes/api/` and
-services point at them with an empty base URL, as the demo `UsersService` does. In that mode the
+services point at them with `SAME_ORIGIN`, as the demo `UsersService` does. In that mode the
 hook still authenticates against the auth backend (`PUBLIC_AUTH_BASE_URL`), endpoints receive
-`locals.user` and `locals.accessToken`, and each handler guards itself with
-`locals.requirePermission`. Both modes coexist: one slice can go direct and another through the
-app.
+`locals.user` and `locals.accessToken`, each handler guards itself with
+`locals.requirePermission`, validates with `readBody` and fails with `errorResponse`
+(`#lib/server/api.ts`), and a `load` only authorizes: data goes through services, reads included.
+Both modes coexist: one slice can go direct and another through the app.
 
 ## Errors
 
@@ -120,7 +121,12 @@ app.
 - What the page cannot render without is `await`ed in `load`. Slow data is returned as a promise
   (streaming) and rendered with `AsyncView` + a skeleton.
 - What the user searches, filters or edits in place is loaded by the page with `Query` +
-  `AsyncView` in `onMount`. `Query` keeps the latest run and holds on to its data when a run fails.
+  `AsyncView` in `onMount`. `Query.run` takes the fetcher and the params it answers: it keeps the
+  latest run, aborts the one it supersedes through the `AbortSignal` it hands the fetcher, holds on
+  to its data when a run fails, and remembers which params produced the rows on screen. Different
+  params make it `isStale`, and `AsyncView` shows the loading state; the same params are a refresh
+  and the rows stay. A list endpoint answers a `PaginatedResponse<T>`: a page of items, the total,
+  the page and the page size.
 - No remote functions: they are still experimental in SvelteKit 3.
 
 ## State
@@ -129,6 +135,44 @@ Per-request state goes in `locals`, in the `load`'s `data` or in Svelte context 
 is the example). A module-level `$state` holding user data leaks data between users under SSR: it
 is a security incident, not an oversight. The classes in `#lib/hooks/` are generic state and are
 instantiated where they are used.
+
+## Import rules
+
+Enforced by `eslint.config.js` (`no-restricted-imports` per folder, with regexes because a glob
+starting with `#` reads as a gitignore comment). The same file bans `console` outside the logger,
+`process.env`, `import.meta.env`, `$env/*` and the native `confirm()`, requires a `type` on every
+button, and warns past 400 lines.
+
+```
+routes/              → features/, components/, hooks/, utils/, config/, types/, core/
+                       a load never imports lib/server/ around an endpoint
+features/<slice>/    → core/, config/, hooks/, utils/, types/, components/ui|coral|blocks
+                       never another slice, except through types/
+components/blocks/   → core/, config/, utils/, hooks/, components/ui|coral
+components/layout/   → the same, plus config/navigation and config/permissions
+config/              → core/ (types and pure helpers), types/
+hooks/, utils/       → core/, types/. Never features/ or components/
+core/                → nothing outside core/
+types/               → nothing
+lib/server/          → core/, config/, types/. Imported only from routes/ and hooks.server.ts
+```
+
+## Naming
+
+| Thing                  | Convention                         | Example                            |
+| ---------------------- | ---------------------------------- | ---------------------------------- |
+| Component file         | PascalCase                         | `UserFormDialog.svelte`            |
+| Runes class file       | kebab-case + `.svelte.ts`          | `list-query.svelte.ts`             |
+| Server-only module     | `.server.ts`                       | `session.server.ts`                |
+| Other modules          | kebab-case                         | `redirect.ts`                      |
+| Class                  | PascalCase, named by its role      | `UsersService`, `Query`            |
+| Config constant        | SCREAMING_SNAKE_CASE               | `ROUTE_ACCESS`, `NAVIGATION_ITEMS` |
+| Wire type              | `Wire` suffix, next to its service | `TokenPairWire`                    |
+| Enum of a closed set   | PascalCase, UPPER members          | `UserRole.ADMIN`                   |
+| Label record           | `<ENUM>_LABELS`                    | `ROLE_LABELS`                      |
+| Handler prop           | `on<event>`, lowercase             | `onsubmit`, `onsearch`             |
+| Factory                | `create<Thing>`                    | `createPermissionGuard`            |
+| Setter for core wiring | `set<Thing>`                       | `setLogger`, `setErrorBodyParser`  |
 
 ## Environment variables
 

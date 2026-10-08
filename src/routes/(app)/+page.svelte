@@ -9,7 +9,7 @@
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { AppError } from '#lib/core/errors.js';
 	import { Query } from '#lib/hooks/query.svelte.js';
-	import { toast } from 'svelte-sonner';
+	import { reportError } from '#lib/utils/notify.js';
 	import LayoutDashboardIcon from '@lucide/svelte/icons/layout-dashboard';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import ActivityIcon from '@lucide/svelte/icons/activity';
@@ -32,7 +32,7 @@
 		});
 
 		// A later failure keeps the list on screen, so it is reported here.
-		if (items.error && items.data !== null) toast.error(items.error.message);
+		if (items.error && !items.isStale) reportError(items.error);
 	}
 
 	// Starts empty, so the empty state, the data and a failure are each a click away.
@@ -44,8 +44,8 @@
 <div class="flex flex-col gap-6">
 	<PageHeader title="Dashboard" description="Welcome to your app. Start building here.">
 		{#snippet actions()}
-			<Button variant="outline" size="sm" onclick={() => load(true)}>Simulate failure</Button>
-			<Button size="sm" onclick={() => load()}>Load demo data</Button>
+			<Button variant="outline" onclick={() => load(true)}>Simulate failure</Button>
+			<Button onclick={() => load()}>Load demo data</Button>
 		{/snippet}
 	</PageHeader>
 
@@ -97,7 +97,7 @@
 						<InboxIcon class="size-5" />
 					{/snippet}
 					{#snippet action()}
-						<Button variant="outline" size="sm" onclick={() => load()}>Load demo data</Button>
+						<Button variant="outline" onclick={() => load()}>Load demo data</Button>
 					{/snippet}
 				</EmptyState>
 			{/snippet}

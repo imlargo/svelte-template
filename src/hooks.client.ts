@@ -7,8 +7,11 @@ export const init: ClientInit = () => {
 	setErrorBodyParser(parseErrorBody);
 };
 
+const NOT_FOUND_MESSAGE = 'This page does not exist, or it moved.';
+
 // Same contract as the server's handleError, so a browser report matches its console line.
 export const handleError: HandleClientError = ({ kind, error }) => {
+	if (kind === 'framework' && error.status === 404) return { message: NOT_FOUND_MESSAGE };
 	if (kind !== 'unknown') return;
 
 	const errorId = createErrorId();

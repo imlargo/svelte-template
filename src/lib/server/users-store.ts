@@ -8,6 +8,7 @@
  */
 import { UserRole } from '#lib/types/user.js';
 import type { User } from '#lib/types/user.js';
+import type { PaginatedResponse } from '#lib/types/pagination.js';
 
 const SEED: User[] = [
 	seed('1', 'Ada Lovelace', 'ada@example.com', UserRole.ADMIN),
@@ -27,15 +28,23 @@ function seed(id: string, name: string, email: string, role: UserRole): User {
 let users: User[] = [...SEED];
 let nextId = users.length + 1;
 
-export function listUsers(search?: string): User[] {
+/** Without `pageSize`, everything in one page. */
+export function listUsers(search?: string, page = 1, pageSize?: number): PaginatedResponse<User> {
 	const term = search?.trim().toLowerCase();
 	const found = term
 		? users.filter(
 				(u) => u.email.toLowerCase().includes(term) || (u.name ?? '').toLowerCase().includes(term)
 			)
 		: users;
+	const sorted = [...found].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+	const size = pageSize ?? sorted.length;
 
-	return [...found].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+	return {
+		items: sorted.slice((page - 1) * size, page * size),
+		total: sorted.length,
+		page,
+		pageSize: size
+	};
 }
 
 export function findUser(id: string): User | undefined {

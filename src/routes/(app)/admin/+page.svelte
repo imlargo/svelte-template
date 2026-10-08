@@ -12,14 +12,16 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { Query } from '#lib/hooks/query.svelte.js';
-	import { normalizeError } from '#lib/core/errors.js';
+	import { reportError } from '#lib/utils/notify.js';
 	import { getAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { UsersService } from '#lib/features/users/services/users.js';
 	import UserFormDialog from '#lib/features/users/components/UserFormDialog.svelte';
 	import { ROLE_LABELS } from '#lib/config/permissions.js';
 	import { UserRole, type User } from '#lib/types/user.js';
+	import type { PaginatedResponse } from '#lib/types/pagination.js';
 	import type { UserFormData } from '#lib/features/users/schemas.js';
 	import { formatDate } from '#lib/utils/date.js';
+	import { toneBadgeClass } from '#lib/utils/tone.js';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
@@ -27,7 +29,7 @@
 
 	// Loaded by the page, not by `load`: the list is searched and edited in place.
 	const users = new UsersService(getAuth().api);
-	const list = new Query<User[]>();
+	const list = new Query<PaginatedResponse<User>>();
 
 	let search = $state('');
 
@@ -36,9 +38,10 @@
 	let deleting = $state<User | null>(null);
 
 	async function load() {
-		await list.run(() => users.list(search));
-		// A later failure keeps the table on screen, so it is reported here.
-		if (list.error && list.data !== null) toast.error(list.error.message);
+		// The params make a new search stale and a refresh after a write not.
+		await list.run((signal) => users.list(search, signal), { search });
+		// A refresh that fails keeps the table on screen, so it is reported here.
+		if (list.error && !list.isStale) reportError(list.error);
 	}
 
 	function onSearch(term: string) {
@@ -65,7 +68,7 @@
 			if (target) await users.update(target.id, data);
 			else await users.create(data);
 		} catch (err) {
-			toast.error(normalizeError(err).message);
+			reportError(err);
 			return false;
 		}
 
@@ -89,7 +92,7 @@
 <div class="flex flex-col gap-6">
 	<PageHeader title="Users" description="Create, edit and remove the people in this workspace.">
 		{#snippet actions()}
-			<Button size="sm" onclick={openCreate}>
+			<Button onclick={openCreate}>
 				<PlusIcon class="size-4" />
 				New user
 			</Button>
@@ -120,68 +123,75 @@
 			</div>
 		{/snippet}
 
-		{#snippet children(rows)}
-			<div class="rounded-lg border">
-				<Table.Root>
-					<Table.Header>
-						<Table.Row>
-							<Table.Head>Name</Table.Head>
-							<Table.Head>Email</Table.Head>
-							<Table.Head>Role</Table.Head>
-							<Table.Head>Created</Table.Head>
-							<Table.Head class="w-24 text-right">Actions</Table.Head>
-						</Table.Row>
-					</Table.Header>
-					<Table.Body>
-						{#each rows as user (user.id)}
+		{#snippet children(page)}
+			{#if page.items.length === 0}
+				<EmptyState
+					title={search ? 'No matches' : 'No users yet'}
+					description={search
+						? `Nothing matched “${search}”.`
+						: 'Create the first user to get started.'}
+				>
+					{#snippet icon()}
+						<UsersIcon class="size-5" />
+					{/snippet}
+					{#snippet action()}
+						{#if !search}
+							<Button variant="outline" onclick={openCreate}>New user</Button>
+						{/if}
+					{/snippet}
+				</EmptyState>
+			{:else}
+				<div class="rounded-lg border">
+					<Table.Root>
+						<Table.Header>
 							<Table.Row>
-								<Table.Cell class="font-medium">{user.name ?? '—'}</Table.Cell>
-								<Table.Cell class="text-muted-foreground">{user.email}</Table.Cell>
-								<Table.Cell>
-									<Badge variant={user.role === UserRole.ADMIN ? 'default' : 'secondary'}>
-										{ROLE_LABELS[user.role]}
-									</Badge>
-								</Table.Cell>
-								<Table.Cell class="text-muted-foreground">{formatDate(user.created_at)}</Table.Cell>
-								<Table.Cell class="text-right">
-									<Button
-										variant="ghost"
-										size="icon"
-										aria-label="Edit {user.email}"
-										onclick={() => openEdit(user)}
-									>
-										<PencilIcon class="size-4" />
-									</Button>
-									<Button
-										variant="ghost"
-										size="icon"
-										aria-label="Delete {user.email}"
-										onclick={() => (deleting = user)}
-									>
-										<Trash2Icon class="size-4 text-destructive" />
-									</Button>
-								</Table.Cell>
+								<Table.Head>Name</Table.Head>
+								<Table.Head>Email</Table.Head>
+								<Table.Head>Role</Table.Head>
+								<Table.Head>Created</Table.Head>
+								<Table.Head class="w-24 text-right">Actions</Table.Head>
 							</Table.Row>
-						{/each}
-					</Table.Body>
-				</Table.Root>
-			</div>
-		{/snippet}
-
-		{#snippet empty()}
-			<EmptyState
-				title={search ? 'No matches' : 'No users yet'}
-				description={search
-					? `Nothing matched “${search}”.`
-					: 'Create the first user to get started.'}
-			>
-				{#snippet icon()}
-					<UsersIcon class="size-5" />
-				{/snippet}
-				{#snippet action()}
-					<Button variant="outline" size="sm" onclick={openCreate}>New user</Button>
-				{/snippet}
-			</EmptyState>
+						</Table.Header>
+						<Table.Body>
+							{#each page.items as user (user.id)}
+								<Table.Row>
+									<Table.Cell class="font-medium">{user.name ?? '—'}</Table.Cell>
+									<Table.Cell class="text-muted-foreground">{user.email}</Table.Cell>
+									<Table.Cell>
+										<Badge
+											variant="outline"
+											class={toneBadgeClass(user.role === UserRole.ADMIN ? 'action' : 'default')}
+										>
+											{ROLE_LABELS[user.role]}
+										</Badge>
+									</Table.Cell>
+									<Table.Cell class="text-muted-foreground"
+										>{formatDate(user.created_at)}</Table.Cell
+									>
+									<Table.Cell class="text-right">
+										<Button
+											variant="ghost"
+											size="icon"
+											aria-label="Edit {user.email}"
+											onclick={() => openEdit(user)}
+										>
+											<PencilIcon class="size-4" />
+										</Button>
+										<Button
+											variant="ghost"
+											size="icon"
+											aria-label="Delete {user.email}"
+											onclick={() => (deleting = user)}
+										>
+											<Trash2Icon class="size-4 text-destructive" />
+										</Button>
+									</Table.Cell>
+								</Table.Row>
+							{/each}
+						</Table.Body>
+					</Table.Root>
+				</div>
+			{/if}
 		{/snippet}
 	</AsyncView>
 </div>
@@ -198,5 +208,5 @@
 	confirmLabel="Delete"
 	variant="destructive"
 	onconfirm={confirmDelete}
-	onerror={(err) => toast.error(normalizeError(err).message)}
+	onerror={reportError}
 />
