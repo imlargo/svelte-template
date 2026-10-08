@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
 	import PageHeader from '#lib/components/blocks/PageHeader.svelte';
 	import DocumentTitle from '#lib/components/blocks/DocumentTitle.svelte';
 	import AsyncView from '#lib/components/blocks/AsyncView.svelte';
@@ -13,7 +12,8 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { ListQuery } from '#lib/hooks/list-query.svelte.js';
-	import { normalizeError } from '#lib/core/errors.js';
+	import { toast } from 'svelte-sonner';
+	import { reportError } from '#lib/utils/notify.js';
 	import { getAuth } from '#lib/features/auth/client-session.svelte.js';
 	import { UsersService } from '#lib/features/users/services/users.js';
 	import UserFormDialog from '#lib/features/users/components/UserFormDialog.svelte';
@@ -41,9 +41,9 @@
 	let deleting = $state<User | null>(null);
 
 	async function load() {
-		await list.load({ search }, () => users.list(search));
+		await list.load({ search }, (signal) => users.list(search, signal));
 		// A later failure keeps the table on screen, so it is reported here.
-		if (list.error && list.data !== null) toast.error(list.error.message);
+		if (list.error && list.data !== null) reportError(list.error);
 	}
 
 	function onSearch(term: string) {
@@ -70,7 +70,7 @@
 			if (target) await users.update(target.id, data);
 			else await users.create(data);
 		} catch (err) {
-			toast.error(normalizeError(err).message);
+			reportError(err);
 			return false;
 		}
 
@@ -94,7 +94,7 @@
 <div class="flex flex-col gap-6">
 	<PageHeader title="Users" description="Create, edit and remove the people in this workspace.">
 		{#snippet actions()}
-			<Button size="sm" onclick={openCreate}>
+			<Button onclick={openCreate}>
 				<PlusIcon class="size-4" />
 				New user
 			</Button>
@@ -127,7 +127,7 @@
 						{/snippet}
 						{#snippet action()}
 							{#if page.total === 0}
-								<Button variant="outline" size="sm" onclick={openCreate}>New user</Button>
+								<Button variant="outline" onclick={openCreate}>New user</Button>
 							{/if}
 						{/snippet}
 					</EmptyState>
@@ -206,5 +206,5 @@
 	confirmLabel="Delete"
 	variant="destructive"
 	onconfirm={confirmDelete}
-	onerror={(err) => toast.error(normalizeError(err).message)}
+	onerror={reportError}
 />

@@ -30,7 +30,7 @@
 					<CircleAlertIcon class="text-destructive" />
 				{/snippet}
 				{#snippet action()}
-					<Button variant="outline" size="sm" onclick={reset}>Try again</Button>
+					<Button variant="outline" onclick={reset}>Try again</Button>
 				{/snippet}
 			</EmptyState>
 		{/if}
