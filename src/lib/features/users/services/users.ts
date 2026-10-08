@@ -10,9 +10,9 @@ export class UsersService extends BaseService {
 		super(SAME_ORIGIN, auth);
 	}
 
-	list(search?: string) {
+	list(search?: string, signal?: AbortSignal) {
 		return this.expectBody(
-			this.api.get<ListResponse<User>>('/api/users', { query: { q: search || undefined } })
+			this.api.get<ListResponse<User>>('/api/users', { query: { q: search || undefined }, signal })
 		);
 	}
 

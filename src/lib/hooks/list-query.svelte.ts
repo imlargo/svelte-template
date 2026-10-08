@@ -39,12 +39,12 @@ export class ListQuery<T> implements AsyncState<T> {
 	 * service. A superseded response claims nothing: `Query` drops its data, and
 	 * letting it name what is on screen would leave `isStale` stuck.
 	 */
-	async load(params: object, fetcher: () => Promise<T>): Promise<void> {
+	async load(params: object, fetcher: (signal: AbortSignal) => Promise<T>): Promise<void> {
 		const key = JSON.stringify(params);
 		this.#requestedKey = key;
 
-		await this.#query.run(async () => {
-			const result = await fetcher();
+		await this.#query.run(async (signal) => {
+			const result = await fetcher(signal);
 			if (key === this.#requestedKey) this.#renderedKey = key;
 			return result;
 		});

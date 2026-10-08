@@ -3,6 +3,20 @@ import { Query } from './query.svelte';
 import { AppError } from '#lib/core/errors.js';
 
 describe('Query', () => {
+	it('aborts the run it supersedes', async () => {
+		const query = new Query<string>();
+		let first: AbortSignal | undefined;
+
+		query.run((signal) => {
+			first = signal;
+			return new Promise(() => {});
+		});
+		await query.run(async () => 'second');
+
+		expect(first?.aborted).toBe(true);
+		expect(query.data).toBe('second');
+	});
+
 	it('starts empty and idle', () => {
 		const query = new Query<string[]>();
 
