@@ -4,9 +4,17 @@
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
 	import type { User } from '#lib/types/user.js';
+	import {
+		NAVIGATION_GROUP_LABELS,
+		NAVIGATION_ITEMS,
+		NavigationGroup,
+		type NavigationItem,
+		type NavigationSection
+	} from '#lib/config/navigation.js';
 	import { config } from '#lib/config/app.js';
 	import { HOME_ROUTE } from '#lib/config/routes.js';
-	import { displayUser, navigationSections } from '#lib/components/layout/navigation.js';
+	import { ROLE_LABELS, ROLE_PERMISSIONS, ROUTE_ACCESS } from '#lib/config/permissions.js';
+	import { hasPermission } from '#lib/core/permissions.js';
 	import NavMain from './NavMain.svelte';
 	import NavUser from './NavUser.svelte';
 
@@ -19,8 +27,28 @@
 
 	const sidebar = Sidebar.useSidebar();
 
-	const sections = $derived(navigationSections(user));
-	const shownUser = $derived(displayUser(user));
+	// Presentation only: the hook enforces the same table.
+	function canOpen(item: NavigationItem): boolean {
+		if (!config.auth.enabled) return true;
+		const access = ROUTE_ACCESS[item.route];
+		return access === 'public' || hasPermission(ROLE_PERMISSIONS, user?.role, access);
+	}
+
+	const sections: NavigationSection[] = $derived(
+		Object.values(NavigationGroup)
+			.map((group) => ({
+				label: NAVIGATION_GROUP_LABELS[group],
+				items: NAVIGATION_ITEMS.filter((item) => item.group === group && canOpen(item))
+			}))
+			.filter((section) => section.items.length > 0)
+	);
+
+	const displayUser = $derived({
+		name: user?.name ?? user?.email ?? 'User',
+		email: user?.email ?? '',
+		roleLabel: user ? (ROLE_LABELS[user.role] ?? user.role) : '',
+		avatar: user?.avatar ?? null
+	});
 
 	afterNavigate(({ shallow }) => {
 		if (shallow) return;
@@ -59,7 +87,7 @@
 	</Sidebar.Content>
 
 	<Sidebar.Footer>
-		<NavUser user={shownUser} />
+		<NavUser user={displayUser} />
 	</Sidebar.Footer>
 
 	<Sidebar.Rail />
