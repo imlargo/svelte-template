@@ -120,12 +120,13 @@ Both modes coexist: one slice can go direct and another through the app.
 
 - What the page cannot render without is `await`ed in `load`. Slow data is returned as a promise
   (streaming) and rendered with `AsyncView` + a skeleton.
-- What the user searches, filters or edits in place is loaded by the page with `Query` or
-  `ListQuery` + `AsyncView` in `onMount`. `Query` keeps the latest run, aborts the one it supersedes through the
-  `AbortSignal` it hands the fetcher, and holds on to its data when a run fails. `ListQuery` also remembers which filters produced the rows on screen: a changed
-  filter is `isStale` and shows a `TableSkeleton`, a refresh after a write keeps the rows. A list
-  answers as `ListResponse<T>`, items plus the unfiltered total, so an empty page can say whether
-  nothing exists or nothing matches.
+- What the user searches, filters or edits in place is loaded by the page with `Query` +
+  `AsyncView` in `onMount`. `Query.run` takes the fetcher and the params it answers: it keeps the
+  latest run, aborts the one it supersedes through the `AbortSignal` it hands the fetcher, holds on
+  to its data when a run fails, and remembers which params produced the rows on screen. Different
+  params make it `isStale`, and `AsyncView` shows the loading state; the same params are a refresh
+  and the rows stay. A list endpoint answers a `PaginatedResponse<T>`: a page of items, the total,
+  the page and the page size.
 - No remote functions: they are still experimental in SvelteKit 3.
 
 ## State
@@ -163,8 +164,8 @@ lib/server/          → core/, config/, types/. Imported only from routes/ and 
 | Component file         | PascalCase                         | `UserFormDialog.svelte`            |
 | Runes class file       | kebab-case + `.svelte.ts`          | `list-query.svelte.ts`             |
 | Server-only module     | `.server.ts`                       | `session.server.ts`                |
-| Other modules          | kebab-case                         | `sign-in-errors.ts`                |
-| Class                  | PascalCase, named by its role      | `UsersService`, `ListQuery`        |
+| Other modules          | kebab-case                         | `redirect.ts`                      |
+| Class                  | PascalCase, named by its role      | `UsersService`, `Query`            |
 | Config constant        | SCREAMING_SNAKE_CASE               | `ROUTE_ACCESS`, `NAVIGATION_ITEMS` |
 | Wire type              | `Wire` suffix, next to its service | `TokenPairWire`                    |
 | Enum of a closed set   | PascalCase, UPPER members          | `UserRole.ADMIN`                   |

@@ -14,7 +14,7 @@ started.
 
 [`docs/architecture.md`](./docs/architecture.md) explains the layers, the request lifecycle,
 permissions, and where the backend contract is changed. The import rules between layers are
-enforced by `eslint.config.js`: a violation is a lint error, not a review comment. `src/` remains the source of truth for
+listed there; keep them by hand, nothing enforces them. `src/` remains the source of truth for
 the details: when facing a structural decision or unsure about a pattern, read the code of the
 equivalent area before inventing a new one.
 
@@ -56,12 +56,12 @@ A view is not done when the happy path works with sample data. Walk the full jou
 role that uses it, not only the one with the most permissions:
 
 - **Every empty state is honest.** "Nothing exists yet" and "nothing matches the active filter"
-  are different things and are said differently. `ListResponse.total` is what tells them apart;
-  when it is the filter, say which one and offer to clear it.
+  are different things and are said differently; when it is the filter, say which one and offer
+  to clear it.
 - **Every asynchronous action shows that it is happening.** A spinner or a skeleton, never a
   disabled button alone: disabled says "not now", not "in progress". When a filter changes,
-  replace the old rows with a loading state (`ListQuery.isStale`); leaving them on screen,
-  clickable, is worse than showing nothing. A refresh after a write keeps the rows.
+  replace the old rows with a loading state (`Query.isStale`, which `AsyncView` honours); leaving
+  them on screen, clickable, is worse than showing nothing. A refresh after a write keeps the rows.
 - **The UI hides what the role cannot do**, asking the client side with the same source the server
   uses (`hasPermission` + `ROLE_PERMISSIONS`). Never show a control the backend will refuse: the
   server blocks it anyway, but offering it is a UX bug even when it is not a security one.
@@ -129,8 +129,8 @@ role that uses it, not only the one with the most permissions:
 
 ## State
 
-- Shared state with runes lives in classes under `#lib/hooks/` (`Query`, `ListQuery`,
-  `Disclosure`, `Pagination`, `IsMobile`, in `#lib/hooks/*.svelte.ts`). `#lib/core/` is plain TypeScript with no
+- Shared state with runes lives in classes under `#lib/hooks/` (`Query`, `Disclosure`,
+  `Pagination`, `IsMobile`, in `#lib/hooks/*.svelte.ts`). `#lib/core/` is plain TypeScript with no
   Svelte in it. Before creating a new one, consider
   whether the state is really shared or local to a component — in that case, a `$state` inside
   the component itself is enough.
@@ -147,10 +147,11 @@ role that uses it, not only the one with the most permissions:
 - **A navigation never waits for slow data.** In `load`, `await` only what the page cannot render
   without; return the rest as a promise (streaming) and render it with `AsyncView` + a skeleton.
   Reference: `routes/(app)/+page.server.ts`.
-- Data the user searches, filters or edits in place is loaded by the page itself with `Query` or
-  `ListQuery` + `AsyncView` (in `onMount`, not with `if (browser)`). The fetcher receives an
-  `AbortSignal`; pass it to the service, so a superseded request is cancelled. A filtered list answers as
-  `ListResponse<T>` and renders `TableSkeleton` while `isStale`. Reference: `routes/(app)/admin/`.
+- Data the user searches, filters or edits in place is loaded by the page itself with `Query` +
+  `AsyncView` (in `onMount`, not with `if (browser)`). `run` takes the fetcher and the params it
+  answers: the fetcher receives an `AbortSignal` to pass to the service, and the params let the
+  query tell a new search (stale, skeleton) from a refresh (rows stay). A list endpoint answers a
+  `PaginatedResponse<T>` (`#lib/types/pagination.ts`). Reference: `routes/(app)/admin/`.
 - Remote functions are not used (they are still experimental in SvelteKit 3).
 - On the client, a service is created with `getAuth().api`, never with a bare token: that way it
   inherits session renewal and 401 handling. On the server, with
@@ -215,7 +216,10 @@ no "unrestricted" value you could use by accident.
   its own invalidation, never a `sessionStorage` key invented inside a service.
 - `#lib/utils/` is pure functions, with one exception: `notify.ts`, side effects without state.
 - Do not leave dead code, debug comments or `console.log` in the final code; the logger is the
-  only exit for logs and ESLint enforces it.
+  only exit for logs. Never `import.meta.env` either: `$app/env` is the only way to read the
+  environment.
+- Every native `<button>` carries a `type`. A file past about 400 lines is doing more than one
+  thing: extract a component or a hook.
 - Changes must be minimal and scoped to the task: do not refactor unrelated code unless asked.
 
 ## Before calling something done

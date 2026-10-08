@@ -75,11 +75,11 @@ src/
     components/
       ui/                shadcn — do not edit
       coral/             Vendored kit on top of shadcn — do not edit
-      blocks/            Our own pieces: AsyncView, Boundary, TableSkeleton, LoadingButton, TruncatedText…
-      layout/            Sidebar, header, and the bottom bar for phones
-    hooks/               Reactive state classes with runes (Query, ListQuery, Disclosure, Pagination…)
-    utils/               Pure functions (forms, date, paths, string, env, tone)
-    types/               Types shared across slices (User, ListResponse…)
+      blocks/            Our own pieces: AsyncView, Boundary, EmptyState, ErrorState, PageHeader…
+      layout/            Sidebar and header
+    hooks/               Reactive state classes with runes (Query, Disclosure, Pagination…)
+    utils/               Pure functions (forms, date, paths, string, env, tone, notify)
+    types/               Types shared across slices (User, PaginatedResponse…)
     server/              api.ts: how endpoints answer. users-store.ts is demo only
   routes/
     (app)/               Pages with the sidebar, protected
