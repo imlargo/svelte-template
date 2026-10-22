@@ -10,6 +10,12 @@ sidebar layout, forms, components. It is not a framework and should not become o
 to clone it and build on it without friction or surprises. See [`README.md`](./README.md) to get
 started.
 
+## Skills
+
+If imlargo's skills are installed ([imlargo/skills](https://github.com/imlargo/skills)), follow
+`imlargo`, `imlargo-anti-slop`, `imlargo-workflow`, `imlargo-frontend`, `imlargo-svelte` and
+`imlargo-design`. This file is self-contained without them, and wins where it is more specific.
+
 ## Architecture documentation
 
 [`docs/architecture.md`](./docs/architecture.md) explains the layers, the request lifecycle,
