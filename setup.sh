@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Regenera el template sobre una instalación nueva:
 #   1. mueve todo lo actual a legacy/
-#   2. crea app/ desde cero con lo instalable en su última versión
-#      (sv create + add-ons, skills, shadcn-svelte y todos sus componentes)
+#   2. crea app/ desde cero con lo instalable en su última versión, de forma interactiva
+#      (sv create, skills, shadcn-svelte) y agrega todos los componentes de shadcn
 #   3. trae solo el código propio del template desde legacy/
 #   4. deja en legacy/ lo regenerado (config, app.d.ts, layout.css…) para comparar
 set -euo pipefail
@@ -12,29 +12,6 @@ cd "$(dirname "$0")"
 readonly LEGACY=legacy
 readonly APP=app
 readonly KEEP_AT_ROOT=(.git "$LEGACY" setup.sh reset.sh)
-
-readonly SV_ADDONS=(
-	prettier
-	eslint
-	vitest="usages:unit,component"
-	playwright="demo:no"
-	tailwindcss="plugins:typography,forms"
-	sveltekit-adapter="adapter:cloudflare+cfTarget:workers"
-	ai-tools="ide:claude-code,vscode+delivery:plugin+tools:mcp+mcpSetup:remote"
-)
-
-# nova · neutral · lucide · Geist · radio medium. Se decodifica en shadcn-svelte.com/create.
-readonly SHADCN_PRESET=b2iG
-readonly SHADCN_INIT_FLAGS=(
-	--preset "$SHADCN_PRESET"
-	--base-color neutral
-	--css src/routes/layout.css
-	--lib-alias '#lib'
-	--utils-alias '#lib/utils'
-	--hooks-alias '#lib/hooks'
-	--components-alias '#lib/components'
-	--ui-alias '#lib/components/ui'
-)
 
 readonly DEPS=(zod @imlargo/air)
 readonly DEV_DEPS=(lint-staged husky)
@@ -111,19 +88,19 @@ move_to_legacy() {
 }
 
 create_app() {
-	log "Creando $APP/ con sv create"
-	npx -y sv@latest create "$APP" --template minimal --types ts --install pnpm --add "${SV_ADDONS[@]}"
+	log "Creando $APP/ con sv create (instala con pnpm: los pasos siguientes lo usan)"
+	npx -y sv@latest create "$APP"
 	rm -rf "${SCAFFOLD_EXAMPLES[@]/#/$APP/}"
 }
 
 install_skills() {
 	log "Instalando skills"
-	in_app pnpm dlx skills add huntabyte/shadcn-svelte -y
+	in_app pnpm dlx skills add huntabyte/shadcn-svelte
 }
 
 install_shadcn() {
-	log "Instalando shadcn-svelte (confirma la actualización de layout.css)"
-	in_app pnpm dlx shadcn-svelte@latest init "${SHADCN_INIT_FLAGS[@]}"
+	log "Instalando shadcn-svelte"
+	in_app pnpm dlx shadcn-svelte@latest init
 	in_app pnpm dlx shadcn-svelte@latest add -a -y -o
 }
 
