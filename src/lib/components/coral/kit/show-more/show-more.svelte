@@ -1,11 +1,12 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/show-more
-	 * @version 1.0.0
+	 * @version 1.0.1
 	 */
 	import { tick } from 'svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
+	import { scaleOf } from '../../lib/scale.js';
 	import type { ShowMoreProps } from './types.js';
 
 	let {
@@ -82,7 +83,8 @@
 		// the browser has usually scrolled the region to bring the focused element into view, and an
 		// element that was hidden then looks exactly like one that is showing.
 		const target = event.target as HTMLElement;
-		const reach = target.getBoundingClientRect().bottom - inner.getBoundingClientRect().top;
+		const drawn = target.getBoundingClientRect().bottom - inner.getBoundingClientRect().top;
+		const reach = drawn / scaleOf(region).y;
 		if (reach > region.clientHeight + 1) setExpanded(true);
 	}
 

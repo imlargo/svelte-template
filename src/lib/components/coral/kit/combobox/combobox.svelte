@@ -1,7 +1,7 @@
 <script lang="ts" generics="T, Type extends ComboboxType = 'single'">
 	/**
 	 * @coral/kit/combobox
-	 * @version 1.0.0
+	 * @version 1.0.1
 	 */
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
@@ -15,7 +15,6 @@
 	import HiddenField from '../../lib/hidden-field.svelte';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { debounce } from '../../lib/debounce.js';
-	import { onClose } from '../../lib/on-close.svelte.js';
 	import { flatten, toGroups } from '../../lib/options.js';
 	import { includesValue, matches } from './matching.js';
 	import { selectAllVisible } from './selection.js';
@@ -39,6 +38,7 @@
 		onsearch,
 		searchDebounce = 0,
 		onOpenChange,
+		onOpenChangeComplete,
 		filter,
 		shouldFilter = true,
 		disabled = false,
@@ -202,12 +202,12 @@
 	}
 
 	/**
-	 * Forgets the term on any close. Watched on `open`, not `onOpenChange`: the primitive does not
-	 * report a close made by assigning `open`, which is what a footer's `close()` does.
+	 * Forgets the term once the popover has finished closing, however it closed: a footer's
+	 * `close()` assigns `open`, which `onOpenChange` never reports. Any sooner and the list refills
+	 * while it is still fading out.
 	 */
-	onClose(
-		() => open,
-		() => {
+	function handleOpenChangeComplete(next: boolean) {
+		if (!next) {
 			searchLater.cancel();
 			// The caller hears about it too, undebounced. When the server owns the search, clearing
 			// only this side leaves an empty search box sitting above a list still filtered by a
@@ -215,10 +215,16 @@
 			if (search !== '') onsearch?.('');
 			search = '';
 		}
-	);
+		onOpenChangeComplete?.(next);
+	}
 </script>
 
-<Popover.Root bind:open {onOpenChange} {...restProps}>
+<Popover.Root
+	bind:open
+	{onOpenChange}
+	onOpenChangeComplete={handleOpenChangeComplete}
+	{...restProps}
+>
 	<div class="relative">
 		<Popover.Trigger bind:ref={triggerRef}>
 			{#snippet child({ props })}

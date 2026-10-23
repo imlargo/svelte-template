@@ -1,6 +1,6 @@
 /**
  * @coral/kit/command-palette
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 /** Something the palette can do. `run` is the only part the palette itself understands. */

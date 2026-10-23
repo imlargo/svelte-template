@@ -1,6 +1,6 @@
 /**
  * @coral/kit/activity-calendar
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 /** Which weekday a week starts on. `0` is Sunday, the way `Date#getDay` numbers them. */

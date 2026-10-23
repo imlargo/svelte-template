@@ -1,13 +1,12 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/command-palette
-	 * @version 1.0.0
+	 * @version 1.0.1
 	 */
 	import * as Command from '#lib/components/ui/command/index.js';
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { Action } from '../../lib/action.svelte.js';
 	import { debounce } from '../../lib/debounce.js';
-	import { onClose } from '../../lib/on-close.svelte.js';
 	import Shortcut from '../shortcut/shortcut.svelte';
 	import { ariaKeyshortcuts, parse } from '../shortcut/keys.js';
 	import { listen } from '../shortcut/listen.js';
@@ -34,6 +33,7 @@
 		placeholder = 'Type a command or search...',
 		emptyMessage = 'No results found.',
 		vimBindings,
+		onOpenChangeComplete,
 		class: className,
 		listClass,
 		trigger,
@@ -102,15 +102,18 @@
 	);
 	$effect(() => () => searchLater.cancel());
 
-	/** Forgets the term on any close; `run` closes by assigning `open`, which the primitive does not report. */
-	onClose(
-		() => open,
-		() => {
+	/**
+	 * Forgets the term once the dialog has finished closing, however it closed: `run` assigns `open`,
+	 * which `onOpenChange` never reports.
+	 */
+	function handleOpenChangeComplete(next: boolean) {
+		if (!next) {
 			searchLater.cancel();
 			if (search !== '') onsearch?.('');
 			search = '';
 		}
-	);
+		onOpenChangeComplete?.(next);
+	}
 
 	/**
 	 * Runs an action and decides whether the palette has earned the right to close - the convention
@@ -161,6 +164,7 @@
 	vimBindings={vimBindings ?? !swallowed}
 	shouldFilter={!onsearch}
 	class={className}
+	onOpenChangeComplete={handleOpenChangeComplete}
 	{...restProps}
 >
 	<!-- `aria-controls` and `aria-activedescendant` by hand: see `kit/combobox`. -->
