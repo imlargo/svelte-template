@@ -16,4 +16,4 @@ if [[ ! -e .env ]]; then
 fi
 
 git reset --hard HEAD
-git clean -ffdx -e /setup.sh -e /reset.sh -e /.env
+git clean -ffdx -e /setup.sh -e /reset.sh -e /init.sh -e /.env

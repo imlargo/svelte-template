@@ -11,7 +11,7 @@ cd "$(dirname "$0")"
 
 readonly LEGACY=legacy
 readonly APP=app
-readonly KEEP_AT_ROOT=(.git "$LEGACY" setup.sh reset.sh)
+readonly KEEP_AT_ROOT=(.git "$LEGACY" setup.sh reset.sh init.sh)
 
 readonly DEPS=(zod @imlargo/air)
 readonly DEV_DEPS=(lint-staged husky)
