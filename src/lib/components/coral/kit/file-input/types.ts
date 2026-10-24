@@ -1,6 +1,6 @@
 /**
  * @coral/kit/file-input
- * @version 1.1.1
+ * @version 1.2.0
  */
 
 import type { Snippet } from 'svelte';
@@ -67,7 +67,7 @@ export type FileInputProps = InputProps & {
 	 * Pass an empty string to render none.
 	 */
 	hint?: string;
-	/** Accessible label for a row's remove button. Takes the file, because "Remove" alone names none. */
+	/** Accessible label for a row's remove button. Takes the file, because 'Remove' alone names none. */
 	removeLabel?: (file: File) => string;
 	/** Merged onto the drop zone. Use it to change the height or padding. */
 	class?: string;
@@ -84,5 +84,14 @@ export type FileInputProps = InputProps & {
 	 */
 	file?: Snippet<[FileContext]>;
 };
+
+/** What a project can state once for every file input - see `lib/defaults`. */
+export type FileInputDefaults = Partial<Pick<FileInputProps, 'label' | 'removeLabel'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/file-input'?: FileInputDefaults;
+	}
+}
 
 export type { FileRejection, RejectionReason } from './collect.js';

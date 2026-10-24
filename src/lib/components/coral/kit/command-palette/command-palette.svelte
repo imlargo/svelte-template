@@ -1,12 +1,15 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/command-palette
-	 * @version 1.0.1
+	 * @version 1.1.0
 	 */
 	import * as Command from '#lib/components/ui/command/index.js';
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
+	import ListStatus from '../../lib/list-status.svelte';
+	import LiveRegion from '../../lib/live-region.svelte';
 	import { Action } from '../../lib/action.svelte.js';
 	import { debounce } from '../../lib/debounce.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import Shortcut from '../shortcut/shortcut.svelte';
 	import { ariaKeyshortcuts, parse } from '../shortcut/keys.js';
 	import { listen } from '../shortcut/listen.js';
@@ -16,6 +19,8 @@
 	import type { CommandAction } from './actions.js';
 	import type { CommandPaletteProps } from './types.js';
 
+	const defaults = getCoralDefaults('kit/command-palette');
+
 	let {
 		actions,
 		open = $bindable(false),
@@ -23,15 +28,17 @@
 		bindActionShortcuts = true,
 		recent = $bindable([]),
 		maxRecent = 5,
-		recentLabel = 'Recent',
+		recentLabel = defaults.recentLabel ?? 'Recent',
 		search = $bindable(''),
 		onsearch,
-		searchDebounce = 0,
+		searchDebounce = defaults.searchDebounce ?? 0,
+		shouldFilter = !onsearch,
 		loading = false,
 		onrun,
 		onerror,
-		placeholder = 'Type a command or search...',
-		emptyMessage = 'No results found.',
+		placeholder = defaults.placeholder ?? 'Type a command or search...',
+		emptyMessage = defaults.emptyMessage ?? 'No results found.',
+		loadingMessage = defaults.loadingMessage ?? 'Loading...',
 		vimBindings,
 		onOpenChangeComplete,
 		class: className,
@@ -62,10 +69,21 @@
 	/** The primitive's highlighted value is the row's search string; this turns it back into an id. */
 	let highlighted = $state('');
 	const activeId = $derived.by(() => {
-		if (loading || highlighted === '') return undefined;
+		if (highlighted === '') return undefined;
 		const match = actions.find((item) => searchValue(item) === highlighted);
 		return match ? `${listId}-${positions.get(match.id)}` : undefined;
 	});
+
+	/**
+	 * How many rows the primitive's own matching kept, once it has reported any. The matching is its,
+	 * so this is read off it rather than redone here; `undefined` until the first report keeps the
+	 * moment before the rows have registered from being read as "nothing matched".
+	 */
+	let matched = $state<number>();
+	const noMatches = $derived(!loading && matched === 0);
+
+	/** What the list has to say beyond its actions, spoken as well as shown. */
+	const status = $derived(loading ? loadingMessage : noMatches ? emptyMessage : '');
 
 	const detected = new PlatformState();
 	const platform = $derived(detected.current);
@@ -154,17 +172,19 @@
 {@render trigger?.({ props: triggerProps, open })}
 
 <!--
-	`shouldFilter` is left to the primitive by default: it scores every row against `searchValue`,
-	which is why keywords travel inside that string. With `onsearch` the list is the server's answer
-	and filtering it again locally would hide rows the server meant to return.
+	Filtering is left to the primitive by default: it scores every row against `searchValue`, which is
+	why keywords travel inside that string. With `onsearch` the list is the server's answer and
+	filtering it again locally would hide rows the server meant to return - unless the caller asks,
+	for a palette whose local actions sit beside the remote results.
 -->
 <Command.Dialog
 	bind:open
 	bind:value={highlighted}
 	vimBindings={vimBindings ?? !swallowed}
-	shouldFilter={!onsearch}
+	{shouldFilter}
 	class={className}
 	onOpenChangeComplete={handleOpenChangeComplete}
+	onStateChange={(state) => (matched = state.filtered.count)}
 	{...restProps}
 >
 	<!-- `aria-controls` and `aria-activedescendant` by hand: see `kit/combobox`. -->
@@ -176,62 +196,56 @@
 		oninput={(event) => searchLater(event.currentTarget.value)}
 	/>
 
-	<!-- A listbox may only own options and groups, so it is hidden while the results are on their way. -->
-	<Command.List id={listId} class={listClass} hidden={loading}>
-		{#if !loading}
-			<Command.Empty>
-				<!-- A listbox must own options; the primitive says when it is empty, and this is what it holds. -->
-				<div role="option" aria-selected="false" aria-disabled="true">
-					{#if empty}{@render empty()}{:else}{emptyMessage}{/if}
-				</div>
-			</Command.Empty>
-
-			{#each groups as entry, index (entry.label ?? index)}
-				<Command.Group heading={entry.label}>
-					{#each entry.actions as item (item.id)}
-						<Command.Item
-							id={`${listId}-${positions.get(item.id)}`}
-							value={searchValue(item)}
-							disabled={item.disabled}
-							class="data-disabled:pointer-events-none data-disabled:opacity-50"
-							onSelect={() => run(item)}
-						>
-							{#if actionSnippet}
-								{@render actionSnippet({ action: item, pending: running === item.id })}
-							{:else}
-								<span class="flex min-w-0 flex-col">
-									<span class="truncate">{item.label}</span>
-									{#if item.description}
-										<span class="truncate text-xs text-muted-foreground">{item.description}</span>
-									{/if}
-								</span>
-
-								{#if running === item.id}
-									<Spinner class="ms-auto opacity-50" />
-								{:else if item.shortcut}
-									<!-- Drawn, not bound, from here: the binding above is what makes it work, and
-									     it is live whether or not this row is on screen. -->
-									<Shortcut keys={item.shortcut} class="ms-auto" />
+	<Command.List id={listId} class={listClass}>
+		{#each groups as entry, index (entry.label ?? index)}
+			<Command.Group heading={entry.label}>
+				{#each entry.actions as item (item.id)}
+					<Command.Item
+						id={`${listId}-${positions.get(item.id)}`}
+						value={searchValue(item)}
+						disabled={item.disabled}
+						class="data-disabled:pointer-events-none data-disabled:opacity-50"
+						onSelect={() => run(item)}
+					>
+						{#if actionSnippet}
+							{@render actionSnippet({ action: item, pending: running === item.id })}
+						{:else}
+							<span class="flex min-w-0 flex-col">
+								<span class="truncate">{item.label}</span>
+								{#if item.description}
+									<span class="truncate text-xs text-muted-foreground">{item.description}</span>
 								{/if}
+							</span>
+
+							{#if running === item.id}
+								<Spinner class="ms-auto opacity-50" />
+							{:else if item.shortcut}
+								<!-- Drawn, not bound, from here: the binding above is what makes it work, and
+								     it is live whether or not this row is on screen. -->
+								<Shortcut keys={item.shortcut} class="ms-auto" />
 							{/if}
-						</Command.Item>
-					{/each}
-				</Command.Group>
-			{/each}
+						{/if}
+					</Command.Item>
+				{/each}
+			</Command.Group>
+		{/each}
+
+		<!--
+			Under the actions rather than instead of them: a palette mixing local actions with a remote
+			search keeps the local ones runnable while the request is out, and says more are coming.
+		-->
+		{#if loading}
+			<ListStatus message={loadingMessage} loading children={indicator} />
+		{:else}
+			<!-- The primitive says when its matching came up empty; its own padding gives way to the row's. -->
+			<Command.Empty class="p-0">
+				<ListStatus message={emptyMessage} children={empty} />
+			</Command.Empty>
 		{/if}
 	</Command.List>
 
-	{#if loading}
-		<Command.Loading>
-			{#if indicator}
-				{@render indicator()}
-			{:else}
-				<div class="flex items-center justify-center py-6">
-					<Spinner class="opacity-50" />
-				</div>
-			{/if}
-		</Command.Loading>
-	{/if}
+	<!-- A list that has emptied, or is waiting on a server, says nothing on its own. -->
+	<LiveRegion message={status} />
 
 	{@render footer?.()}
 </Command.Dialog>

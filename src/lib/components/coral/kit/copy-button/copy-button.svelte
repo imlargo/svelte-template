@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/copy-button
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import CopyIcon from '@lucide/svelte/icons/copy';
@@ -10,17 +10,20 @@
 	import { Announcer } from '../../lib/announce.svelte.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { resolveText, writeText } from './clipboard.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { CopyButtonProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/copy-button');
 
 	let {
 		text,
-		timeout = 2000,
+		timeout = defaults.timeout ?? 2000,
 		status = $bindable('idle'),
 		oncopy,
 		onerror,
-		label = 'Copy to clipboard',
-		copiedLabel = 'Copied',
-		failedLabel = 'Copy failed',
+		label = defaults.label ?? 'Copy to clipboard',
+		copiedLabel = defaults.copiedLabel ?? 'Copied',
+		failedLabel = defaults.failedLabel ?? 'Copy failed',
 		variant = 'ghost',
 		size,
 		disabled,

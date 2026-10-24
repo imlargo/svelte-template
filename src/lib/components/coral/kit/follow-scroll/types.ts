@@ -1,6 +1,6 @@
 /**
  * @coral/kit/follow-scroll
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
@@ -55,3 +55,14 @@ export type FollowScrollProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'>
 	 */
 	jump?: Snippet<[JumpContext]>;
 };
+
+/** What a project can state once for every follow scroll - see `lib/defaults`. */
+export type FollowScrollDefaults = Partial<
+	Pick<FollowScrollProps, 'jumpLabel' | 'unreadLabel' | 'threshold'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/follow-scroll'?: FollowScrollDefaults;
+	}
+}

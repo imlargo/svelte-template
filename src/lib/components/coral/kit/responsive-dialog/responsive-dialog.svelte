@@ -1,17 +1,20 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/responsive-dialog
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { MediaQuery } from 'svelte/reactivity';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import * as Drawer from '#lib/components/ui/drawer/index.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { setResponsiveDialog } from './context.js';
 	import type { ResponsiveDialogProps } from './types.js';
 
+	const defaults = getCoralDefaults('kit/responsive-dialog');
+
 	let {
 		open = $bindable(false),
-		query = '(min-width: 768px)',
+		query = defaults.query ?? '(min-width: 768px)',
 		fallback = false,
 		onOpenChange,
 		children,

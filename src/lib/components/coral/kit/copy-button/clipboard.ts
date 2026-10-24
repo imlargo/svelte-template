@@ -1,6 +1,6 @@
 /**
  * @coral/kit/copy-button
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 /** What a copy button can be handed: the text itself, or a way to produce it when clicked. */

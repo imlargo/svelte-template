@@ -1,6 +1,6 @@
 /**
  * @coral/kit/command-palette
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 import { parse } from '../shortcut/keys.js';

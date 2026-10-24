@@ -1,22 +1,30 @@
 <script lang="ts" generics="T">
 	/**
 	 * @coral/kit/select
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import XIcon from '@lucide/svelte/icons/x';
 	import * as Select from '#lib/components/ui/select/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
 	import HiddenField from '../../lib/hidden-field.svelte';
+	import ListStatus from '../../lib/list-status.svelte';
+	import LiveRegion from '../../lib/live-region.svelte';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { flatten, toGroups } from '../../lib/options.js';
 	import type { SelectProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/select');
 
 	let {
 		options,
 		value = $bindable(),
 		open = $bindable(false),
-		placeholder = 'Select an option...',
-		clearLabel = 'Clear selection',
+		placeholder = defaults.placeholder ?? 'Select an option...',
+		emptyMessage = defaults.emptyMessage ?? 'No options.',
+		loading = false,
+		loadingMessage = defaults.loadingMessage ?? 'Loading...',
+		clearLabel = defaults.clearLabel ?? 'Clear selection',
 		onchange,
 		disabled = false,
 		clearable = false,
@@ -57,6 +65,11 @@
 			entries: group.options.map((option) => ({ option, index: index++ }))
 		}));
 	});
+
+	/** What the list has to say beyond its options, spoken while it is open. */
+	const status = $derived(
+		!open ? '' : loading ? loadingMessage : all.length === 0 ? emptyMessage : ''
+	);
 
 	const selectedIndex = $derived(all.findIndex((option) => option.value === value));
 	const selected = $derived(selectedIndex === -1 ? undefined : all[selectedIndex]);
@@ -151,7 +164,12 @@
 			{/if}
 		</Select.Trigger>
 
-		<Select.Content id={listId} aria-labelledby={triggerId} class={contentClass}>
+		<Select.Content
+			id={listId}
+			aria-labelledby={triggerId}
+			aria-busy={loading ? 'true' : undefined}
+			class={contentClass}
+		>
 			{#each indexed as group, groupIndex (groupIndex)}
 				<Select.Group>
 					{#if group.label}
@@ -178,8 +196,18 @@
 					{/each}
 				</Select.Group>
 			{/each}
+
+			<!-- Under the options, as an option nothing can pick: a listbox may own nothing else, and an
+			     empty one leaves the reader unable to tell "nothing here" from "not here yet". -->
+			{#if loading}
+				<ListStatus message={loadingMessage} loading />
+			{:else if all.length === 0}
+				<ListStatus message={emptyMessage} />
+			{/if}
 		</Select.Content>
 	</Select.Root>
+
+	<LiveRegion message={status} />
 
 	<!-- Beside the trigger, not inside: a button within a button is invalid HTML, and browsers
 	     recover by dropping one of the two. -->

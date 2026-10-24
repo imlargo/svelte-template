@@ -1,13 +1,16 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/toc
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { prefersReducedMotion } from 'svelte/motion';
 	import { cn } from '#lib/utils.js';
 	import { collect, pickActive } from './headings.js';
 	import type { TocHeading } from './headings.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { TocItemContext, TocProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/toc');
 
 	let {
 		headings,
@@ -19,7 +22,7 @@
 		onactivechange,
 		smooth = true,
 		minHeadings = 2,
-		label = 'On this page',
+		label = defaults.label ?? 'On this page',
 		ref = $bindable(null),
 		class: className,
 		itemClass,

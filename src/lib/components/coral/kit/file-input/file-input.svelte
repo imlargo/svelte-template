@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/file-input
-	 * @version 1.1.1
+	 * @version 1.2.0
 	 */
 	import { SvelteMap } from 'svelte/reactivity';
 	import FileIcon from '@lucide/svelte/icons/file';
@@ -13,7 +13,10 @@
 	import { describeAccept } from './accept.js';
 	import { collect } from './collect.js';
 	import { formatBytes } from './format-bytes.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { FileInputProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/file-input');
 
 	let {
 		value = $bindable([]),
@@ -24,9 +27,9 @@
 		maxFiles,
 		maxSize,
 		disabled = false,
-		label = 'Drop files here, or click to browse',
+		label = defaults.label ?? 'Drop files here, or click to browse',
 		hint,
-		removeLabel = (entry: File) => `Remove ${entry.name}`,
+		removeLabel = defaults.removeLabel ?? ((entry: File) => `Remove ${entry.name}`),
 		class: className,
 		listClass,
 		zone,

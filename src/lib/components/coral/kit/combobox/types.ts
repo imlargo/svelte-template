@@ -1,10 +1,10 @@
 /**
  * @coral/kit/combobox
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
-import type { Popover } from '#lib/components/ui/popover/index.js';
+import type { Popover, PopoverContent } from '#lib/components/ui/popover/index.js';
 import type { Option, Options } from '../../lib/options.js';
 import type { TriggerAttributes } from '../../lib/trigger.js';
 
@@ -49,15 +49,20 @@ type BaseProps<T> = RootProps &
 		placeholder?: string;
 		/** Shown in the search box. */
 		searchPlaceholder?: string;
-		/** Shown when the search matches nothing. */
+		/** Shown when the search matches nothing. Announced too. */
 		emptyMessage?: string;
+		/** Shown, and announced, while `loading`. */
+		loadingMessage?: string;
 		/** Blocks the trigger. */
 		disabled?: boolean;
 		/** Adds a clear control to the trigger, and makes re-picking the selected option unset it. */
 		clearable?: boolean;
 		/** Accessible label for the clear control. */
 		clearLabel?: string;
-		/** Renders a loading row in place of the list. Pair with `onsearch` for server-side search. */
+		/**
+		 * Adds a loading row under whatever options are already listed. Pair with `onsearch` for
+		 * server-side search: the previous results stay usable while the next ones are on their way.
+		 */
 		loading?: boolean;
 		/**
 		 * Submits with a surrounding form, as one field per selected value - so `type="multiple"`
@@ -94,6 +99,8 @@ type BaseProps<T> = RootProps &
 		filter?: (option: Option<T>, search: string) => boolean;
 		/** How many badges the trigger shows before collapsing into a counter. `type="multiple"` only. */
 		maxDisplay?: number;
+		/** Which trigger edge the list lines up with. `end` for a combobox at the end of a toolbar. */
+		align?: ComponentProps<typeof PopoverContent>['align'];
 		/** Merged onto the trigger button. */
 		class?: string;
 		/** Merged onto the popover content. */
@@ -111,6 +118,25 @@ type BaseProps<T> = RootProps &
 		/** Rendered below the list - bulk actions, a count, a "create new" affordance. */
 		footer?: Snippet<[FooterContext<T>]>;
 	};
+
+/** What a project can state once for every combobox - see `lib/defaults`. */
+export type ComboboxDefaults = Partial<
+	Pick<
+		BaseProps<unknown>,
+		| 'placeholder'
+		| 'searchPlaceholder'
+		| 'emptyMessage'
+		| 'loadingMessage'
+		| 'clearLabel'
+		| 'searchDebounce'
+	>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/combobox'?: ComboboxDefaults;
+	}
+}
 
 /** Which selection mode a combobox is in. */
 export type ComboboxType = 'single' | 'multiple';

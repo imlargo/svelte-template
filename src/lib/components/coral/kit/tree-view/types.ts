@@ -1,6 +1,6 @@
 /**
  * @coral/kit/tree-view
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
@@ -48,6 +48,21 @@ export type TreeViewProps<T> = Omit<HTMLAttributes<HTMLDivElement>, 'children' |
 	node?: Snippet<[NodeContext<T>]>;
 	/** Replaces the expand icon. Rendered for expandable rows only. */
 	icon?: Snippet<[NodeContext<T>]>;
+	/**
+	 * Controls at the end of each row - rename, add, delete. Rendered inside the row, out of the tab
+	 * order: Tab from a focused row steps into them, Shift+Tab and Escape step back out, and the
+	 * tree stays one tab stop. Clicking one does not select the row.
+	 */
+	actions?: Snippet<[NodeContext<T>]>;
 };
+
+/** What a project can state once for every tree - see `lib/defaults`. */
+export type TreeViewDefaults = Partial<Pick<TreeViewProps<unknown>, 'toggleLabel'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/tree-view'?: TreeViewDefaults;
+	}
+}
 
 export type { TreeNode, TreeRow } from './tree.js';

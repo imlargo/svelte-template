@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/search-input
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { untrack } from 'svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
@@ -11,15 +11,18 @@
 	import { cn } from '#lib/utils.js';
 	import { debounce } from '../../lib/debounce.js';
 	import { effectiveTerm, hasChanged } from './term.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { SearchInputProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/search-input');
 
 	let {
 		value = $bindable(''),
 		onsearch,
-		searchDebounce = 300,
+		searchDebounce = defaults.searchDebounce ?? 300,
 		minLength = 0,
 		loading = false,
-		clearLabel = 'Clear search',
+		clearLabel = defaults.clearLabel ?? 'Clear search',
 		disabled = false,
 		readonly = false,
 		class: className,

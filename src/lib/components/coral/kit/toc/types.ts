@@ -1,6 +1,6 @@
 /**
  * @coral/kit/toc
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
@@ -63,5 +63,14 @@ export type TocProps = Omit<HTMLAttributes<HTMLElement>, 'children'> & {
 	/** Replaces each link. */
 	item?: Snippet<[TocItemContext]>;
 };
+
+/** What a project can state once for every toc - see `lib/defaults`. */
+export type TocDefaults = Partial<Pick<TocProps, 'label'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/toc'?: TocDefaults;
+	}
+}
 
 export type { TocHeading } from './headings.js';

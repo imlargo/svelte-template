@@ -1,14 +1,17 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/textarea
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { untrack } from 'svelte';
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
 	import { cn } from '#lib/utils.js';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { countOf, heightFor, remaining } from './measure.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { TextareaProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/textarea');
 
 	let {
 		value = $bindable(''),
@@ -17,7 +20,7 @@
 		maxLength,
 		showCount = false,
 		warnAt,
-		remainingLabel = (left: number) => `${left} characters left`,
+		remainingLabel = defaults.remainingLabel ?? ((left: number) => `${left} characters left`),
 		submitOn = false,
 		onsubmit,
 		id,

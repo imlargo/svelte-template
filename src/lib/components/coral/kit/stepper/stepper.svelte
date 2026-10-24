@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
 	/**
 	 * @coral/kit/stepper
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { tick } from 'svelte';
 	import { cn } from '#lib/utils.js';

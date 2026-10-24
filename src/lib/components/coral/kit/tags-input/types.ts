@@ -1,6 +1,6 @@
 /**
  * @coral/kit/tags-input
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -76,7 +76,7 @@ export type TagsInputProps = InputProps & {
 	clearable?: boolean;
 	/** Accessible label for the clear control. */
 	clearLabel?: string;
-	/** Accessible label for a tag's remove control. Takes the tag, because "Remove" alone names none. */
+	/** Accessible label for a tag's remove control. Takes the tag, because 'Remove' alone names none. */
 	removeLabel?: (value: string) => string;
 	/** Requires at least one tag before the surrounding form submits. */
 	required?: boolean;
@@ -97,3 +97,14 @@ export type TagsInputProps = InputProps & {
 	/** Replaces the body of each tag - an icon, an avatar, a count. The remove control stays. */
 	tag?: Snippet<[TagContext]>;
 };
+
+/** What a project can state once for every tags input - see `lib/defaults`. */
+export type TagsInputDefaults = Partial<
+	Pick<TagsInputProps, 'clearLabel' | 'removeLabel' | 'delimiter'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/tags-input'?: TagsInputDefaults;
+	}
+}

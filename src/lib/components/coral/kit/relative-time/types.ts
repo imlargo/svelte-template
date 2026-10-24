@@ -1,13 +1,13 @@
 /**
  * @coral/kit/relative-time
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
 import type { HTMLTimeAttributes } from 'svelte/elements';
 
 export type RelativeTimeContext = {
-	/** The formatted label - "hace 5 minutos". */
+	/** The formatted label - 'hace 5 minutos'. */
 	text: string;
 	/** The full date, formatted with `titleFormat` - what the `title` shows. */
 	absolute: string;
@@ -21,11 +21,11 @@ export type RelativeTimeProps = Omit<HTMLTimeAttributes, 'children' | 'datetime'
 	/** Drives the wording and the absolute date. */
 	locale?: string;
 	/**
-	 * `auto` says "yesterday" and "now"; `always` says "1 day ago" and "in 0 seconds". Passed to
+	 * `auto` says 'yesterday' and 'now'; `always` says '1 day ago' and 'in 0 seconds'. Passed to
 	 * `Intl.RelativeTimeFormat`.
 	 */
 	numeric?: Intl.RelativeTimeFormatNumeric;
-	/** `long`, `short` or `narrow` - "5 minutes ago", "5 min. ago", "5m ago". */
+	/** `long`, `short` or `narrow` - '5 minutes ago', '5 min. ago', '5m ago'. */
 	format?: Intl.RelativeTimeFormatStyle;
 	/** Smallest unit shown. At `minute`, anything within half a minute reads as now. */
 	precision?: 'second' | 'minute';
@@ -33,7 +33,7 @@ export type RelativeTimeProps = Omit<HTMLTimeAttributes, 'children' | 'datetime'
 	live?: boolean;
 	/**
 	 * How far away, in milliseconds, a date can be before it is shown as an absolute date instead.
-	 * "3 years ago" is rarely what anyone wants to read about an invoice.
+	 * '3 years ago' is rarely what anyone wants to read about an invoice.
 	 */
 	cutoff?: number;
 	/** How the absolute date is formatted - in the `title`, and past the `cutoff`. */
@@ -45,5 +45,16 @@ export type RelativeTimeProps = Omit<HTMLTimeAttributes, 'children' | 'datetime'
 	/** Replaces the text inside the `<time>`. */
 	children?: Snippet<[RelativeTimeContext]>;
 };
+
+/** What a project can state once for every relative time - see `lib/defaults`. */
+export type RelativeTimeDefaults = Partial<
+	Pick<RelativeTimeProps, 'numeric' | 'format' | 'precision' | 'cutoff' | 'titleFormat'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/relative-time'?: RelativeTimeDefaults;
+	}
+}
 
 export type { Relative, Unit } from './relative.js';

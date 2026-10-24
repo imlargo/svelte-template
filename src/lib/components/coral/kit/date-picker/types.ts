@@ -1,6 +1,6 @@
 /**
  * @coral/kit/date-picker
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -52,7 +52,7 @@ export type FooterContext<Type extends DatePickerType> = {
 
 type BaseProps<Type extends DatePickerType> = TriggerAttributes & {
 	type?: Type;
-	/** The selection. Bindable. A `DateRange` when `type="range"`. */
+	/** The selection. Bindable. A `DateRange` when `type='range'`. */
 	value?: DatePickerValue<Type>;
 	/** Whether the popover is open. Bindable. */
 	open?: boolean;
@@ -64,7 +64,7 @@ type BaseProps<Type extends DatePickerType> = TriggerAttributes & {
 	 * is the kind of coin-flip every caller loses once.
 	 */
 	month?: DateValue;
-	/** Shortcuts rendered beside the calendar - "Today", "Last 7 days". */
+	/** Shortcuts rendered beside the calendar - 'Today', 'Last 7 days'. */
 	presets?: Preset<NonNullable<DatePickerValue<Type>>>[];
 	/** Printed on the trigger while nothing is selected. */
 	placeholder?: string;
@@ -88,7 +88,7 @@ type BaseProps<Type extends DatePickerType> = TriggerAttributes & {
 	 * A range submits two: `name` and `endName`.
 	 */
 	name?: string;
-	/** The end of a range's field name. Defaults to `${name}-end`. `type="range"` only. */
+	/** The end of a range's field name. Defaults to `${name}-end`. `type='range'` only. */
 	endName?: string;
 	/** `id` of the form to submit with, for a picker outside it. Ignored without `name`. */
 	form?: string;
@@ -107,7 +107,7 @@ type BaseProps<Type extends DatePickerType> = TriggerAttributes & {
 	contentClass?: string;
 	/** Replaces the whole trigger. */
 	trigger?: Snippet<[TriggerContext<Type>]>;
-	/** Rendered below the calendar - a "clear" action, a hint, a time field. */
+	/** Rendered below the calendar - a 'clear' action, a hint, a time field. */
 	footer?: Snippet<[FooterContext<Type>]>;
 	/**
 	 * Called when the user picks a day, a preset, or clears - never on mount, and never when
@@ -153,3 +153,14 @@ type ForwardedProps<Type extends DatePickerType> = Type extends 'range'
  */
 export type DatePickerProps<Type extends DatePickerType = 'single'> = BaseProps<Type> &
 	ForwardedProps<Type>;
+
+/** What a project can state once for every date picker - see `lib/defaults`. */
+export type DatePickerDefaults = Partial<
+	Pick<BaseProps<'single'>, 'placeholder' | 'clearLabel' | 'format'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/date-picker'?: DatePickerDefaults;
+	}
+}

@@ -1,6 +1,6 @@
 /**
  * @coral/kit/copy-button
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -43,10 +43,21 @@ export type CopyButtonProps = ButtonProps & {
 	/** Announced when it fails. */
 	failedLabel?: string;
 	/**
-	 * Replaces the icon. Receives the status, so the button can say "Copy link" and "Copied!" in
+	 * Replaces the icon. Receives the status, so the button can say 'Copy link' and 'Copied!' in
 	 * words. With visible text the accessible name comes from it, and `label` is not applied.
 	 */
 	children?: Snippet<[{ status: CopyStatus }]>;
 };
+
+/** What a project can state once for every copy button - see `lib/defaults`. */
+export type CopyButtonDefaults = Partial<
+	Pick<CopyButtonProps, 'label' | 'copiedLabel' | 'failedLabel' | 'timeout'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/copy-button'?: CopyButtonDefaults;
+	}
+}
 
 export type { CopySource } from './clipboard.js';

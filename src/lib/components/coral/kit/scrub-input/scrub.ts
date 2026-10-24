@@ -1,6 +1,6 @@
 /**
  * @coral/kit/scrub-input
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 /** Whole steps taken out of a drag, and the distance left over for the next move event. */
@@ -27,12 +27,4 @@ export function consume(distance: number, pixelsPerStep: number): Consumed {
 	// unequal to 0 under `Object.is` and prints as `-0` wherever a caller shows it.
 	const steps = Math.trunc(distance / pixelsPerStep) + 0;
 	return { steps, rest: distance - steps * pixelsPerStep };
-}
-
-/**
- * How much one step is worth right now. Shift is the coarse modifier everywhere a number can be
- * dragged or nudged, so it means the same on the handle and on the arrow keys.
- */
-export function amountFor(step: number, largeStep: number, coarse: boolean): number {
-	return coarse ? largeStep : step;
 }

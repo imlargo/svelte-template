@@ -1,7 +1,7 @@
 <script lang="ts" generics="Type extends DatePickerType = 'single'">
 	/**
 	 * @coral/kit/date-picker
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { tick } from 'svelte';
 	import CalendarIcon from '@lucide/svelte/icons/calendar';
@@ -15,6 +15,7 @@
 	import { formatDay, formatDayRange, isSameDay, isSameRange } from './format.js';
 	import { activePreset, resolvePreset } from './presets.js';
 	import type { Preset } from './presets.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type {
 		DatePickerProps,
 		DatePickerType,
@@ -22,6 +23,8 @@
 		DateRange,
 		DateValue
 	} from './types.js';
+
+	const defaults = getCoralDefaults('kit/date-picker');
 
 	let {
 		// Undefined, not defaulted: `Type` is inferred, so a concrete `'single'` would not be
@@ -31,12 +34,12 @@
 		open = $bindable(false),
 		month = $bindable(),
 		presets,
-		placeholder = 'Select a date...',
-		locale = 'en-US',
-		format = { dateStyle: 'medium' },
+		placeholder = defaults.placeholder ?? 'Select a date...',
+		locale = defaults.locale ?? 'en-US',
+		format = defaults.format ?? { dateStyle: 'medium' },
 		disabled = false,
 		clearable = false,
-		clearLabel = 'Clear date',
+		clearLabel = defaults.clearLabel ?? 'Clear date',
 		name,
 		endName,
 		form,

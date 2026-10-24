@@ -1,6 +1,6 @@
 /**
  * @coral/kit/avatar-stack
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -43,7 +43,7 @@ export type AvatarStackProps<T> = GroupProps & {
 	getKey?: (item: T, index: number) => unknown;
 	/** Forwarded to every avatar, and matched by the count. */
 	size?: 'default' | 'sm' | 'lg';
-	/** Names the stack as a whole - "Assignees", "Viewing this document". */
+	/** Names the stack as a whole - 'Assignees', 'Viewing this document'. */
 	label?: string;
 	/** Accessible label for the count. Receives how many are hidden. */
 	overflowLabel?: (count: number) => string;
@@ -55,3 +55,12 @@ export type AvatarStackProps<T> = GroupProps & {
 	 */
 	overflow?: Snippet<[OverflowContext<T>]>;
 };
+
+/** What a project can state once for every avatar stack - see `lib/defaults`. */
+export type AvatarStackDefaults = Partial<Pick<AvatarStackProps<unknown>, 'overflowLabel'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/avatar-stack'?: AvatarStackDefaults;
+	}
+}

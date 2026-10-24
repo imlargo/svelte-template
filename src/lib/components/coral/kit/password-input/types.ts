@@ -1,6 +1,6 @@
 /**
  * @coral/kit/password-input
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -22,14 +22,14 @@ export type PasswordInputProps = InputProps & {
 	capsLock?: boolean;
 	/**
 	 * Accessible name of the visibility toggle. One name for both states: the toggle reports
-	 * `aria-pressed`, so "Show password, pressed" already means the password is showing.
+	 * `aria-pressed`, so 'Show password, pressed' already means the password is showing.
 	 */
 	toggleLabel?: string;
 	/** Announced, and set as the indicator's name, while Caps Lock is on. */
 	capsLockLabel?: string;
 	/**
 	 * Hides the password again when its form submits. On by default - see the docs for what a
-	 * password manager does with a field that is `type="text"` at the moment of submission.
+	 * password manager does with a field that is `type='text'` at the moment of submission.
 	 */
 	hideOnSubmit?: boolean;
 	/** Called when the reader shows or hides the password. Never when `visible` is set from code. */
@@ -44,3 +44,14 @@ export type PasswordInputProps = InputProps & {
 	 */
 	capsLockIndicator?: Snippet;
 };
+
+/** What a project can state once for every password input - see `lib/defaults`. */
+export type PasswordInputDefaults = Partial<
+	Pick<PasswordInputProps, 'toggleLabel' | 'capsLockLabel'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/password-input'?: PasswordInputDefaults;
+	}
+}

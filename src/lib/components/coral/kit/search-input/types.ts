@@ -1,6 +1,6 @@
 /**
  * @coral/kit/search-input
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps } from 'svelte';
@@ -35,3 +35,12 @@ export type SearchInputProps = InputProps & {
 	/** Merged onto the bordered group around everything. */
 	groupClass?: string;
 };
+
+/** What a project can state once for every search input - see `lib/defaults`. */
+export type SearchInputDefaults = Partial<Pick<SearchInputProps, 'clearLabel' | 'searchDebounce'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/search-input'?: SearchInputDefaults;
+	}
+}

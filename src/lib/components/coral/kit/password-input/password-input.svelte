@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/password-input
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { flushSync } from 'svelte';
 	import ArrowBigUpDashIcon from '@lucide/svelte/icons/arrow-big-up-dash';
@@ -9,14 +9,17 @@
 	import EyeOffIcon from '@lucide/svelte/icons/eye-off';
 	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import LiveRegion from '../../lib/live-region.svelte';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { PasswordInputProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/password-input');
 
 	let {
 		value = $bindable(),
 		visible = $bindable(false),
 		capsLock = $bindable(false),
-		toggleLabel = 'Show password',
-		capsLockLabel = 'Caps Lock is on',
+		toggleLabel = defaults.toggleLabel ?? 'Show password',
+		capsLockLabel = defaults.capsLockLabel ?? 'Caps Lock is on',
 		hideOnSubmit = true,
 		onvisiblechange,
 		id,

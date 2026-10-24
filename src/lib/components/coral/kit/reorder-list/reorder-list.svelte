@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
 	/**
 	 * @coral/kit/reorder-list
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { flushSync } from 'svelte';
 	import { flip } from 'svelte/animate';
@@ -12,7 +12,10 @@
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { focusRing } from '../../lib/focus.js';
 	import { keyTarget, move, targetIndex } from './reorder.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { HandleProps, ItemContext, ReorderListProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/reorder-list');
 
 	let {
 		items = $bindable([]),
@@ -20,16 +23,21 @@
 		getLabel = (item: T) => String(item),
 		onreorder,
 		disabled = false,
-		handleLabel = (label: string) => `Reorder ${label}`,
-		instructions = 'Press Space to pick up. Use the arrow keys to move, Space to drop, Escape to cancel.',
-		grabbed = (label: string, position: number, total: number) =>
-			`${label} picked up. Position ${position} of ${total}.`,
-		moved = (label: string, position: number, total: number) =>
-			`${label} moved to position ${position} of ${total}.`,
-		dropped = (label: string, position: number, total: number) =>
-			`${label} dropped at position ${position} of ${total}.`,
-		cancelled = (label: string, position: number, total: number) =>
-			`Move cancelled. ${label} returned to position ${position} of ${total}.`,
+		handleLabel = defaults.handleLabel ?? ((label: string) => `Reorder ${label}`),
+		instructions = defaults.instructions ??
+			'Press Space to pick up. Use the arrow keys to move, Space to drop, Escape to cancel.',
+		grabbed = defaults.grabbed ??
+			((label: string, position: number, total: number) =>
+				`${label} picked up. Position ${position} of ${total}.`),
+		moved = defaults.moved ??
+			((label: string, position: number, total: number) =>
+				`${label} moved to position ${position} of ${total}.`),
+		dropped = defaults.dropped ??
+			((label: string, position: number, total: number) =>
+				`${label} dropped at position ${position} of ${total}.`),
+		cancelled = defaults.cancelled ??
+			((label: string, position: number, total: number) =>
+				`Move cancelled. ${label} returned to position ${position} of ${total}.`),
 		ref = $bindable(null),
 		class: className,
 		itemClass,

@@ -1,34 +1,41 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/number-input
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import { cn } from '#lib/utils.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { decimalsOf } from '../../lib/number.js';
 	import { numberField, numberFieldClass } from '../../lib/number-field.js';
 	import type { NumberInputProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/number-input');
 
 	let {
 		value = $bindable(),
 		min,
 		max,
 		step = 1,
+		largeStep,
 		decimals,
+		locale = defaults.locale ?? 'en-US',
 		onchange,
-		decrementLabel = 'Decrease',
-		incrementLabel = 'Increase',
+		decrementLabel = defaults.decrementLabel ?? 'Decrease',
+		incrementLabel = defaults.incrementLabel ?? 'Increase',
 		disabled = false,
 		readonly = false,
 		class: className,
 		groupClass,
 		ref = $bindable(null),
+		onkeydown,
 		...restProps
 	}: NumberInputProps = $props();
 
 	const places = $derived(decimals ?? decimalsOf(step));
+	const coarse = $derived(largeStep ?? step * 10);
 
 	/**
 	 * A stepper is only spent once the value is actually against its bound. An empty field leaves
@@ -42,10 +49,20 @@
 		set: (next) => (value = next),
 		min: () => min,
 		max: () => max,
+		step: () => step,
+		largeStep: () => coarse,
 		decimals: () => places,
+		locale: () => locale,
 		editable: () => !disabled && !readonly,
 		onchange: () => onchange
 	});
+
+	const shown = $derived(field.text(value));
+
+	function handleKeydown(event: KeyboardEvent & { currentTarget: HTMLInputElement }) {
+		onkeydown?.(event);
+		field.keydown(event);
+	}
 </script>
 
 <InputGroup.Root class={cn('max-w-max', groupClass)}>
@@ -61,23 +78,27 @@
 	</InputGroup.Addon>
 
 	<!--
-		`type="number"` for the keyboard and the semantics the browser already gives: arrow keys step,
-		mobile shows a numeric keypad, and assistive tech reads it as a spinbutton. The native
-		spinners are removed because this component draws its own, and two sets of steppers on one
-		field is one set too many.
+		A text field, not `type="number"`: a number input parses through the browser, which drops a
+		`1,5` typed the way most of the world writes a decimal and shows the value with a point
+		whatever the reader's locale. The text field reads and writes the number in `locale`, and
+		gives back what the number type had for free - the spinbutton role with its value and bounds,
+		a numeric keypad on a phone, and the arrow keys stepping.
 	-->
 	<InputGroup.Input
 		bind:ref
-		type="number"
+		type="text"
+		role="spinbutton"
 		inputmode={places > 0 ? 'decimal' : 'numeric'}
-		{value}
-		{min}
-		{max}
-		{step}
+		autocomplete="off"
+		value={shown}
+		aria-valuenow={value}
+		aria-valuetext={value === undefined ? undefined : shown}
+		aria-valuemin={min}
+		aria-valuemax={max}
 		{disabled}
 		{readonly}
 		onchange={field.change}
-		onwheel={field.wheel}
+		onkeydown={handleKeydown}
 		class={cn(numberFieldClass, className)}
 		{...restProps}
 	/>

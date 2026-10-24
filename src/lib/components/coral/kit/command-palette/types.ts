@@ -1,6 +1,6 @@
 /**
  * @coral/kit/command-palette
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -51,7 +51,16 @@ export type CommandPaletteProps = DialogProps & {
 	onsearch?: (term: string) => void;
 	/** Milliseconds of quiet typing before `onsearch` runs. */
 	searchDebounce?: number;
-	/** Renders a loading row in place of the list. Pair with `onsearch`. */
+	/**
+	 * Whether the primitive filters the list by the term. Off by default once `onsearch` is set,
+	 * because the list is then the server's answer. Turn it back on for a palette that mixes local
+	 * actions with remote results, so the local ones are narrowed by the term as well.
+	 */
+	shouldFilter?: boolean;
+	/**
+	 * Adds a loading row under the actions already listed. Pair with `onsearch`: what is already
+	 * known stays visible and runnable while the rest is on its way.
+	 */
 	loading?: boolean;
 	/** An action ran and did not refuse. */
 	onrun?: (action: CommandAction) => void;
@@ -59,8 +68,10 @@ export type CommandPaletteProps = DialogProps & {
 	onerror?: (error: unknown, action: CommandAction) => void;
 	/** Shown in the search box. */
 	placeholder?: string;
-	/** Shown when nothing matches. */
+	/** Shown, and announced, when nothing matches. */
 	emptyMessage?: string;
+	/** Shown, and announced, while `loading`. */
+	loadingMessage?: string;
 	/**
 	 * The primitive's Ctrl+N/P/J/K list navigation. Left alone, it is on unless it would swallow a
 	 * combo this palette binds - see the docs on `mod+k` off a Mac.
@@ -74,12 +85,26 @@ export type CommandPaletteProps = DialogProps & {
 	trigger?: Snippet<[{ props: Record<string, unknown>; open: boolean }]>;
 	/** Replaces the body of each row - the icon, the label, what sits on the right. */
 	action?: Snippet<[ActionContext]>;
-	/** Replaces the loading row. */
+	/** Replaces the contents of the loading row. */
 	indicator?: Snippet;
-	/** Replaces the empty state. */
+	/** Replaces the contents of the empty row. */
 	empty?: Snippet;
 	/** Rendered below the list, inside the dialog - a legend, a hint. */
 	footer?: Snippet;
 };
+
+/** What a project can state once for every palette - see `lib/defaults`. */
+export type CommandPaletteDefaults = Partial<
+	Pick<
+		CommandPaletteProps,
+		'placeholder' | 'emptyMessage' | 'loadingMessage' | 'recentLabel' | 'searchDebounce'
+	>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/command-palette'?: CommandPaletteDefaults;
+	}
+}
 
 export type { CommandAction, CommandGroup } from './actions.js';

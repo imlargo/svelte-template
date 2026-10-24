@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/inline-edit
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { tick, untrack } from 'svelte';
 	import * as InputGroup from '#lib/components/ui/input-group/index.js';
@@ -9,7 +9,10 @@
 	import { cn } from '#lib/utils.js';
 	import { Action } from '../../lib/action.svelte.js';
 	import { focusRing } from '../../lib/focus.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { InlineEditProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/inline-edit');
 
 	let {
 		value = $bindable(''),
@@ -23,7 +26,7 @@
 		saveOnBlur = true,
 		selectOnEdit = true,
 		placeholder = '',
-		editLabel = (current: string) => (current ? `Edit ${current}` : 'Edit'),
+		editLabel = defaults.editLabel ?? ((current: string) => (current ? `Edit ${current}` : 'Edit')),
 		disabled = false,
 		class: className,
 		inputClass,

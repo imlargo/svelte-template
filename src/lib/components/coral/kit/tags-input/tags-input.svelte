@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/tags-input
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { tick } from 'svelte';
 	import XIcon from '@lucide/svelte/icons/x';
@@ -10,22 +10,25 @@
 	import { cn } from '#lib/utils.js';
 	import { focusRing } from '../../lib/focus.js';
 	import { add, split } from './tags.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { TagsInputProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/tags-input');
 
 	let {
 		value = $bindable([]),
 		inputValue = $bindable(''),
 		onchange,
 		onreject,
-		delimiter = ',',
+		delimiter = defaults.delimiter ?? ',',
 		max,
 		allowDuplicates = false,
 		validate,
 		sanitize = (raw: string) => raw.trim(),
 		addOnBlur = true,
 		clearable = false,
-		clearLabel = 'Clear all',
-		removeLabel = (tag: string) => `Remove ${tag}`,
+		clearLabel = defaults.clearLabel ?? 'Clear all',
+		removeLabel = defaults.removeLabel ?? ((tag: string) => `Remove ${tag}`),
 		required = false,
 		name,
 		form,

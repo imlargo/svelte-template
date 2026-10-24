@@ -1,7 +1,7 @@
 <script lang="ts" generics="T, Type extends ComboboxType = 'single'">
 	/**
 	 * @coral/kit/combobox
-	 * @version 1.0.1
+	 * @version 1.1.0
 	 */
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
@@ -10,16 +10,20 @@
 	import * as Popover from '#lib/components/ui/popover/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { cn } from '#lib/utils.js';
 	import HiddenField from '../../lib/hidden-field.svelte';
+	import ListStatus from '../../lib/list-status.svelte';
 	import LiveRegion from '../../lib/live-region.svelte';
 	import { debounce } from '../../lib/debounce.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { flatten, toGroups } from '../../lib/options.js';
 	import { includesValue, matches } from './matching.js';
+	import { Remembered } from './remembered.js';
 	import { selectAllVisible } from './selection.js';
 	import type { Option } from '../../lib/options.js';
 	import type { ComboboxProps, ComboboxType } from './types.js';
+
+	const defaults = getCoralDefaults('kit/combobox');
 
 	let {
 		options,
@@ -30,13 +34,14 @@
 		value = $bindable(),
 		open = $bindable(false),
 		search = $bindable(''),
-		placeholder = 'Select an option...',
-		searchPlaceholder = 'Search...',
-		emptyMessage = 'No results found.',
-		clearLabel = 'Clear selection',
+		placeholder = defaults.placeholder ?? 'Select an option...',
+		searchPlaceholder = defaults.searchPlaceholder ?? 'Search...',
+		emptyMessage = defaults.emptyMessage ?? 'No results found.',
+		loadingMessage = defaults.loadingMessage ?? 'Loading...',
+		clearLabel = defaults.clearLabel ?? 'Clear selection',
 		onchange,
 		onsearch,
-		searchDebounce = 0,
+		searchDebounce = defaults.searchDebounce ?? 0,
 		onOpenChange,
 		onOpenChangeComplete,
 		filter,
@@ -54,6 +59,7 @@
 		required = false,
 		serialize,
 		maxDisplay = 3,
+		align = 'start',
 		class: className,
 		contentClass,
 		listClass,
@@ -104,9 +110,12 @@
 	const values = $derived<T[]>(
 		multiple ? ((value as T[] | undefined) ?? []) : value === undefined ? [] : [value as T]
 	);
-	/** The options carrying these values, in list order. */
+	/** What this instance has shown as selected, so a result set that drops an option keeps its label. */
+	const remembered = new Remembered<T>();
+
+	/** The options carrying these values, from the list first and then from memory. */
 	function hydrate(entries: T[]): Option<T>[] {
-		return all.filter((option) => includesValue(entries, option.value));
+		return remembered.hydrate(all, entries);
 	}
 
 	const selected = $derived(hydrate(values));
@@ -135,9 +144,12 @@
 
 	const noMatches = $derived(!loading && rendered.length === 0);
 
-	/** The highlighted option's element id, while there is a list for it to be in. */
+	/** What the list has to say beyond its options, spoken as well as shown. */
+	const status = $derived(loading ? loadingMessage : noMatches ? emptyMessage : '');
+
+	/** The highlighted option's element id, while there is an option for it to point at. */
 	const activeId = $derived(
-		highlighted !== '' && !noMatches && !loading ? `${listId}-${highlighted}` : undefined
+		highlighted !== '' && rendered.length > 0 ? `${listId}-${highlighted}` : undefined
 	);
 
 	/**
@@ -288,7 +300,7 @@
 		{/if}
 	</div>
 
-	<Popover.Content class={cn('w-(--bits-popover-anchor-width) p-0', contentClass)}>
+	<Popover.Content {align} class={cn('w-(--bits-popover-anchor-width) p-0', contentClass)}>
 		<Command.Root shouldFilter={false} bind:value={highlighted}>
 			<!--
 				`aria-controls` and `aria-activedescendant` by hand: the primitive derives both from a
@@ -304,63 +316,49 @@
 				oninput={handleSearch}
 			/>
 
-			<!--
-				A listbox may only own options and groups, so while it has none - nothing matches, or the
-				results are on their way - it is hidden and the message sits beside it instead.
-			-->
-			<Command.List id={listId} class={listClass} hidden={noMatches || loading}>
-				{#if !loading}
-					{#each rendered as group, groupIndex (groupIndex)}
-						<Command.Group heading={group.label}>
-							{#each group.entries as entry (entry.index)}
-								{@const isSelected = includesValue(values, entry.option.value)}
-								<Command.Item
-									id={`${listId}-${entry.index}`}
-									value={String(entry.index)}
-									disabled={entry.option.disabled}
-									class="data-disabled:pointer-events-none data-disabled:opacity-50"
-									data-checked={isSelected ? 'true' : undefined}
-									onSelect={() => select(entry.option)}
-								>
-									{#if optionSnippet}
-										{@render optionSnippet({ option: entry.option, selected: isSelected })}
-									{:else if entry.option.description}
-										<span class="flex min-w-0 flex-col">
-											<span class="truncate">{entry.option.label}</span>
-											<span class="truncate text-muted-foreground">
-												{entry.option.description}
-											</span>
+			<Command.List id={listId} class={listClass}>
+				{#each rendered as group, groupIndex (groupIndex)}
+					<Command.Group heading={group.label}>
+						{#each group.entries as entry (entry.index)}
+							{@const isSelected = includesValue(values, entry.option.value)}
+							<Command.Item
+								id={`${listId}-${entry.index}`}
+								value={String(entry.index)}
+								disabled={entry.option.disabled}
+								class="data-disabled:pointer-events-none data-disabled:opacity-50"
+								data-checked={isSelected ? 'true' : undefined}
+								onSelect={() => select(entry.option)}
+							>
+								{#if optionSnippet}
+									{@render optionSnippet({ option: entry.option, selected: isSelected })}
+								{:else if entry.option.description}
+									<span class="flex min-w-0 flex-col">
+										<span class="truncate">{entry.option.label}</span>
+										<span class="truncate text-muted-foreground">
+											{entry.option.description}
 										</span>
-									{:else}
-										{entry.option.label}
-									{/if}
-								</Command.Item>
-							{/each}
-						</Command.Group>
-					{/each}
+									</span>
+								{:else}
+									{entry.option.label}
+								{/if}
+							</Command.Item>
+						{/each}
+					</Command.Group>
+				{/each}
+
+				<!--
+					Under the options rather than instead of them: with server-side search the previous
+					results stay usable while the next ones load, and the reader is told more are coming.
+				-->
+				{#if loading}
+					<ListStatus message={loadingMessage} loading children={indicator} />
+				{:else if noMatches}
+					<ListStatus message={emptyMessage} children={empty} />
 				{/if}
 			</Command.List>
 
-			{#if loading}
-				<Command.Loading>
-					{#if indicator}
-						{@render indicator()}
-					{:else}
-						<div class="flex items-center justify-center py-6">
-							<Spinner class="opacity-50" />
-						</div>
-					{/if}
-				</Command.Loading>
-			{/if}
-
-			{#if !loading}
-				<Command.Empty>
-					{#if empty}{@render empty()}{:else}{emptyMessage}{/if}
-				</Command.Empty>
-			{/if}
-
-			<!-- Typing into a field whose list is empty says nothing on its own, so the result is spoken. -->
-			<LiveRegion message={noMatches && !empty ? emptyMessage : ''} />
+			<!-- Typing into a field whose list has emptied, or is loading, says nothing on its own. -->
+			<LiveRegion message={status} />
 
 			{#if footer}
 				<div class="border-t p-1">

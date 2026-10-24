@@ -1,6 +1,6 @@
 /**
  * @coral/kit/show-more
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
@@ -35,3 +35,12 @@ export type ShowMoreProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
 	/** Replaces the toggle button. Only rendered when the content actually overflows. */
 	toggle?: Snippet<[ToggleContext]>;
 };
+
+/** What a project can state once for every show more - see `lib/defaults`. */
+export type ShowMoreDefaults = Partial<Pick<ShowMoreProps, 'moreLabel' | 'lessLabel'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/show-more'?: ShowMoreDefaults;
+	}
+}

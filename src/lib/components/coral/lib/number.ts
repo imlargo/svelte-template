@@ -1,7 +1,13 @@
 /**
  * @coral/lib/number
- * @version 1.0.0
+ * @version 1.1.0
  */
+
+import { numberFormat } from './intl.js';
+
+/** `toFixed` and `Intl` both refuse more than twenty decimals. */
+const MAX_DECIMALS = 20;
+const precision = (decimals: number) => Math.min(Math.max(decimals, 0), MAX_DECIMALS);
 
 /**
  * How many decimals a step implies: `0.1` gives 1, `0.05` gives 2, `1` gives 0. Exponent notation
@@ -24,7 +30,7 @@ export function decimalsOf(step: number): number {
  */
 export function round(value: number, decimals: number): number {
 	if (!Number.isFinite(value)) return value;
-	return Number(value.toFixed(Math.min(Math.max(decimals, 0), 20)));
+	return Number(value.toFixed(precision(decimals)));
 }
 
 /**
@@ -55,21 +61,72 @@ export function stepValue({ value, delta, min, max, decimals }: StepOptions): nu
 	return clamp(round((value ?? 0) + delta, decimals), min, max);
 }
 
+export type Separators = {
+	/** What sits between the whole part and the fraction: `.` in `en-US`, `,` in `de-DE`. */
+	decimal: string;
+	/** What groups the thousands, or an empty string where the locale writes none. */
+	group: string;
+};
+
+const separatorsByLocale = new Map<string | undefined, Separators>();
+
+/** The separators a locale writes numbers with, read off `Intl` once per locale. */
+export function separators(locale?: string): Separators {
+	const known = separatorsByLocale.get(locale);
+	if (known) return known;
+
+	const parts = numberFormat(locale).formatToParts(12345.6);
+	const found = {
+		decimal: parts.find((part) => part.type === 'decimal')?.value ?? '.',
+		group: parts.find((part) => part.type === 'group')?.value ?? ''
+	};
+	separatorsByLocale.set(locale, found);
+	return found;
+}
+
+export type ParseOptions = {
+	min?: number;
+	max?: number;
+	decimals: number;
+	/** The locale the text was typed in. Left out, the reader's own. */
+	locale?: string;
+};
+
 /**
- * Reads what someone typed, on commit rather than per keystroke. `undefined` for an empty field:
- * clearing means "no value", not "the smallest allowed one". Browsers hand back an empty string for
- * anything they cannot parse, so unparseable input arrives here as empty too.
+ * Reads what someone typed, on commit rather than per keystroke, the way their locale writes it:
+ * `1,5` is one and a half in `de-DE` and fifteen in `en-US`, because there the comma groups
+ * thousands. Group separators are dropped along with any whitespace, since a locale that groups
+ * with a narrow space gets a plain one typed, and the locale's decimal becomes the point `Number`
+ * reads. `undefined` for an empty or unreadable field: clearing means "no value", not "the smallest
+ * allowed one".
  */
 export function parse(
 	raw: string,
-	min: number | undefined,
-	max: number | undefined,
-	decimals: number
+	{ min, max, decimals, locale }: ParseOptions
 ): number | undefined {
-	if (raw.trim() === '') return undefined;
+	const text = raw.trim();
+	if (text === '') return undefined;
 
-	const parsed = Number(raw);
+	const { decimal, group } = separators(locale);
+	const normalized = (group ? text.replaceAll(group, '') : text)
+		.replace(/\s/g, '')
+		.replace(decimal, '.')
+		// The minus `Intl` prints in some locales is not the hyphen a keyboard types.
+		.replace('\u2212', '-');
+
+	const parsed = Number(normalized);
 	if (Number.isNaN(parsed)) return undefined;
 
 	return clamp(round(parsed, decimals), min, max);
+}
+
+/**
+ * Writes a value the way the locale does, without grouping: a field is typed into, and a thousands
+ * separator appearing under the caret on commit is one more thing to delete on the next edit.
+ */
+export function format(value: number, decimals: number, locale?: string): string {
+	return numberFormat(locale, {
+		maximumFractionDigits: precision(decimals),
+		useGrouping: false
+	}).format(value);
 }

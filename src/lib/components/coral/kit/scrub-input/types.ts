@@ -1,6 +1,6 @@
 /**
  * @coral/kit/scrub-input
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -9,8 +9,9 @@ import type { InputGroupInput } from '#lib/components/ui/input-group/index.js';
 /**
  * Everything the shadcn input accepts - `name`, `id`, `placeholder`, `aria-*`, `ref` - stays
  * available. `value` and `type` are Coral's: the value is a number rather than a string, and the
- * type is always `number`. `files` goes with them, since a number field can never carry a `FileList`,
- * and so does `onchange`, which reports the value rather than the DOM event.
+ * field is a text field that reads and writes it in `locale`. `files` goes with them, since a
+ * number field can never carry a `FileList`, and so does `onchange`, which reports the value
+ * rather than the DOM event.
  */
 type InputProps = Omit<
 	ComponentProps<typeof InputGroupInput>,
@@ -43,6 +44,11 @@ export type ScrubInputProps = InputProps & {
 	 * when the step and the precision genuinely differ.
 	 */
 	decimals?: number;
+	/**
+	 * The locale the number is typed and shown in: it decides whether `1,5` is one and a half or
+	 * fifteen, and which separator the field writes back.
+	 */
+	locale?: string;
 	/**
 	 * How far the pointer travels per step. Lower is faster: at `1` the value follows the pointer
 	 * pixel for pixel, which is what a field measured in pixels usually wants.

@@ -1,6 +1,6 @@
 /**
  * @coral/kit/activity-calendar
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
@@ -87,3 +87,14 @@ export type ActivityCalendarProps<T = unknown> = Omit<
 
 export type { Weekday } from './dates.js';
 export type { ActivityCell, ActivityDay, ActivityWeek, Grid, MonthSpan } from './grid.js';
+
+/** What a project can state once for every activity calendar - see `lib/defaults`. */
+export type ActivityCalendarDefaults = Partial<
+	Pick<ActivityCalendarProps<unknown>, 'weekStart' | 'label'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/activity-calendar'?: ActivityCalendarDefaults;
+	}
+}

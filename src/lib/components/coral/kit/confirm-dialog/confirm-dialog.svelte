@@ -1,18 +1,21 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/confirm-dialog
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import { Action } from '../../lib/action.svelte.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { ConfirmDialogProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/confirm-dialog');
 
 	let {
 		title,
 		description,
-		confirmLabel = 'Continue',
-		cancelLabel = 'Cancel',
+		confirmLabel = defaults.confirmLabel ?? 'Continue',
+		cancelLabel = defaults.cancelLabel ?? 'Cancel',
 		showCancel = true,
 		variant = 'default',
 		onconfirm,
@@ -20,6 +23,7 @@
 		oncancel,
 		onOpenChange,
 		pending,
+		confirmDisabled = false,
 		size = 'default',
 		open = $bindable(false),
 		class: className,
@@ -43,7 +47,7 @@
 	 * the entry too: a second click would submit the same destructive action twice.
 	 */
 	async function confirm() {
-		if (busy) return;
+		if (busy || confirmDisabled) return;
 
 		if (!onconfirm) {
 			open = false;
@@ -121,7 +125,7 @@
 				second button would hand the outer class down to the inner one and quietly repaint a
 				destructive action in the default colour.
 			-->
-			<AlertDialog.Action {variant} disabled={busy} onclick={confirm}>
+			<AlertDialog.Action {variant} disabled={busy || confirmDisabled} onclick={confirm}>
 				{#if busy}
 					<Spinner />
 				{/if}

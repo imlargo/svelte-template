@@ -1,22 +1,25 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/follow-scroll
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { prefersReducedMotion } from 'svelte/motion';
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { cn } from '#lib/utils.js';
 	import { isAtEnd, unreadSince } from './follow.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { FollowScrollProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/follow-scroll');
 
 	let {
 		pinned = $bindable(true),
 		onpinnedchange,
 		count,
-		threshold = 32,
-		jumpLabel = 'Jump to latest',
-		unreadLabel = (unread: number) => `${unread} new`,
+		threshold = defaults.threshold ?? 32,
+		jumpLabel = defaults.jumpLabel ?? 'Jump to latest',
+		unreadLabel = defaults.unreadLabel ?? ((unread: number) => `${unread} new`),
 		ref = $bindable(null),
 		class: className,
 		children,

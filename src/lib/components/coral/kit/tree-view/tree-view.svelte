@@ -1,15 +1,18 @@
 <script lang="ts" generics="T = unknown">
 	/**
 	 * @coral/kit/tree-view
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import { tick } from 'svelte';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import { cn } from '#lib/utils.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { focusRingInset } from '../../lib/focus.js';
 	import { ancestorsOf, expandableSiblings, typeahead, visibleRows } from './tree.js';
 	import type { TreeRow } from './tree.js';
 	import type { NodeContext, TreeViewProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/tree-view');
 
 	let {
 		nodes,
@@ -17,14 +20,15 @@
 		selected = $bindable(),
 		onselect,
 		onexpandedchange,
-		locale,
+		locale = defaults.locale,
 		label,
-		toggleLabel,
+		toggleLabel = defaults.toggleLabel,
 		ref = $bindable(null),
 		class: className,
 		rowClass,
 		node: nodeSnippet,
 		icon,
+		actions,
 		...restProps
 	}: TreeViewProps<T> = $props();
 
@@ -88,9 +92,72 @@
 	let queryTimer: ReturnType<typeof setTimeout> | undefined;
 	$effect(() => () => clearTimeout(queryTimer));
 
+	const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]';
+
+	/**
+	 * Keeps every control in a row's actions out of the tab order, for as long as the row lives. The
+	 * tree is one tab stop with the arrows inside it, and sequential focus visiting every action of
+	 * every row would undo that; the actions are reached from their row instead - see `handleKeydown`.
+	 */
+	function untabbable(node: HTMLElement) {
+		const demote = () => {
+			for (const control of node.querySelectorAll<HTMLElement>(FOCUSABLE)) control.tabIndex = -1;
+		};
+		demote();
+		const observer = new MutationObserver(demote);
+		observer.observe(node, { childList: true, subtree: true });
+		return () => observer.disconnect();
+	}
+
+	const actionsOf = (row: HTMLElement) =>
+		Array.from(row.querySelectorAll<HTMLElement>(`[data-coral-actions] :is(${FOCUSABLE})`));
+
+	/**
+	 * Tab inside the actions of one row. From the row: into its first control. Between controls: the
+	 * next or the previous. Past the last one, or backwards past the first, focus returns to the row
+	 * before the browser moves on, so Tab leaves the tree from the row the same way it arrived - the
+	 * controls themselves are not in the sequential order. Escape goes back to the row too.
+	 */
+	function handleActionsKeydown(event: KeyboardEvent & { currentTarget: HTMLDivElement }) {
+		const row = event.currentTarget;
+		const controls = actionsOf(row);
+		const inside = event.target !== row;
+		const at = controls.indexOf(event.target as HTMLElement);
+
+		if (event.key === 'Escape' && inside) {
+			event.preventDefault();
+			event.stopPropagation();
+			row.focus();
+			return true;
+		}
+		if (event.key !== 'Tab') return inside;
+
+		if (!inside) {
+			if (event.shiftKey || controls.length === 0) return false;
+			event.preventDefault();
+			controls[0].focus();
+			return true;
+		}
+
+		const next = controls[at + (event.shiftKey ? -1 : 1)];
+		if (next) {
+			event.preventDefault();
+			next.focus();
+		} else if (event.shiftKey) {
+			event.preventDefault();
+			row.focus();
+		} else {
+			// Not prevented: the browser moves on from the row, which is the tree's only tab stop.
+			row.focus();
+		}
+		return true;
+	}
+
 	/** On each row rather than delegated from the tree, so the row that has focus is the one it reads. */
 	function handleKeydown(event: KeyboardEvent & { currentTarget: HTMLDivElement }) {
 		if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+		// A key inside the actions belongs to the control that has focus, Tab and Escape aside.
+		if (handleActionsKeydown(event)) return;
 
 		const index = rows.findIndex((row) => row.node.id === tabbableId);
 		const row = rows[index];
@@ -183,19 +250,26 @@
 			data-state={row.expanded ? 'open' : row.expandable ? 'closed' : undefined}
 			data-selected={context.selected || undefined}
 			data-disabled={row.node.disabled || undefined}
-			style:--coral-pad="calc(var(--coral-indent) * {row.level - 1})"
-			class={cn(
-				'flex cursor-default items-center gap-1 ps-(--coral-pad) select-none',
-				focusRingInset,
-				rowClass
-			)}
-			onfocus={() => (focusedId = row.node.id)}
+			class={cn('flex cursor-default items-center gap-1 select-none', focusRingInset, rowClass)}
+			onfocusin={() => (focusedId = row.node.id)}
 			onkeydown={handleKeydown}
-			onclick={() => {
+			onclick={(event) => {
+				// A click on one of the row's actions is that action's, not a selection.
+				if ((event.target as Element).closest('[data-coral-actions]')) return;
 				focusedId = row.node.id;
 				select(row);
 			}}
 		>
+			<!--
+				The indent is an element, not padding on the row: padding would be merged with `rowClass`,
+				where a `px-2` quietly wins and every level renders flush.
+			-->
+			<span
+				aria-hidden="true"
+				class="shrink-0"
+				style:width="calc(var(--coral-indent) * {row.level - 1})"
+			></span>
+
 			{#if row.expandable}
 				<!--
 					A mouse target only, hidden from assistive tech: from the keyboard, the arrows do what
@@ -203,6 +277,7 @@
 					model the pattern depends on.
 				-->
 				<span
+					data-coral-toggle
 					aria-hidden="true"
 					title={toggleLabel?.(row.node, row.expanded)}
 					class="flex shrink-0 cursor-pointer items-center justify-center"
@@ -234,6 +309,12 @@
 				{@render nodeSnippet(context)}
 			{:else}
 				<span class="min-w-0 truncate">{row.node.label}</span>
+			{/if}
+
+			{#if actions}
+				<span data-coral-actions class="ms-auto flex shrink-0 items-center" {@attach untabbable}>
+					{@render actions(context)}
+				</span>
 			{/if}
 		</div>
 	{/each}

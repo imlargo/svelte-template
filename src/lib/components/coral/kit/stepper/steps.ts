@@ -1,6 +1,6 @@
 /**
  * @coral/kit/stepper
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 /** Where a step stands relative to the current one. */

@@ -1,7 +1,7 @@
 <script lang="ts" generics="T = unknown">
 	/**
 	 * @coral/kit/activity-calendar
-	 * @version 1.0.1
+	 * @version 1.1.0
 	 */
 	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
 	import { cn } from '#lib/utils.js';
@@ -11,23 +11,26 @@
 	import { weekdayAt } from './dates.js';
 	import { buildGrid, stepFor } from './grid.js';
 	import type { ActivityCell } from './grid.js';
+	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { ActivityCalendarProps } from './types.js';
+
+	const defaults = getCoralDefaults('kit/activity-calendar');
 
 	let {
 		data,
 		start,
 		end,
-		weekStart = 1,
+		weekStart = defaults.weekStart ?? 1,
 		levels = 4,
 		thresholds,
-		locale = 'en-US',
+		locale = defaults.locale ?? 'en-US',
 		color = 'var(--primary)',
 		emptyColor = 'var(--muted)',
 		showWeekdays = true,
 		showMonths = true,
 		showLegend = true,
 		caption,
-		label,
+		label = defaults.label,
 		onselect,
 		ref = $bindable(null),
 		class: className,

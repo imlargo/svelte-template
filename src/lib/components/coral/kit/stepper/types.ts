@@ -1,6 +1,6 @@
 /**
  * @coral/kit/stepper
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -89,6 +89,18 @@ export type StepperNextProps = ButtonProps & {
 	/** Replaces the label. Receives where the stepper is, for a button that changes with the step. */
 	children?: Snippet<[{ isLast: boolean; pending: boolean }]>;
 };
+
+/** What a project can state once for every stepper - see `lib/defaults`. */
+export type StepperDefaults = Partial<Pick<StepperNextProps, 'nextLabel' | 'finishLabel'>> & {
+	/** The previous button's `label`. */
+	previousLabel?: StepperPreviousProps['label'];
+};
+
+declare global {
+	interface CoralDefaults {
+		'kit/stepper'?: StepperDefaults;
+	}
+}
 
 export type { StepperContext } from './context.js';
 export type { StepState } from './steps.js';

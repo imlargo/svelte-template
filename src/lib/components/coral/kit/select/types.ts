@@ -1,6 +1,6 @@
 /**
  * @coral/kit/select
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -56,6 +56,15 @@ export type SelectProps<T> = RootProps &
 		onchange?: (option: Option<T> | undefined) => void;
 		/** Shown on the trigger while nothing is selected. */
 		placeholder?: string;
+		/** Shown, and announced, in a list with no options. */
+		emptyMessage?: string;
+		/**
+		 * Adds a loading row under whatever options are already listed, for options that come from a
+		 * request. The reader is told so, seen and heard, the way `kit/combobox` tells it.
+		 */
+		loading?: boolean;
+		/** Shown, and announced, while `loading`. */
+		loadingMessage?: string;
 		/** Blocks the trigger. */
 		disabled?: boolean;
 		/** Adds a clear control to the trigger, and makes re-picking the selected option unset it. */
@@ -84,3 +93,14 @@ export type SelectProps<T> = RootProps &
 		/** Replaces the body of each option row. The check indicator stays. */
 		option?: Snippet<[OptionContext<T>]>;
 	};
+
+/** What a project can state once for every select - see `lib/defaults`. */
+export type SelectDefaults = Partial<
+	Pick<SelectProps<unknown>, 'placeholder' | 'emptyMessage' | 'loadingMessage' | 'clearLabel'>
+>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/select'?: SelectDefaults;
+	}
+}

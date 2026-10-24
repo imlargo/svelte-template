@@ -1,6 +1,6 @@
 /**
  * @coral/kit/rating-group
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { Snippet } from 'svelte';
@@ -65,3 +65,12 @@ export type RatingGroupProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> 
 	 */
 	star?: Snippet<[StarContext]>;
 };
+
+/** What a project can state once for every rating group - see `lib/defaults`. */
+export type RatingGroupDefaults = Partial<Pick<RatingGroupProps, 'label'>>;
+
+declare global {
+	interface CoralDefaults {
+		'kit/rating-group'?: RatingGroupDefaults;
+	}
+}
