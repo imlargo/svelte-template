@@ -37,6 +37,12 @@ export default defineConfig(
 		}
 	},
 	{
+		// Coral is plain Svelte installed from its registry: an href it renders comes from the project's
+		// data, which is where resolve() belongs.
+		files: ['src/lib/components/coral/**'],
+		rules: { 'svelte/no-navigation-without-resolve': 'off' }
+	},
+	{
 		// Override or add rule settings here, such as:
 		// 'svelte/button-has-type': 'error'
 		rules: {}
