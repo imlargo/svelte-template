@@ -8,6 +8,7 @@ bun.lockb
 # Miscellaneous
 /static/
 src/lib/components/ui/
+src/lib/components/coral/
 
 .claude/
 .agents/
