@@ -5,6 +5,7 @@
 #      every shadcn-svelte component, all of them interactive
 #   3. installs the template's own dependencies
 #   4. moves the template's own code into app/, replacing what the scaffold put there
+#   5. replaces the project with app/ and deletes legacy/ (git keeps the previous version)
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -166,6 +167,18 @@ move_lint_staged_config() {
 	' "$LEGACY/package.json" "$APP/package.json"
 }
 
+# node_modules is reinstalled at the root: pnpm's bin shims carry absolute paths.
+promote_app() {
+	log "Replacing the project with $APP/"
+	rm -rf "$LEGACY" "$APP/node_modules" "$APP/.svelte-kit"
+	shopt -s dotglob nullglob
+	mv "$APP"/* .
+	shopt -u dotglob nullglob
+	rmdir "$APP"
+	pnpm install
+	pnpm run --if-present gen
+}
+
 check_clean_tree
 move_to_legacy
 create_app
@@ -174,9 +187,6 @@ install_components
 install_deps
 move_own_code
 move_lint_staged_config
-in_app pnpm run --if-present gen
+promote_app
 
-cat <<EOF
-
-Done: the new project is in $APP/ and the previous one in $LEGACY/.
-EOF
+log "Done: review the changes with git status and git diff"
