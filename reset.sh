@@ -15,5 +15,13 @@ if [[ ! -e .env ]]; then
 	done
 fi
 
+# reset --hard devolvería los scripts a su versión del commit: se guardan los locales.
+readonly SCRIPTS=(setup.sh reset.sh init.sh)
+backup=$(mktemp -d)
+cp "${SCRIPTS[@]}" "$backup/"
+
 git reset --hard HEAD
 git clean -ffdx -e /setup.sh -e /reset.sh -e /init.sh -e /.env
+
+mv "${SCRIPTS[@]/#/$backup/}" .
+rmdir "$backup"
