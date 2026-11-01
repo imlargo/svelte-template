@@ -4,13 +4,6 @@ import type { RequirePermission } from '#lib/features/auth/guard.server.js';
 // for information about these interfaces
 declare global {
 	namespace App {
-		interface Platform {
-			env: Env;
-			ctx: ExecutionContext;
-			caches: CacheStorage;
-			cf?: IncomingRequestCfProperties;
-		}
-
 		interface Error {
 			/** Set by `handleError` for unexpected errors, and logged alongside them. */
 			errorId?: string;
@@ -26,6 +19,7 @@ declare global {
 		}
 		// interface PageData {}
 		// interface PageState {}
+		// interface Platform {}
 	}
 }
 
