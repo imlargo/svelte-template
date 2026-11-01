@@ -11,7 +11,7 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 	{
-		ignores: ['src/lib/components/ui/**']
+		ignores: ['src/lib/components/ui/**', 'src/lib/components/coral/**']
 	},
 	js.configs.recommended,
 	ts.configs.recommended,
@@ -35,12 +35,6 @@ export default defineConfig(
 				parser: ts.parser
 			}
 		}
-	},
-	{
-		// Coral is plain Svelte installed from its registry: an href it renders comes from the project's
-		// data, which is where resolve() belongs.
-		files: ['src/lib/components/coral/**'],
-		rules: { 'svelte/no-navigation-without-resolve': 'off' }
 	},
 	{
 		// Override or add rule settings here, such as:
