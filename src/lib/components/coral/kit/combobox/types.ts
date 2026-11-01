@@ -1,6 +1,6 @@
 /**
  * @coral/kit/combobox
- * @version 1.1.0
+ * @version 1.3.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -23,6 +23,12 @@ export type TriggerContext<T> = {
 export type OptionContext<T> = {
 	option: Option<T>;
 	selected: boolean;
+};
+
+/** What the `selection` snippet receives. */
+export type SelectionContext<T> = {
+	/** Every selected option. Never empty: the placeholder shows instead. */
+	selected: Option<T>[];
 };
 
 /** What the `footer` snippet receives. Rendered below the list, inside the popover. */
@@ -101,6 +107,11 @@ type BaseProps<T> = RootProps &
 		maxDisplay?: number;
 		/** Which trigger edge the list lines up with. `end` for a combobox at the end of a toolbar. */
 		align?: ComponentProps<typeof PopoverContent>['align'];
+		/**
+		 * The element the list lines up with and takes its width from, instead of the trigger. For a
+		 * trigger that is one part of a wider control, such as the country button in a phone field.
+		 */
+		anchor?: HTMLElement | null;
 		/** Merged onto the trigger button. */
 		class?: string;
 		/** Merged onto the popover content. */
@@ -109,12 +120,30 @@ type BaseProps<T> = RootProps &
 		listClass?: string;
 		/** Replaces the whole trigger. */
 		trigger?: Snippet<[TriggerContext<T>]>;
+		/**
+		 * Replaces what the default trigger prints for the selection: the label, or the badges with
+		 * `type="multiple"`. The placeholder, the chevron and the clear control stay.
+		 */
+		selection?: Snippet<[SelectionContext<T>]>;
 		/** Replaces the body of each option row. The check indicator stays. */
 		option?: Snippet<[OptionContext<T>]>;
 		/** Replaces the empty state. */
 		empty?: Snippet;
 		/** Replaces the loading row. */
 		indicator?: Snippet;
+		/**
+		 * Adds a row that creates an option from the search term, offered when no option is already
+		 * labelled that. Receives the trimmed term; return the new option, and add it to `options`,
+		 * and the combobox selects it. Return `false`, or throw, and nothing is selected.
+		 */
+		oncreate?: (term: string) => Option<T> | false | Promise<Option<T> | false>;
+		/** The create row's text. Takes the term, because 'Create' alone says nothing about what. */
+		createLabel?: (term: string) => string;
+		/**
+		 * Receives whatever `oncreate` threw. Without it the error propagates as an unhandled
+		 * rejection, which is visible in the console but to nobody using the page.
+		 */
+		onerror?: (error: unknown) => void;
 		/** Rendered below the list - bulk actions, a count, a "create new" affordance. */
 		footer?: Snippet<[FooterContext<T>]>;
 	};
@@ -128,6 +157,7 @@ export type ComboboxDefaults = Partial<
 		| 'emptyMessage'
 		| 'loadingMessage'
 		| 'clearLabel'
+		| 'createLabel'
 		| 'searchDebounce'
 	>
 >;

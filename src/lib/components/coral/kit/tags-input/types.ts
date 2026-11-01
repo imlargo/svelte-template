@@ -1,6 +1,6 @@
 /**
  * @coral/kit/tags-input
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -86,6 +86,13 @@ export type TagsInputProps = InputProps & {
 	disabled?: boolean;
 	/** Shows the tags without offering to change them. */
 	readonly?: boolean;
+	/**
+	 * Tags to offer while typing, filtered by what is typed and minus the ones already held. Picked
+	 * with the arrows and Enter, or a click; anything else typed is still a tag of its own.
+	 */
+	suggestions?: string[];
+	/** Accessible name of the suggestion list. */
+	suggestionsLabel?: string;
 	/** Which badge variant the tags are drawn with. */
 	tagVariant?: BadgeVariant;
 	/** Merged onto the box around everything. */
@@ -100,7 +107,7 @@ export type TagsInputProps = InputProps & {
 
 /** What a project can state once for every tags input - see `lib/defaults`. */
 export type TagsInputDefaults = Partial<
-	Pick<TagsInputProps, 'clearLabel' | 'removeLabel' | 'delimiter'>
+	Pick<TagsInputProps, 'clearLabel' | 'removeLabel' | 'delimiter' | 'suggestionsLabel'>
 >;
 
 declare global {

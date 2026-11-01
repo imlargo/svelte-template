@@ -1,10 +1,11 @@
 <script lang="ts" generics="T, Type extends ComboboxType = 'single'">
 	/**
 	 * @coral/kit/combobox
-	 * @version 1.1.0
+	 * @version 1.3.0
 	 */
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
+	import PlusIcon from '@lucide/svelte/icons/plus';
 	import XIcon from '@lucide/svelte/icons/x';
 	import * as Command from '#lib/components/ui/command/index.js';
 	import * as Popover from '#lib/components/ui/popover/index.js';
@@ -14,10 +15,11 @@
 	import HiddenField from '../../lib/hidden-field.svelte';
 	import ListStatus from '../../lib/list-status.svelte';
 	import LiveRegion from '../../lib/live-region.svelte';
+	import { Action } from '../../lib/action.svelte.js';
 	import { debounce } from '../../lib/debounce.js';
 	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { flatten, toGroups } from '../../lib/options.js';
-	import { includesValue, matches } from './matching.js';
+	import { canCreate, includesValue, matches } from './matching.js';
 	import { Remembered } from './remembered.js';
 	import { selectAllVisible } from './selection.js';
 	import type { Option } from '../../lib/options.js';
@@ -40,6 +42,9 @@
 		loadingMessage = defaults.loadingMessage ?? 'Loading...',
 		clearLabel = defaults.clearLabel ?? 'Clear selection',
 		onchange,
+		oncreate,
+		createLabel = defaults.createLabel ?? ((term: string) => `Create "${term}"`),
+		onerror,
 		onsearch,
 		searchDebounce = defaults.searchDebounce ?? 0,
 		onOpenChange,
@@ -60,10 +65,12 @@
 		serialize,
 		maxDisplay = 3,
 		align = 'start',
+		anchor,
 		class: className,
 		contentClass,
 		listClass,
 		trigger,
+		selection,
 		option: optionSnippet,
 		empty,
 		indicator,
@@ -142,14 +149,23 @@
 			.filter((group) => group.entries.length > 0);
 	});
 
-	const noMatches = $derived(!loading && rendered.length === 0);
+	/**
+	 * The create row, offered once something is typed that no option is already called. Not while
+	 * loading: the option may be in the results still on their way, and a second one is a duplicate.
+	 */
+	const offerCreate = $derived(oncreate !== undefined && !loading && canCreate(all, search));
+	const creating = new Action();
+
+	const noMatches = $derived(!loading && rendered.length === 0 && !offerCreate);
 
 	/** What the list has to say beyond its options, spoken as well as shown. */
 	const status = $derived(loading ? loadingMessage : noMatches ? emptyMessage : '');
 
 	/** The highlighted option's element id, while there is an option for it to point at. */
 	const activeId = $derived(
-		highlighted !== '' && rendered.length > 0 ? `${listId}-${highlighted}` : undefined
+		highlighted !== '' && (rendered.length > 0 || offerCreate)
+			? `${listId}-${highlighted}`
+			: undefined
 	);
 
 	/**
@@ -197,6 +213,29 @@
 		const next = clearable && isSelected ? undefined : option.value;
 		commit(next);
 		close();
+	}
+
+	/**
+	 * Hands the term to the caller and picks what comes back. The caller adds it to `options`; until
+	 * then it is remembered here, so its label is on the trigger from the moment it exists.
+	 */
+	async function create() {
+		if (!oncreate) return;
+
+		let created: Option<T> | false = false;
+		try {
+			await creating.run(async () => (created = await oncreate(search.trim())));
+		} catch (error) {
+			if (!onerror) throw error;
+			onerror(error);
+			return;
+		}
+		if (!created) return;
+
+		remembered.remember(created);
+		// Several can be created in a row, and the term just spent would offer itself again.
+		if (multiple) search = '';
+		select(created);
 	}
 
 	function clear() {
@@ -267,6 +306,8 @@
 						>
 							{#if selected.length === 0}
 								{placeholder}
+							{:else if selection}
+								{@render selection({ selected })}
 							{:else if multiple}
 								{#each shown as option (option.value)}
 									<Badge variant="secondary">{option.label}</Badge>
@@ -300,7 +341,11 @@
 		{/if}
 	</div>
 
-	<Popover.Content {align} class={cn('w-(--bits-popover-anchor-width) p-0', contentClass)}>
+	<Popover.Content
+		{align}
+		customAnchor={anchor}
+		class={cn('w-(--bits-popover-anchor-width) p-0', contentClass)}
+	>
 		<Command.Root shouldFilter={false} bind:value={highlighted}>
 			<!--
 				`aria-controls` and `aria-activedescendant` by hand: the primitive derives both from a
@@ -350,6 +395,22 @@
 					Under the options rather than instead of them: with server-side search the previous
 					results stay usable while the next ones load, and the reader is told more are coming.
 				-->
+				{#if offerCreate}
+					<Command.Group>
+						<Command.Item
+							id={`${listId}-create`}
+							value="create"
+							disabled={creating.running}
+							aria-busy={creating.running ? 'true' : undefined}
+							class="data-disabled:pointer-events-none data-disabled:opacity-50"
+							onSelect={create}
+						>
+							<PlusIcon />
+							<span class="min-w-0 truncate">{createLabel(search.trim())}</span>
+						</Command.Item>
+					</Command.Group>
+				{/if}
+
 				{#if loading}
 					<ListStatus message={loadingMessage} loading children={indicator} />
 				{:else if noMatches}

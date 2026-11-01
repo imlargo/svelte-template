@@ -1,7 +1,9 @@
 /**
  * @coral/kit/tags-input
- * @version 1.1.0
+ * @version 1.2.0
  */
+
+import { fold } from '../../lib/fold.js';
 
 /** Why a tag was turned away. */
 export type RejectionReason = 'invalid' | 'duplicate' | 'max';
@@ -91,4 +93,17 @@ export function add(
 	}
 
 	return { tags: changed ? tags : current, rejected };
+}
+
+/**
+ * The suggestions worth showing for what is being typed: those containing it, folded the way Coral's
+ * searches fold, minus the tags already held. Each once, in the order given - the caller's order is
+ * usually a ranking already, by use or by recency.
+ */
+export function suggest(suggestions: string[], typed: string, held: string[]): string[] {
+	const needle = fold(typed.trim());
+	const taken = new Set(held);
+	return [...new Set(suggestions)].filter(
+		(suggestion) => !taken.has(suggestion) && fold(suggestion).includes(needle)
+	);
 }

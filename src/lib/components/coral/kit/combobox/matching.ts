@@ -1,6 +1,6 @@
 /**
  * @coral/kit/combobox
- * @version 1.1.0
+ * @version 1.3.0
  */
 
 import { fold } from '../../lib/fold.js';
@@ -31,4 +31,13 @@ export function matches<T>(option: Option<T>, search: string): boolean {
  */
 export function includesValue<T>(values: T[], value: T): boolean {
 	return values.some((candidate) => candidate === value);
+}
+
+/**
+ * Whether a search is worth offering to create: it has text, and no option is already labelled
+ * that, folded the way the search folds - so `acai` does not offer to create a second `Açaí`.
+ */
+export function canCreate<T>(options: Option<T>[], search: string): boolean {
+	const term = fold(search.trim());
+	return term !== '' && !options.some((option) => fold(option.label.trim()) === term);
 }

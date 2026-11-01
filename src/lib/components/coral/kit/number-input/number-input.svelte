@@ -1,14 +1,14 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/number-input
-	 * @version 1.1.0
+	 * @version 1.2.0
 	 */
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import * as InputGroup from '#lib/components/ui/input-group/index.js';
 	import { cn } from '#lib/utils.js';
 	import { getCoralDefaults } from '../../lib/defaults.js';
-	import { decimalsOf } from '../../lib/number.js';
+	import { decimalsOf, fractionDigits } from '../../lib/number.js';
 	import { numberField, numberFieldClass } from '../../lib/number-field.js';
 	import type { NumberInputProps } from './types.js';
 
@@ -22,6 +22,7 @@
 		largeStep,
 		decimals,
 		locale = defaults.locale ?? 'en-US',
+		format,
 		onchange,
 		decrementLabel = defaults.decrementLabel ?? 'Decrease',
 		incrementLabel = defaults.incrementLabel ?? 'Increase',
@@ -34,7 +35,8 @@
 		...restProps
 	}: NumberInputProps = $props();
 
-	const places = $derived(decimals ?? decimalsOf(step));
+	/** A currency takes its cents even on a step of `1`: a price is not rounded to the dollar. */
+	const places = $derived(decimals ?? Math.max(decimalsOf(step), fractionDigits(locale, format)));
 	const coarse = $derived(largeStep ?? step * 10);
 
 	/**
@@ -53,6 +55,7 @@
 		largeStep: () => coarse,
 		decimals: () => places,
 		locale: () => locale,
+		format: () => format,
 		editable: () => !disabled && !readonly,
 		onchange: () => onchange
 	});

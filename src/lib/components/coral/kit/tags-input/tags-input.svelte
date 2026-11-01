@@ -1,15 +1,17 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/tags-input
-	 * @version 1.1.0
+	 * @version 1.2.0
 	 */
 	import { tick } from 'svelte';
 	import XIcon from '@lucide/svelte/icons/x';
+	import * as Command from '#lib/components/ui/command/index.js';
 	import * as InputGroup from '#lib/components/ui/input-group/index.js';
+	import * as Popover from '#lib/components/ui/popover/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { cn } from '#lib/utils.js';
 	import { focusRing } from '../../lib/focus.js';
-	import { add, split } from './tags.js';
+	import { add, split, suggest } from './tags.js';
 	import { getCoralDefaults } from '../../lib/defaults.js';
 	import type { TagsInputProps } from './types.js';
 
@@ -34,6 +36,8 @@
 		form,
 		disabled = false,
 		readonly = false,
+		suggestions,
+		suggestionsLabel = defaults.suggestionsLabel ?? 'Suggestions',
 		tagVariant = 'secondary',
 		class: className,
 		inputClass,
@@ -51,6 +55,38 @@
 	let box = $state<HTMLDivElement | null>(null);
 
 	const mutable = $derived(!disabled && !readonly);
+
+	const uid = $props.id();
+	const listId = `${uid}-suggestions`;
+
+	/** Whether the reader has asked for suggestions - by typing, or with the down arrow. */
+	let suggesting = $state(false);
+	/** The suggestion the arrow keys are on. Empty means none, so Enter adds what was typed. */
+	let active = $state('');
+
+	const offered = $derived(
+		suggestions ? suggest(suggestions, inputValue, allowDuplicates ? [] : value) : []
+	);
+	const listOpen = $derived(mutable && suggesting && offered.length > 0);
+	const activeIndex = $derived(offered.indexOf(active));
+
+	function closeSuggestions() {
+		suggesting = false;
+		active = '';
+	}
+
+	/** Steps through the suggestions from the field, which keeps focus the whole time. */
+	function moveActive(step: 1 | -1) {
+		suggesting = true;
+		const from = activeIndex === -1 ? (step === 1 ? -1 : offered.length) : activeIndex;
+		active = offered[(from + step + offered.length) % offered.length] ?? '';
+	}
+
+	function pick(suggestion: string) {
+		if (accept([suggestion])) setDraft('');
+		closeSuggestions();
+		ref?.focus();
+	}
 	const showClear = $derived(clearable && mutable && value.length > 0);
 
 	function commit(tags: string[]) {
@@ -150,6 +186,10 @@
 			setDraft(parts.pop() ?? '');
 			accept(parts);
 		}
+
+		// Offered for what is being typed, not after a delimiter has just emptied the field.
+		suggesting = inputValue.trim() !== '';
+		active = '';
 	}
 
 	function handleInput(event: Event & { currentTarget: HTMLInputElement }) {
@@ -185,6 +225,25 @@
 		onkeydown?.(event);
 		if (event.defaultPrevented) return;
 
+		if (suggestions && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+			event.preventDefault();
+			moveActive(event.key === 'ArrowDown' ? 1 : -1);
+			return;
+		}
+
+		if (listOpen && event.key === 'Escape') {
+			// The first Escape closes the list; the second is a dialog's, if there is one around.
+			event.stopPropagation();
+			closeSuggestions();
+			return;
+		}
+
+		if (event.key === 'Enter' && listOpen && activeIndex !== -1) {
+			event.preventDefault();
+			pick(active);
+			return;
+		}
+
 		if (event.key === 'Enter') {
 			// An empty field is left to the form: Enter there is a submit, not an empty tag. This is
 			// also why the key is only swallowed when it had something to do - a tags input that
@@ -206,6 +265,7 @@
 	}
 
 	function handleBlur(event: FocusEvent & { currentTarget: HTMLInputElement }) {
+		closeSuggestions();
 		if (addOnBlur && inputValue !== '' && accept([inputValue])) setDraft('');
 		onblur?.(event);
 	}
@@ -297,8 +357,18 @@
 		rather than whatever happens to be half-typed in the field. Its padding drops to sit level with
 		the tags.
 	-->
+	<!--
+		With suggestions the field is a combobox whose list it drives without giving up focus, the
+		pattern a search box with suggestions follows: the arrows move `aria-activedescendant`, and
+		what is typed stays editable the whole time.
+	-->
 	<InputGroup.Input
 		bind:ref={() => ref, (node) => (ref = node as HTMLInputElement | null)}
+		role={suggestions ? 'combobox' : undefined}
+		aria-autocomplete={suggestions ? 'list' : undefined}
+		aria-expanded={suggestions ? listOpen : undefined}
+		aria-controls={listOpen ? listId : undefined}
+		aria-activedescendant={listOpen && activeIndex !== -1 ? `${listId}-${activeIndex}` : undefined}
 		value={inputValue}
 		{disabled}
 		{readonly}
@@ -318,6 +388,42 @@
 		</InputGroup.Button>
 	{/if}
 </InputGroup.Root>
+
+{#if suggestions}
+	<!--
+		Anchored to the whole box, so the list lines up with it however many lines the tags wrap
+		onto. Focus never moves into it: a click is kept from blurring the field, which would add the
+		half-typed text as a tag of its own before the suggestion it was meant to become.
+	-->
+	<Popover.Root open={listOpen} onOpenChange={(next) => !next && closeSuggestions()}>
+		<Popover.Content
+			customAnchor={box}
+			align="start"
+			trapFocus={false}
+			onOpenAutoFocus={(event) => event.preventDefault()}
+			onCloseAutoFocus={(event) => event.preventDefault()}
+			onInteractOutside={(event) => {
+				if (box?.contains(event.target as Node)) event.preventDefault();
+			}}
+			onpointerdown={(event) => event.preventDefault()}
+			class="w-(--bits-popover-anchor-width) p-0"
+		>
+			<Command.Root shouldFilter={false} value={active}>
+				<Command.List id={listId} aria-label={suggestionsLabel}>
+					{#each offered as suggestion, index (suggestion)}
+						<Command.Item
+							id={`${listId}-${index}`}
+							value={suggestion}
+							onSelect={() => pick(suggestion)}
+						>
+							<span class="min-w-0 truncate">{suggestion}</span>
+						</Command.Item>
+					{/each}
+				</Command.List>
+			</Command.Root>
+		</Popover.Content>
+	</Popover.Root>
+{/if}
 
 <!--
 	One hidden input per tag, the shape a server already reads as a list. The visible field never

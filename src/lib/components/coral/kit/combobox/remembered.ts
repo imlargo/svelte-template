@@ -1,6 +1,6 @@
 /**
  * @coral/kit/combobox
- * @version 1.1.0
+ * @version 1.3.0
  */
 
 import { includesValue } from './matching.js';
@@ -21,6 +21,11 @@ export class Remembered<T> {
 	 * The options carrying `values`: the ones in `all`, in list order, then any `all` no longer
 	 * holds but this instance has shown before, in selection order.
 	 */
+	/** Keeps an option known before any list has carried it - one the caller just created. */
+	remember(option: Option<T>): void {
+		this.#known.set(option.value, option);
+	}
+
 	hydrate(all: Option<T>[], values: T[]): Option<T>[] {
 		const listed = all.filter((option) => includesValue(values, option.value));
 		for (const option of listed) this.#known.set(option.value, option);

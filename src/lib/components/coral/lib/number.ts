@@ -1,6 +1,6 @@
 /**
  * @coral/lib/number
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 import { numberFormat } from './intl.js';
@@ -90,7 +90,29 @@ export type ParseOptions = {
 	decimals: number;
 	/** The locale the text was typed in. Left out, the reader's own. */
 	locale?: string;
+	/** How the value is written - a currency, a percent, a unit - so its symbols can be read past. */
+	style?: Intl.NumberFormatOptions;
 };
+
+/** The parts of a formatted number that are not the number: `$`, `%`, `km/h`, `CHF`. */
+const AFFIXES = new Set(['currency', 'percentSign', 'unit', 'literal']);
+
+/**
+ * Everything `style` writes around a number, longest first, so `US$` goes before a lone `$` would
+ * leave the `US` behind. Read off a negative and a positive value, because some locales move the
+ * symbol to the other side of the minus.
+ */
+function affixes(locale: string | undefined, style: Intl.NumberFormatOptions): string[] {
+	const formatter = numberFormat(locale, style);
+	const parts = [...formatter.formatToParts(-1.5), ...formatter.formatToParts(1.5)];
+	const found = parts
+		.filter((part) => AFFIXES.has(part.type) && part.value.trim() !== '')
+		.map((part) => part.value.trim());
+	return [...new Set(found)].sort((a, b) => b.length - a.length);
+}
+
+/** Whether `style` shows a fraction as a percent: the value `0.15` is written `15%`. */
+const isPercent = (style?: Intl.NumberFormatOptions) => style?.style === 'percent';
 
 /**
  * Reads what someone typed, on commit rather than per keystroke, the way their locale writes it:
@@ -102,9 +124,11 @@ export type ParseOptions = {
  */
 export function parse(
 	raw: string,
-	{ min, max, decimals, locale }: ParseOptions
+	{ min, max, decimals, locale, style }: ParseOptions
 ): number | undefined {
-	const text = raw.trim();
+	let text = raw.trim();
+	if (style) for (const affix of affixes(locale, style)) text = text.replaceAll(affix, '');
+	text = text.trim();
 	if (text === '') return undefined;
 
 	const { decimal, group } = separators(locale);
@@ -114,19 +138,40 @@ export function parse(
 		// The minus `Intl` prints in some locales is not the hyphen a keyboard types.
 		.replace('\u2212', '-');
 
-	const parsed = Number(normalized);
-	if (Number.isNaN(parsed)) return undefined;
+	const read = Number(normalized);
+	if (Number.isNaN(read)) return undefined;
+
+	// Typed as a percent with or without the sign: `15` in a percent field is fifteen percent.
+	const parsed = isPercent(style) ? read / 100 : read;
 
 	return clamp(round(parsed, decimals), min, max);
 }
 
 /**
+ * The fraction digits `style` always writes: two for dollars, none for yen, none without a style.
+ * A currency field whose step is `1` still takes cents, and this is how it knows to.
+ */
+export function fractionDigits(locale: string | undefined, style?: Intl.NumberFormatOptions) {
+	return style ? (numberFormat(locale, style).resolvedOptions().minimumFractionDigits ?? 0) : 0;
+}
+
+/**
  * Writes a value the way the locale does, without grouping: a field is typed into, and a thousands
  * separator appearing under the caret on commit is one more thing to delete on the next edit.
+ *
+ * `decimals` is the precision of the value, so a percent shows two fewer: `0.155` is `15.5%`.
  */
-export function format(value: number, decimals: number, locale?: string): string {
+export function format(
+	value: number,
+	decimals: number,
+	locale?: string,
+	style?: Intl.NumberFormatOptions
+): string {
+	const shown = precision(isPercent(style) ? decimals - 2 : decimals);
 	return numberFormat(locale, {
-		maximumFractionDigits: precision(decimals),
+		...style,
+		maximumFractionDigits: shown,
+		minimumFractionDigits: Math.min(shown, fractionDigits(locale, style)),
 		useGrouping: false
 	}).format(value);
 }

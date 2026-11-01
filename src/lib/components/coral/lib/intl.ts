@@ -1,6 +1,6 @@
 /**
  * @coral/lib/intl
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 const cache = new Map<string, unknown>();
@@ -46,4 +46,11 @@ export function relativeTimeFormat(
 	options?: Intl.RelativeTimeFormatOptions
 ): Intl.RelativeTimeFormat {
 	return cached('relative', locale, options, () => new Intl.RelativeTimeFormat(locale, options));
+}
+
+export function displayNames(
+	locale: string | undefined,
+	options: Intl.DisplayNamesOptions
+): Intl.DisplayNames {
+	return cached('display', locale, options, () => new Intl.DisplayNames(locale, options));
 }

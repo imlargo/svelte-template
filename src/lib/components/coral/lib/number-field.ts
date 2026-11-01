@@ -1,6 +1,6 @@
 /**
  * @coral/lib/number-field
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 import { format, parse, stepValue } from './number.js';
@@ -23,6 +23,8 @@ export type NumberFieldConfig = {
 	decimals: () => number;
 	/** The locale the value is written and read in. */
 	locale: () => string | undefined;
+	/** How the value is written: a currency, a percent, a unit. A plain number when left out. */
+	format?: () => Intl.NumberFormatOptions | undefined;
 	/** Whether the reader may change the value at all - not disabled, not read-only. */
 	editable: () => boolean;
 	onchange: () => ((value: number | undefined) => void) | undefined;
@@ -35,7 +37,9 @@ export const numberFieldClass = 'w-16 text-center';
 export function numberField(config: NumberFieldConfig) {
 	/** The value as the field shows it. Empty for no value. */
 	function text(value = config.value()): string {
-		return value === undefined ? '' : format(value, config.decimals(), config.locale());
+		return value === undefined
+			? ''
+			: format(value, config.decimals(), config.locale(), config.format?.());
 	}
 
 	/** How much one step is worth right now. Shift is the coarse modifier everywhere a number moves. */
@@ -76,7 +80,8 @@ export function numberField(config: NumberFieldConfig) {
 			min: config.min(),
 			max: config.max(),
 			decimals: config.decimals(),
-			locale: config.locale()
+			locale: config.locale(),
+			style: config.format?.()
 		});
 
 		commit(next);

@@ -1,6 +1,6 @@
 /**
  * @coral/kit/number-input
- * @version 1.1.0
+ * @version 1.2.0
  */
 
 import type { ComponentProps } from 'svelte';
@@ -42,6 +42,13 @@ export type NumberInputProps = InputProps & {
 	 * fifteen, and which separator the field writes back.
 	 */
 	locale?: string;
+	/**
+	 * How the value is written: a currency, a percent, a unit. Passed to `Intl.NumberFormat` - `{
+	 * style: 'currency', currency: 'EUR' }`, `{ style: 'percent' }`, `{ style: 'unit', unit:
+	 * 'gigabyte' }` - and read back past its symbols, typed or not. With `percent` the value is the
+	 * fraction, so `0.15` shows as `15%` and a step of `0.01` is one percent.
+	 */
+	format?: Intl.NumberFormatOptions;
 	/**
 	 * Called when the value changes by a stepper or by a committed edit - never on mount, and never
 	 * when `value` is assigned from code.
