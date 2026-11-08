@@ -1,5 +1,5 @@
 import { resolve } from '$app/paths';
-import type { Path, ResolvedPathname } from '$app/types';
+import type { PageRouteId, Path, ResolvedPathname } from '$app/types';
 
 /**
  * `resolve()` for the pathnames in `config/routes` and `config/navigation`.
@@ -9,6 +9,18 @@ import type { Path, ResolvedPathname } from '$app/types';
  */
 export function resolvePathname(pathname: ResolvedPathname): ResolvedPathname {
 	return resolve(pathname.slice(1) as Path);
+}
+
+/** A page without params, so `resolve(route)` needs nothing else. */
+export type StaticPageRouteId = Exclude<PageRouteId, `${string}[${string}`>;
+
+/**
+ * `resolve()` for a page route held in a variable. `resolve` types its argument
+ * as one tuple per route, and TypeScript stops merging those past a few dozen
+ * routes (imlargo/svelte-template#24); one call site keeps that to one place.
+ */
+export function routeHref(route: StaticPageRouteId): ResolvedPathname {
+	return resolve(route);
 }
 
 /**

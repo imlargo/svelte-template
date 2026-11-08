@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeHref, isPrefixOf } from './paths';
+import { activeHref, isPrefixOf, routeHref } from './paths';
 
 describe('isPrefixOf', () => {
 	it('matches the route itself and its nested paths', () => {
@@ -34,5 +34,12 @@ describe('activeHref', () => {
 
 	it('returns null for a page no entry covers', () => {
 		expect(activeHref(hrefs, { pathname: '/settings', search: '' })).toBeNull();
+	});
+});
+
+describe('routeHref', () => {
+	it('is the pathname of a page route, its groups dropped', () => {
+		expect(routeHref('/(app)/admin')).toBe('/admin');
+		expect(routeHref('/(app)')).toBe('/');
 	});
 });

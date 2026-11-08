@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { config } from '#lib/config/app.js';
 	import { NAVIGATION_ITEMS } from '#lib/config/navigation.js';
-	import { activeHref, withSearch } from '#lib/utils/paths.js';
+	import { activeHref, routeHref, withSearch } from '#lib/utils/paths.js';
 
 	let {
 		title,
@@ -22,12 +21,13 @@
 	} = $props();
 
 	const entries = NAVIGATION_ITEMS.flatMap((item) => [
-		{ title: item.title, href: resolve(item.route) },
+		{ title: item.title, href: routeHref(item.route) },
 		...(item.items ?? []).map((sub) => ({
 			title: sub.title,
-			href: withSearch(resolve(sub.route), sub.search)
+			href: withSearch(routeHref(sub.route), sub.search)
 		}))
 	]);
+	// A sub-entry on its parent's own page (an "All" entry) does not rename it: the first entry wins.
 	const hrefs = entries.map((entry) => entry.href);
 
 	const section = $derived.by(() => {

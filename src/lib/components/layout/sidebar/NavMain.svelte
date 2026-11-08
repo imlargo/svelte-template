@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import * as Collapsible from '#lib/components/ui/collapsible/index.js';
@@ -12,13 +11,13 @@
 		NavigationSubItem
 	} from '#lib/config/navigation.js';
 	import { cn } from '#lib/utils.js';
-	import { activeHref, withSearch } from '#lib/utils/paths.js';
+	import { activeHref, routeHref, withSearch } from '#lib/utils/paths.js';
 	import { toneBadgeClass } from '#lib/utils/tone.js';
 
 	let { sections }: { sections: NavigationSection[] } = $props();
 
 	function hrefOf(entry: NavigationItem | NavigationSubItem): ResolvedPathname {
-		return withSearch(resolve(entry.route), 'search' in entry ? entry.search : undefined);
+		return withSearch(routeHref(entry.route), 'search' in entry ? entry.search : undefined);
 	}
 
 	const hrefs = $derived(

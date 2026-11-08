@@ -1,9 +1,9 @@
 import HomeIcon from '@lucide/svelte/icons/house';
 import ShieldIcon from '@lucide/svelte/icons/shield';
 import type { LucideIcon } from '@lucide/svelte';
-import type { PageRouteId } from '$app/types';
 import type { User } from '#lib/types/user.js';
 import type { Tone } from '#lib/utils/tone.js';
+import type { StaticPageRouteId } from '#lib/utils/paths.js';
 import { hasPermission } from '#lib/core/permissions.js';
 import { ROLE_PERMISSIONS, ROUTE_ACCESS } from './permissions.js';
 
@@ -29,7 +29,7 @@ export interface NavigationBadge {
 /** A page under an item, opened by its chevron. `search` lists one page under several entries (`?tab=…`). */
 export interface NavigationSubItem {
 	title: string;
-	route: PageRouteId;
+	route: StaticPageRouteId;
 	search?: string;
 }
 
@@ -37,7 +37,7 @@ export interface NavigationSubItem {
 export interface NavigationItem {
 	title: string;
 	icon: LucideIcon;
-	route: PageRouteId;
+	route: StaticPageRouteId;
 	group: NavigationGroup;
 	badge?: NavigationBadge;
 	items?: NavigationSubItem[];
