@@ -3,7 +3,6 @@
 	export interface MenuUser {
 		name: string;
 		email: string;
-		roleLabel: string;
 		avatar?: string | null;
 	}
 </script>

@@ -9,7 +9,7 @@
 		user,
 		children
 	}: {
-		user: MenuUser;
+		user: MenuUser & { roleLabel: string };
 		/** Entries added to the account menu. */
 		children?: Snippet;
 	} = $props();
