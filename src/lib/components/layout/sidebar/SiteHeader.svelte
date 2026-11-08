@@ -1,21 +1,39 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import * as Sidebar from '#lib/components/ui/sidebar/index.js';
 	import { Separator } from '#lib/components/ui/separator/index.js';
 	import { config } from '#lib/config/app.js';
 	import { NAVIGATION_ITEMS } from '#lib/config/navigation.js';
-	import { isPrefixOf } from '#lib/utils/paths.js';
+	import { activeHref, withSearch } from '#lib/utils/paths.js';
 
-	// Deepest route first, so a nested page takes its closest entry's title.
-	const byDepth = NAVIGATION_ITEMS.map((item) => ({
-		title: item.title,
-		href: resolve(item.route)
-	})).sort((a, b) => b.href.length - a.href.length);
+	let {
+		title,
+		actions,
+		trigger = true
+	}: {
+		/** Instead of the navigation entry the page belongs to. */
+		title?: string;
+		/** The right side: a search button, a bell, an account menu. */
+		actions?: Snippet;
+		/** Off on a surface that renders no sidebar. */
+		trigger?: boolean;
+	} = $props();
 
-	const section = $derived(
-		byDepth.find((item) => isPrefixOf(item.href, page.url.pathname))?.title ?? config.branding.name
-	);
+	const entries = NAVIGATION_ITEMS.flatMap((item) => [
+		{ title: item.title, href: resolve(item.route) },
+		...(item.items ?? []).map((sub) => ({
+			title: sub.title,
+			href: withSearch(resolve(sub.route), sub.search)
+		}))
+	]);
+	const hrefs = entries.map((entry) => entry.href);
+
+	const section = $derived.by(() => {
+		const active = activeHref(hrefs, page.url);
+		return entries.find((entry) => entry.href === active)?.title ?? config.branding.name;
+	});
 </script>
 
 <!-- The section, not the page's heading: each page renders its own <h1>. -->
@@ -23,8 +41,15 @@
 	class="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)"
 >
 	<div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-		<Sidebar.Trigger class="-ms-1" />
-		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
-		<p class="text-base font-medium">{section}</p>
+		{#if trigger}
+			<Sidebar.Trigger class="-ms-1" />
+			<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
+		{/if}
+		<p class="text-base font-medium">{title ?? section}</p>
+		{#if actions}
+			<div class="ms-auto flex items-center gap-2">
+				{@render actions()}
+			</div>
+		{/if}
 	</div>
 </header>
