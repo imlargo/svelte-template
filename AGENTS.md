@@ -51,8 +51,9 @@ equivalent area before inventing a new one.
 - **No scale sizes.** Do not use `size="sm"`, `"lg"` or `"xs"`: keep the base size. Two buttons
   that do the same thing on different screens must look the same, and once a `size` enters one
   place it has to be remembered everywhere forever. If something looks too big or too small, the
-  problem is the layout around it. The exception is `size="icon"` and its variants: that is a
-  shape, not a scale, for a button with no text.
+  problem is the layout around it. The exceptions are shapes, not scales: `size="icon"` and its
+  variants for a button with no text, and `size="lg"` on `Sidebar.MenuButton` for the two-line row
+  (avatar, name, email) the sidebar's header and account entry use.
 - **Semantic colors go through `#lib/utils/tone.ts`** (`toneBadgeClass`, `toneTextClass`): it is
   the one place `action`, `information`, `success`, `warning` and `destructive` become classes.
 
