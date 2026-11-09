@@ -54,7 +54,8 @@ equivalent area before inventing a new one.
   problem is the layout around it. The exceptions are shapes, not scales: `size="icon"` and its
   variants for a button with no text, and `size="lg"` on `Sidebar.MenuButton` for the two-line row
   (avatar, name, email) the sidebar's header and account entry use.
-- **Semantic colors go through `#lib/utils/tone.ts`** (`toneBadgeClass`, `toneTextClass`): it is
+- **Semantic colors go through `#lib/utils/tone.ts`** (`toneBadgeClass`, `toneTextClass`,
+  `toneDotClass`, `toneTileClass`): it is
   the one place `action`, `information`, `success`, `warning` and `destructive` become classes.
 
 ## Before calling a view done
