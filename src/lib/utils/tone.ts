@@ -26,10 +26,38 @@ const TEXT: Record<Tone, string> = {
 	destructive: 'text-destructive'
 };
 
+/** A status dot: the solid color, for a small round `<span>` beside a label. */
+const DOT: Record<Tone, string> = {
+	default: 'bg-muted-foreground',
+	action: 'bg-action',
+	information: 'bg-information',
+	success: 'bg-success',
+	warning: 'bg-warning',
+	destructive: 'bg-destructive'
+};
+
+/** An icon tile: faint background, icon in the solid color (a timeline marker, a stat). */
+const TILE: Record<Tone, string> = {
+	default: 'bg-muted text-muted-foreground',
+	action: 'bg-action/10 text-action',
+	information: 'bg-information/10 text-information',
+	success: 'bg-success/10 text-success',
+	warning: 'bg-warning/10 text-warning',
+	destructive: 'bg-destructive/10 text-destructive'
+};
+
 export function toneBadgeClass(tone: Tone): string {
 	return BADGE[tone];
 }
 
 export function toneTextClass(tone: Tone): string {
 	return TEXT[tone];
+}
+
+export function toneDotClass(tone: Tone): string {
+	return DOT[tone];
+}
+
+export function toneTileClass(tone: Tone): string {
+	return TILE[tone];
 }
