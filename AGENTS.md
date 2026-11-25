@@ -169,11 +169,16 @@ role that uses it, not only the one with the most permissions:
 
 ## Forms
 
-- No form library. A form that posts to the server is a form action with `use:enhance`; one inside
-  a client flow (a dialog that calls a service) handles its own `onsubmit`. References:
+- Two ways, both valid. A simple form needs no library: a form action with `use:enhance`, or
+  `onsubmit` inside a client flow (a dialog that calls a service). References:
   `features/auth/components/LoginForm.svelte` and
   `features/users/components/UserFormDialog.svelte`.
-- They are validated with the slice's zod schema through `#lib/utils/forms.ts` (`parseForm`,
+- A form with many fields, arrays or nested values uses Superforms + Formsnap with the zod
+  adapter. The Formsnap wrappers over shadcn's `Field` live in `#lib/components/forms/`
+  (`FormField`, `FormLabel`, `FormDescription`, `FormFieldErrors`, `FormFieldset`, `FormLegend`,
+  `FormElementField`), copied from the shadcn-svelte forms guide: they are ours, not `ui/`. Import
+  each by its path; `Control` comes straight from `formsnap`.
+- Plain forms are validated with the slice's zod schema through `#lib/utils/forms.ts` (`parseForm`,
   `validateField`), and laid out with shadcn's `Field`. The server always validates, even if the
   client already did.
 
