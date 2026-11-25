@@ -1,11 +1,11 @@
 node_modules
 
 # Output
-worker-configuration.d.ts
 .output
 .vercel
 .netlify
 .wrangler
+.cloudflare
 /.svelte-kit
 /build
 

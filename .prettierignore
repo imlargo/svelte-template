@@ -12,6 +12,7 @@ src/lib/components/coral/
 
 .claude/
 .agents/
+.cloudflare/
 skills-lock.json
 
 worker-configuration.d.ts
