@@ -12,7 +12,7 @@ if [[ -e $APP ]]; then
 	exit 1
 fi
 
-npx -y sv@latest create "$APP"
+npx -y npx sv create "$APP"
 cd "$APP"
 pnpm dlx skills add huntabyte/shadcn-svelte
 pnpm dlx shadcn-svelte@latest init
