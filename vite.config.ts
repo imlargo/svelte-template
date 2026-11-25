@@ -1,3 +1,4 @@
+import { svelteDevtools } from '@sveltejs/vite-devtools-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
@@ -6,6 +7,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [
+		svelteDevtools(),
 		tailwindcss(),
 		sveltekit({
 			compilerOptions: {
@@ -43,5 +45,6 @@ export default defineConfig({
 				}
 			}
 		]
-	}
+	},
+	devtools: { apply: 'serve', clientAuth: true }
 });

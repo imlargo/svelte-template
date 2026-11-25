@@ -165,9 +165,9 @@
 											{ROLE_LABELS[user.role]}
 										</Badge>
 									</Table.Cell>
-									<Table.Cell class="text-muted-foreground"
-										>{formatDate(user.created_at)}</Table.Cell
-									>
+									<Table.Cell class="text-muted-foreground">
+										{formatDate(user.created_at)}
+									</Table.Cell>
 									<Table.Cell class="text-right">
 										<Button
 											variant="ghost"
