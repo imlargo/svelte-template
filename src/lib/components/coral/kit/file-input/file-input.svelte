@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/file-input
-	 * @version 1.2.0
+	 * @version 1.3.0
 	 */
 	import { SvelteMap } from 'svelte/reactivity';
 	import FileIcon from '@lucide/svelte/icons/file';
@@ -14,6 +14,7 @@
 	import { collect } from './collect.js';
 	import { formatBytes } from './format-bytes.js';
 	import { getCoralDefaults } from '../../lib/defaults.js';
+	import { keepFocus } from '../../lib/keep-focus.js';
 	import type { FileInputProps } from './types.js';
 
 	const defaults = getCoralDefaults('kit/file-input');
@@ -160,9 +161,30 @@
 		depth = 0;
 		receive(Array.from(event.dataTransfer?.files ?? []));
 	}
+
+	/**
+	 * A screenshot is copied far more often than it is saved, so the focused zone takes files from
+	 * the clipboard too. Text is left to the browser: there is nothing to paste it into.
+	 *
+	 * Heard on the document rather than the zone: a file input is not editable, and a browser may
+	 * aim the paste at the page instead of at it. What counts is that the field has focus.
+	 */
+	$effect(() => {
+		const paste = (event: ClipboardEvent) => {
+			if (disabled || !input || document.activeElement !== input) return;
+			const files = Array.from(event.clipboardData?.files ?? []);
+			if (files.length === 0) return;
+			event.preventDefault();
+			receive(files);
+		};
+		document.addEventListener('paste', paste);
+		return () => document.removeEventListener('paste', paste);
+	});
 </script>
 
-<div class="flex w-full flex-col gap-3">
+<!-- Watched from the root, not the list: the list leaves the page with its last file, and focus
+     on that file's remove button still has to land somewhere - the field. -->
+<div class="flex w-full flex-col gap-3" {@attach keepFocus('[data-coral-file]', () => input)}>
 	<!--
 		A `<label>`, not a div with a click handler.
 
@@ -227,7 +249,7 @@
 		<ul role="list" class={cn('flex flex-col gap-2', listClass)}>
 			{#each value as file, index (`${file.name}-${file.size}-${file.lastModified}`)}
 				{@const preview = previews.get(file)}
-				<li class="min-w-0">
+				<li class="min-w-0" data-coral-file>
 					{#if fileSnippet}
 						{@render fileSnippet({ file, index, remove: () => remove(index) })}
 					{:else}

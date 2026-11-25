@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * @coral/kit/tags-input
-	 * @version 1.2.0
+	 * @version 1.2.1
 	 */
 	import { tick } from 'svelte';
 	import XIcon from '@lucide/svelte/icons/x';
@@ -223,7 +223,9 @@
 		// ...and first on the way through the keyboard, so a caller can take a key for themselves.
 		// Calling `preventDefault` is how they say so - the same signal the browser reads.
 		onkeydown?.(event);
-		if (event.defaultPrevented) return;
+		// Mid-composition, Enter is how an input method accepts what it is suggesting, and the word is
+		// not finished yet: making a tag of it here would keep half of it.
+		if (event.defaultPrevented || event.isComposing) return;
 
 		if (suggestions && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
 			event.preventDefault();

@@ -1,6 +1,6 @@
 /**
  * @coral/kit/shortcut
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import type { ComponentProps, Snippet } from 'svelte';
@@ -21,6 +21,12 @@ export type ShortcutProps = GroupProps & {
 	 * only draws the keys, for a shortcut something else handles.
 	 */
 	onpress?: (event: KeyboardEvent) => void;
+	/**
+	 * Binds the combo to the button or link the shortcut is drawn inside: pressing it clicks that
+	 * control, so `Save ⌘S` needs no second handler. Runs after `onpress`; while the control is
+	 * disabled the shortcut does nothing at all.
+	 */
+	activate?: boolean;
 	/** Stops listening without unmounting - a shortcut that only applies while a panel is open. */
 	enabled?: boolean;
 	/** Whether it fires while typing in a field. Defaults to yes with a modifier, no without. */

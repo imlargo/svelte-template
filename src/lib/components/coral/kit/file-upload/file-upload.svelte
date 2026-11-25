@@ -1,7 +1,7 @@
 <script lang="ts" generics="R = unknown">
 	/**
 	 * @coral/kit/file-upload
-	 * @version 1.0.0
+	 * @version 1.1.0
 	 */
 	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
 	import FileIcon from '@lucide/svelte/icons/file';
@@ -17,6 +17,7 @@
 	import { Announcer } from '../../lib/announce.svelte.js';
 	import { getCoralDefaults } from '../../lib/defaults.js';
 	import { numberFormat } from '../../lib/intl.js';
+	import { keepFocus } from '../../lib/keep-focus.js';
 	import { UploadQueue } from './queue.svelte.js';
 	import type { Upload, UploadStatus, UploadSummary } from './queue.svelte.js';
 	import type { FileUploadProps } from './types.js';
@@ -99,7 +100,17 @@
 	}
 </script>
 
-<div class="flex w-full flex-col gap-3">
+<!--
+	A row's controls change under the reader's hands - cancel becomes retry, an upload finishing takes
+	its cancel away - and the focus on them would fall to the page. It stays in the list instead, and
+	goes back to the picker once the list is empty.
+-->
+<div
+	class="flex w-full flex-col gap-3"
+	{@attach keepFocus('[data-coral-upload]', (root) =>
+		root.querySelector<HTMLInputElement>('input[type="file"]')
+	)}
+>
 	<FileInput bind:value={picked} onchange={handlePick} {disabled} {...restProps} />
 
 	{#if uploads.length > 0}
@@ -108,7 +119,7 @@
 			{#each uploads as entry (entry.id)}
 				{@const sending = entry.status === 'queued' || entry.status === 'uploading'}
 				{@const settled = entry.status === 'failed' || entry.status === 'cancelled'}
-				<li class="min-w-0">
+				<li class="min-w-0" data-coral-upload>
 					{#if row}
 						{@render row({
 							upload: entry,

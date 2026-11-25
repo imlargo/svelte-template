@@ -1,6 +1,6 @@
 /**
  * @coral/kit/shortcut
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 /** Which keyboard conventions to draw and match against. */
